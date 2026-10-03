@@ -1,0 +1,40 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/tower_demo.gd" id="1_demo"]
+
+[node name="TowerDemo" type="Node3D"]
+script = ExtResource("1_demo")
+
+[node name="Tower" type="Node3D" parent="."]
+
+[node name="TurretPivot" type="Node3D" parent="Tower"]
+position = Vector3(0, 0.9, 0)
+
+[node name="Pawn" type="Node3D" parent="."]
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+
+[node name="DetectionRing" type="MeshInstance3D" parent="."]
+
+[node name="AttackRing" type="MeshInstance3D" parent="."]
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-55, -35, 0)
+light_energy = 1.5
+
+[node name="Camera" type="Camera3D" parent="."]
+position = Vector3(0, 19, 22)
+current = true
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="SettingsPanel" type="PanelContainer" parent="UI"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -380.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
