@@ -19,14 +19,51 @@ func set_ranges(attack_radius: float, detection_radius: float) -> void:
 
 func _disc(radius: float, height: float) -> ImmediateMesh:
 	var mesh := ImmediateMesh.new()
+
+	var stops: Array[Vector2] = [
+		Vector2(0.00, 0.05),
+		Vector2(0.60, 0.05),
+		Vector2(0.85, 0.25),
+		Vector2(1.00, 0.70),
+	]
+
 	mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
-	for index in SEGMENTS:
-		# Vertex alpha fades from clear at the center to solid at the boundary.
-		mesh.surface_set_color(Color(1.0, 1.0, 1.0, 0.0))
-		mesh.surface_add_vertex(Vector3(0.0, height, 0.0))
-		mesh.surface_set_color(Color.WHITE)
-		mesh.surface_add_vertex(_point(radius, index + 1, height))
-		mesh.surface_add_vertex(_point(radius, index, height))
+
+	for ring_index in range(stops.size() - 1):
+		var inner_radius: float = radius * stops[ring_index].x
+		var outer_radius: float = radius * stops[ring_index + 1].x
+
+		var inner_alpha: float = stops[ring_index].y
+		var outer_alpha: float = stops[ring_index + 1].y
+
+		for index in SEGMENTS:
+			var next_index := index + 1
+
+			var inner_a := _point(inner_radius, index, height)
+			var inner_b := _point(inner_radius, next_index, height)
+			var outer_a := _point(outer_radius, index, height)
+			var outer_b := _point(outer_radius, next_index, height)
+
+			# Triangle 1
+			mesh.surface_set_color(Color(1.0, 1.0, 1.0, inner_alpha))
+			mesh.surface_add_vertex(inner_a)
+
+			mesh.surface_set_color(Color(1.0, 1.0, 1.0, outer_alpha))
+			mesh.surface_add_vertex(outer_b)
+
+			mesh.surface_set_color(Color(1.0, 1.0, 1.0, outer_alpha))
+			mesh.surface_add_vertex(outer_a)
+
+			# Triangle 2
+			mesh.surface_set_color(Color(1.0, 1.0, 1.0, inner_alpha))
+			mesh.surface_add_vertex(inner_a)
+
+			mesh.surface_set_color(Color(1.0, 1.0, 1.0, inner_alpha))
+			mesh.surface_add_vertex(inner_b)
+
+			mesh.surface_set_color(Color(1.0, 1.0, 1.0, outer_alpha))
+			mesh.surface_add_vertex(outer_b)
+
 	mesh.surface_end()
 	return mesh
 
