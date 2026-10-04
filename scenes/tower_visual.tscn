@@ -1,9 +1,18 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/tower_visual.gd" id="1_tower"]
+[ext_resource type="Script" path="res://scripts/tower_range_visual.gd" id="2_range"]
 
 [node name="Tower" type="Node3D"]
 script = ExtResource("1_tower")
 
 [node name="TurretPivot" type="Node3D" parent="."]
 position = Vector3(0, 0.9, 0)
+
+[node name="RangeVisual" type="Node3D" parent="."]
+visible = false
+script = ExtResource("2_range")
+
+[node name="AttackArea" type="MeshInstance3D" parent="RangeVisual"]
+
+[node name="DetectionArea" type="MeshInstance3D" parent="RangeVisual"]

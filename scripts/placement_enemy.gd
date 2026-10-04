@@ -2,8 +2,6 @@ extends PathFollow3D
 
 signal health_changed
 
-const UnitDefinition = preload("res://scripts/unit_definition.gd")
-
 @export_range(0.0, 30.0, 0.1) var movement_speed := 3.0
 @export_range(0.1, 3.0, 0.05) var visual_scale := 1.0:
 	set(value):

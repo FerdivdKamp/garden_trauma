@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/tower.schema.json",
-  "id": "toy_tank",
-  "name": "Toy Tank",
+  "id": "double_tank",
+  "name": "Double Barrel Toy Tank",
   "cost": 120,
   "detection_range": 9.0,
   "turn_speed": 90.0,

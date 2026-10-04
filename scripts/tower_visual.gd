@@ -2,8 +2,10 @@ extends Node3D
 
 # Shared by the original tower playground and the placement playground.
 const FOOTPRINT_RADIUS := 1.05
+const RangeVisual = preload("res://scripts/tower_range_visual.gd")
 
 @onready var turret_pivot: Node3D = $TurretPivot
+@onready var range_visual: RangeVisual = $RangeVisual
 
 var tower_type := 0
 var is_preview := false
@@ -31,12 +33,21 @@ func set_placement_valid(valid: bool) -> void:
 		_update_materials(valid)
 
 
+func set_ranges(attack_radius: float, detection_radius: float) -> void:
+	range_visual.set_ranges(attack_radius, detection_radius)
+
+
+func set_ranges_visible(value: bool) -> void:
+	range_visual.visible = value
+
+
 func _build_base() -> void:
 	var base_mesh := CylinderMesh.new()
 	base_mesh.top_radius = 0.85
 	base_mesh.bottom_radius = FOOTPRINT_RADIUS
 	base_mesh.height = 0.8
 	var base := _mesh_instance(base_mesh, Color("718aa2"))
+	base.name = "Base"
 	base.position.y = 0.4
 	add_child(base)
 
@@ -70,7 +81,7 @@ func _mesh_instance(shape: Mesh, color: Color) -> MeshInstance3D:
 
 
 func _update_materials(valid: bool) -> void:
-	var parts := [get_child(1)]
+	var parts := [get_node("Base")]
 	parts.append_array(turret_pivot.get_children())
 	for part in parts:
 		var mesh_part := part as MeshInstance3D

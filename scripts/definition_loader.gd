@@ -1,10 +1,8 @@
 class_name DefinitionLoader
 extends RefCounted
 
-const TowerDefinition = preload("res://scripts/tower_definition.gd")
-const UnitDefinition = preload("res://scripts/unit_definition.gd")
-
 const TOWER_DIR := "res://data/towers"
+const TOWER_OVERRIDE_DIR := "user://tower_definitions"
 const UNIT_DIR := "res://data/units"
 const ID_PATTERN := "^[a-z][a-z0-9_]*$"
 const KNOWN_TAGS := ["ground", "air", "mechanical", "projectile", "physical", "electric"]
@@ -24,6 +22,8 @@ static func load_tower(path: String) -> TowerDefinition:
 	result.damage = data.attack.damage
 	result.cooldown = data.attack.cooldown
 	result.attack_range = data.attack.range
+	result.detection_range = data.get("detection_range", 9.0)
+	result.turn_speed = data.get("turn_speed", 90.0)
 	result.projectile_speed = data.attack.projectile_speed
 	result.damage_type = data.get("damage_type", "physical")
 	result.bonus_vs_tags = data.get("bonus_vs_tags", {}).duplicate()
@@ -49,8 +49,42 @@ static func load_unit(path: String) -> UnitDefinition:
 	return result
 
 
-static func load_towers() -> Dictionary:
-	return _load_directory(TOWER_DIR, true)
+static func load_towers(override_directory := "") -> Dictionary:
+	var definitions := _load_directory(TOWER_DIR, true)
+	if not override_directory.is_empty() and DirAccess.dir_exists_absolute(override_directory):
+		for id in definitions:
+			var path := override_directory.path_join(id + ".json")
+			if FileAccess.file_exists(path):
+				var override := load_tower(path)
+				if override != null and override.id == id:
+					definitions[id] = override
+	return definitions
+
+
+static func save_tower_override(definition: TowerDefinition, directory := TOWER_OVERRIDE_DIR) -> bool:
+	var data := {
+		"id": definition.id, "name": definition.name, "cost": definition.cost,
+		"attack": {"damage": definition.damage, "cooldown": definition.cooldown,
+			"range": definition.attack_range, "projectile_speed": definition.projectile_speed},
+		"targeting": {"targets": Array(definition.targets), "priority": definition.priority},
+		"damage_type": definition.damage_type, "bonus_vs_tags": definition.bonus_vs_tags,
+		"tags": Array(definition.tags), "detection_range": definition.detection_range,
+		"turn_speed": definition.turn_speed
+	}
+	if not _valid_tower(data):
+		push_error("Cannot save invalid tower definition: %s" % definition.id)
+		return false
+	if DirAccess.make_dir_recursive_absolute(directory) != OK:
+		push_error("Cannot create tower override directory")
+		return false
+	var path := directory.path_join(definition.id + ".json")
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		push_error("Cannot save tower definition: %s" % path)
+		return false
+	file.store_string(JSON.stringify(data, "  "))
+	file.close()
+	return true
 
 
 static func load_units() -> Dictionary:
@@ -73,7 +107,11 @@ static func _load_directory(directory: String, towers: bool) -> Dictionary:
 		if not filename.ends_with(".json"):
 			continue
 		var path := directory.path_join(filename)
-		var definition: Resource = load_tower(path) if towers else load_unit(path)
+		var definition: Resource
+		if towers:
+			definition = load_tower(path)
+		else:
+			definition = load_unit(path)
 		if definition == null:
 			continue
 		var id: String = definition.id
@@ -110,6 +148,10 @@ static func _valid_tower(data: Dictionary) -> bool:
 	if not _string_array(targeting.get("targets"), ["ground", "air"]) or targeting.get("priority") not in ["first", "nearest", "last"]:
 		return false
 	if data.has("damage_type") and data.damage_type not in DAMAGE_TYPES:
+		return false
+	if data.has("detection_range") and not _number(data.detection_range, 0.0, false, true):
+		return false
+	if data.has("turn_speed") and not _number(data.turn_speed, 0.0):
 		return false
 	var bonuses = data.get("bonus_vs_tags", {})
 	if not bonuses is Dictionary:

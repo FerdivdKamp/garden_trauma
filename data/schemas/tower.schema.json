@@ -30,6 +30,8 @@
       }
     },
     "damage_type": { "enum": ["physical", "electric"] },
+    "detection_range": { "type": "number", "exclusiveMinimum": 0 },
+    "turn_speed": { "type": "number", "minimum": 0 },
     "bonus_vs_tags": {
       "type": "object",
       "propertyNames": { "enum": ["ground", "air", "mechanical", "projectile", "physical", "electric"] },

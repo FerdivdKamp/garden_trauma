@@ -1,12 +1,8 @@
 extends Node
 
 const PlacementEnemy = preload("res://scripts/placement_enemy.gd")
-const TowerDefinition = preload("res://scripts/tower_definition.gd")
 
 # Added to placed towers only; the tower demo keeps its own editable pawn test.
-@export var detection_radius := 9.0
-@export var turn_speed := 90.0
-
 var definition: TowerDefinition
 
 var enemies: Node3D
@@ -35,7 +31,7 @@ func _process(delta: float) -> void:
 			priority_score = enemy.progress
 		elif definition.priority == "last":
 			priority_score = -enemy.progress
-		if TowerRules.can_detect(distance, detection_radius) and priority_score > best_priority:
+		if TowerRules.can_detect(distance, definition.detection_range) and priority_score > best_priority:
 			target = enemy
 			target_distance = distance
 			best_priority = priority_score
@@ -44,9 +40,9 @@ func _process(delta: float) -> void:
 		return
 	var direction := target.global_position - pivot.global_position
 	var desired_yaw := TowerRules.target_yaw(direction)
-	pivot.rotation.y = TowerRules.step_yaw(pivot.rotation.y, desired_yaw, deg_to_rad(turn_speed), delta)
+	pivot.rotation.y = TowerRules.step_yaw(pivot.rotation.y, desired_yaw, deg_to_rad(definition.turn_speed), delta)
 	var aimed := absf(angle_difference(pivot.rotation.y, desired_yaw)) < deg_to_rad(5.0)
-	if shot_clock >= definition.cooldown and aimed and TowerRules.can_attack(target_distance, definition.attack_range, detection_radius):
+	if shot_clock >= definition.cooldown and aimed and TowerRules.can_attack(target_distance, definition.attack_range, definition.detection_range):
 		shot_clock = 0.0
 		var multiplier := 1.0 - target.definition.armor_for(definition.damage_type)
 		for tag in target.definition.tags:

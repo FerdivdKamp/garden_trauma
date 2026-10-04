@@ -1,13 +1,9 @@
 extends Node3D
 
-const TOWER_SAVE_PREFIX := "user://tower_"
 const PAWN_SAVE_PATH := "user://pawn.json"
-const SHOT_INTERVAL := 1.0
 
 @onready var turret_pivot: Node3D = $Tower/TurretPivot
 @onready var pawn: Node3D = $Pawn
-@onready var detection_ring: MeshInstance3D = $DetectionRing
-@onready var attack_ring: MeshInstance3D = $AttackRing
 @onready var settings_panel: PanelContainer = $UI/SettingsPanel
 
 var tower_type := 0
@@ -15,9 +11,12 @@ var detection_radius := 9.0
 var attack_radius := 6.0
 var turn_speed := 90.0
 var damage := 10.0
+var fire_rate := 1.0
 var pawn_distance := 8.0
 var pawn_health := 50.0
 var shot_clock := 0.0
+var tower_definitions: Dictionary
+var definition: TowerDefinition
 
 var fields: Dictionary = {}
 var tower_selector: OptionButton
@@ -26,6 +25,8 @@ var pawn_visual: MeshInstance3D
 
 
 func _ready() -> void:
+	tower_definitions = DefinitionLoader.load_towers(DefinitionLoader.TOWER_OVERRIDE_DIR)
+	_migrate_legacy_tower_saves()
 	$Camera.look_at(Vector3.ZERO, Vector3.UP)
 	_build_ground()
 	_build_pawn()
@@ -47,10 +48,10 @@ func _process(delta: float) -> void:
 
 	shot_clock += delta
 	var aimed := absf(angle_difference(turret_pivot.rotation.y, desired_yaw)) < deg_to_rad(5.0)
-	if shot_clock >= SHOT_INTERVAL and aimed and pawn_health > 0.0 and \
+	if shot_clock >= definition.cooldown and aimed and pawn_health > 0.0 and \
 			TowerRules.can_attack(pawn_distance, attack_radius, detection_radius):
 		shot_clock = 0.0
-		pawn_health = TowerRules.health_after_hit(pawn_health, damage)
+		pawn_health = TowerRules.health_after_hit(pawn_health, definition.damage)
 		_set_field_without_signal("pawn_health", pawn_health)
 		_update_pawn_color()
 	_update_status()
@@ -96,7 +97,7 @@ func _build_ui() -> void:
 	title.text = "TOWER PLAYGROUND"
 	column.add_child(title)
 	var help := Label.new()
-	help.text = "Outer ring: detection   •   Inner ring: attack\nThe tower fires once per second when aimed."
+	help.text = "Yellow area: detection   •   Green area: attack\nThe tower fires when aimed and its cooldown has elapsed."
 	column.add_child(help)
 
 	tower_selector = OptionButton.new()
@@ -109,8 +110,9 @@ func _build_ui() -> void:
 	_add_field(column, "attack_radius", "Attack radius", 1.0, 12.0, 0.1, attack_radius)
 	_add_field(column, "turn_speed", "Turn speed (°/s)", 0.0, 360.0, 1.0, turn_speed)
 	_add_field(column, "damage", "Damage / shot", 0.0, 100.0, 1.0, damage)
+	_add_field(column, "fire_rate", "Fire rate (shots/s)", 0.1, 10.0, 0.1, fire_rate)
 	_add_button(column, "Reset barrel away from pawn", _reset_aim)
-	_add_button(column, "Save tower parameters", _save_tower)
+	_add_button(column, "Save tower definition", _save_tower)
 
 	var pawn_title := Label.new()
 	pawn_title.text = "PAWN"
@@ -170,8 +172,16 @@ func _on_field_changed(value: float, key: String, partner: Range) -> void:
 			_set_field_without_signal("attack_radius", attack_radius)
 		"turn_speed": turn_speed = value
 		"damage": damage = value
+		"fire_rate": fire_rate = value
 		"pawn_distance": pawn_distance = value
 		"pawn_health": pawn_health = value
+	if definition != null:
+		definition.detection_range = detection_radius
+		definition.attack_range = attack_radius
+		definition.turn_speed = turn_speed
+		definition.damage = damage
+		# Gameplay uses seconds between shots; the UI uses shots per second.
+		definition.cooldown = 1.0 / fire_rate
 	_refresh_visuals()
 
 
@@ -184,24 +194,10 @@ func _set_field_without_signal(key: String, value: float) -> void:
 
 func _refresh_visuals() -> void:
 	pawn.position = Vector3(pawn_distance, 0.0, 0.0)
-	_draw_ring(detection_ring, detection_radius, Color("70bce8"), 0.05)
-	_draw_ring(attack_ring, attack_radius, Color("f5d06b"), 0.07)
+	$Tower.set_ranges(attack_radius, detection_radius)
+	$Tower.set_ranges_visible(true)
 	_update_pawn_color()
 	_update_status()
-
-
-func _draw_ring(instance: MeshInstance3D, radius: float, color: Color, height: float) -> void:
-	var ring := ImmediateMesh.new()
-	ring.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
-	for index in range(65):
-		var angle := TAU * float(index) / 64.0
-		ring.surface_add_vertex(Vector3(cos(angle) * radius, height, sin(angle) * radius))
-	ring.surface_end()
-	instance.mesh = ring
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.albedo_color = color
-	instance.material_override = material
 
 
 func _update_pawn_color() -> void:
@@ -237,17 +233,32 @@ func _on_tower_selected(index: int) -> void:
 	_refresh_visuals()
 
 
-func _tower_path() -> String:
-	return TOWER_SAVE_PREFIX + ("single" if tower_type == 0 else "double") + ".json"
+func _tower_id() -> String:
+	return "toy_tank" if tower_type == 0 else "double_tank"
+
+
+func _migrate_legacy_tower_saves() -> void:
+	# Older playground builds saved only four fields. Keep those edits when moving
+	# to complete tower definitions, leaving all other fields at their defaults.
+	for id in ["toy_tank", "double_tank"]:
+		var override_path := DefinitionLoader.TOWER_OVERRIDE_DIR.path_join(id + ".json")
+		if FileAccess.file_exists(override_path):
+			continue
+		var old_name := "single" if id == "toy_tank" else "double"
+		var old_path := "user://tower_%s.json" % old_name
+		if not FileAccess.file_exists(old_path):
+			continue
+		var data := _read_json(old_path)
+		var tower := tower_definitions[id] as TowerDefinition
+		tower.detection_range = clampf(float(data.get("detection_radius", tower.detection_range)), 2.0, 12.0)
+		tower.attack_range = clampf(float(data.get("attack_radius", tower.attack_range)), 1.0, tower.detection_range)
+		tower.turn_speed = clampf(float(data.get("turn_speed", tower.turn_speed)), 0.0, 360.0)
+		tower.damage = clampf(float(data.get("damage", tower.damage)), 0.0, 100.0)
+		# Save writes the imported values in the new format when the player asks.
 
 
 func _save_tower() -> void:
-	_write_json(_tower_path(), {
-		"detection_radius": detection_radius,
-		"attack_radius": attack_radius,
-		"turn_speed": turn_speed,
-		"damage": damage
-	})
+	DefinitionLoader.save_tower_override(definition)
 
 
 func _save_pawn() -> void:
@@ -274,12 +285,13 @@ func _read_json(path: String) -> Dictionary:
 
 
 func _load_tower() -> void:
-	var data := _read_json(_tower_path())
-	detection_radius = clampf(float(data.get("detection_radius", 9.0)), 2.0, 12.0)
-	attack_radius = clampf(float(data.get("attack_radius", 6.0)), 1.0, detection_radius)
-	turn_speed = clampf(float(data.get("turn_speed", 90.0)), 0.0, 360.0)
-	damage = clampf(float(data.get("damage", 10.0)), 0.0, 100.0)
-	for key in ["detection_radius", "attack_radius", "turn_speed", "damage"]:
+	definition = tower_definitions[_tower_id()] as TowerDefinition
+	detection_radius = definition.detection_range
+	attack_radius = definition.attack_range
+	turn_speed = definition.turn_speed
+	damage = definition.damage
+	fire_rate = 1.0 / definition.cooldown
+	for key in ["detection_radius", "attack_radius", "turn_speed", "damage", "fire_rate"]:
 		_set_field_without_signal(key, get(key))
 
 

@@ -42,7 +42,7 @@ func _run() -> void:
 	var attack := tower.get_node("Attack") as PlacementTowerAttack
 	red.progress = 6.0
 	blue.progress = path.curve.get_baked_length()
-	attack.turn_speed = 360.0
+	attack.definition.turn_speed = 360.0
 	attack._process(1.0)
 	_check(is_equal_approx(red.health, 40.0), "Tower damages nearest enemy in attack range")
 	_check(is_equal_approx(blue.health, 75.0), "Out-of-range enemy takes no damage")
