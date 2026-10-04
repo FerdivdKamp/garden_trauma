@@ -10,12 +10,15 @@ Use the tower selector to switch between single and double barrels. Change the s
 
 Click a single or double barrel tile, move the translucent preview over the ground, then click to place towers. A red preview means the position is blocked by the tan path, the ground edge, or another tower. Keep clicking to place more; press **Esc** to cancel. Select the `PlacementPath` node in the editor to adjust `path_width` or edit its `Curve3D` route.
 
+One red enemy starts on the path. The enemy panel lets you choose a red or blue sphere, spawn more, reset the enemies, and adjust each type's movement speed and visual scale. The blue sphere starts slightly larger and has 75 health; red has 50. Each enemy's health appears in the panel. Placed towers detect enemies within 9 units, turn at 90 degrees per second, and deal 10 damage once per second within 6 units when aimed. The reset button removes all enemies and creates one fresh enemy of the selected type; placed towers remain in place. The enemy uses `PathFollow3D` under `PlacementPath`, so editing the curve also changes its route.
+
 Run the unit tests from this directory:
 
 ```powershell
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_tower_rules.gd
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_tower_demo.gd
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_tower_placement.gd
+& 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_placement_combat.gd
 ```
 
 `scripts/tower_rules.gd` holds the range, turning, and damage rules. Both scenes share the basic-shape tower visual, which can later be replaced by Blender models.

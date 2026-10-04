@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/placement_enemy.gd" id="1_enemy"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_enemy"]
+radius = 0.5
+height = 1.0
+
+[node name="Enemy" type="PathFollow3D"]
+script = ExtResource("1_enemy")
+loop = false
+
+[node name="Visual" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.55, 0)
+mesh = SubResource("SphereMesh_enemy")
