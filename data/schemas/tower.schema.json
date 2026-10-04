@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Tower definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "cost", "attack", "targeting", "tags"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "name": { "type": "string", "minLength": 1 },
+    "cost": { "type": "integer", "minimum": 0 },
+    "attack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["damage", "cooldown", "range", "projectile_speed"],
+      "properties": {
+        "damage": { "type": "number", "minimum": 0 },
+        "cooldown": { "type": "number", "exclusiveMinimum": 0 },
+        "range": { "type": "number", "exclusiveMinimum": 0 },
+        "projectile_speed": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "targeting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["targets", "priority"],
+      "properties": {
+        "targets": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["ground", "air"] } },
+        "priority": { "enum": ["first", "nearest", "last"] }
+      }
+    },
+    "damage_type": { "enum": ["physical", "electric"] },
+    "detection_range": { "type": "number", "exclusiveMinimum": 0 },
+    "turn_speed": { "type": "number", "minimum": 0 },
+    "bonus_vs_tags": {
+      "type": "object",
+      "propertyNames": { "enum": ["ground", "air", "mechanical", "projectile", "physical", "electric"] },
+      "additionalProperties": { "type": "number", "minimum": 0 }
+    },
+    "tags": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["ground", "air", "mechanical", "projectile", "physical", "electric"] } }
+  }
+}

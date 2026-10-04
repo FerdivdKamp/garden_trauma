@@ -12,6 +12,7 @@ signal health_changed
 @onready var visual: MeshInstance3D = $Visual
 
 var enemy_type := 0
+var definition: UnitDefinition
 var max_health := 50.0
 var health := 50.0
 
@@ -28,11 +29,12 @@ func _process(delta: float) -> void:
 		progress = minf(progress + movement_speed * delta, route.curve.get_baked_length())
 
 
-func configure(type: int, speed: float, size: float) -> void:
+func configure(type: int, unit: UnitDefinition, speed: float, size: float) -> void:
 	enemy_type = type
+	definition = unit
 	movement_speed = speed
 	visual_scale = size
-	max_health = 50.0 if type == 0 else 75.0
+	max_health = unit.health
 	health = max_health
 	if is_node_ready():
 		_update_color()

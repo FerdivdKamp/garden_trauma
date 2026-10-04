@@ -12,10 +12,6 @@ script = ExtResource("1_demo")
 
 [node name="Ground" type="MeshInstance3D" parent="."]
 
-[node name="DetectionRing" type="MeshInstance3D" parent="."]
-
-[node name="AttackRing" type="MeshInstance3D" parent="."]
-
 [node name="Sun" type="DirectionalLight3D" parent="."]
 rotation_degrees = Vector3(-55, -35, 0)
 light_energy = 1.5

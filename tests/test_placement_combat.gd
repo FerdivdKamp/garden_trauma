@@ -42,13 +42,18 @@ func _run() -> void:
 	var attack := tower.get_node("Attack") as PlacementTowerAttack
 	red.progress = 6.0
 	blue.progress = path.curve.get_baked_length()
-	attack.turn_speed = 360.0
+	attack.definition.turn_speed = 360.0
 	attack._process(1.0)
 	_check(is_equal_approx(red.health, 40.0), "Tower damages nearest enemy in attack range")
 	_check(is_equal_approx(blue.health, 75.0), "Out-of-range enemy takes no damage")
 	_check(demo.enemy_health_label.text.contains("40 / 50 HP"), "Health display updates after damage")
 	attack._process(0.2)
 	_check(is_equal_approx(red.health, 40.0), "Shot interval limits attacks")
+	# Changing typed definition data affects combat without reading JSON in the attack node.
+	red.definition.armor["physical"] = 0.5
+	attack.definition.bonus_vs_tags["ground"] = 2.0
+	attack._process(0.8)
+	_check(is_equal_approx(red.health, 30.0), "Armor and tag bonus modify damage")
 	red.take_damage(100.0)
 	_check(is_equal_approx(red.health, 0.0), "Health is clamped at zero")
 	var stopped_at := red.progress

@@ -21,6 +21,7 @@ const TOWER_RADIUS := 1.05
 
 var selected_type := -1
 var preview: Node3D
+var hovered_tower: Node3D
 var has_ground_point := false
 var ground_point := Vector3.ZERO
 var status: Label
@@ -28,9 +29,17 @@ var tower_buttons: Array[Button] = []
 var enemy_selector: OptionButton
 var enemy_health_label: Label
 var enemy_count := 0
+var tower_definitions: Dictionary
+var unit_definitions: Dictionary
 
 
 func _ready() -> void:
+	# Load once; scene nodes use typed definitions instead of JSON dictionaries.
+	tower_definitions = DefinitionLoader.load_towers(DefinitionLoader.TOWER_OVERRIDE_DIR)
+	unit_definitions = DefinitionLoader.load_units()
+	assert(tower_definitions.has("toy_tank") and tower_definitions.has("double_tank") and unit_definitions.has("red_sphere") and unit_definitions.has("blue_sphere"))
+	red_speed = (unit_definitions["red_sphere"] as UnitDefinition).speed
+	blue_speed = (unit_definitions["blue_sphere"] as UnitDefinition).speed
 	camera.look_at(Vector3.ZERO, Vector3.UP)
 	var ground_mesh := PlaneMesh.new()
 	ground_mesh.size = Vector2.ONE * GROUND_HALF_SIZE * 2.0
@@ -43,9 +52,11 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	var mouse_position := get_viewport().get_mouse_position()
+	_update_cursor(mouse_position)
+	_update_hovered_tower(mouse_position)
 	if preview == null:
 		return
-	_update_cursor(get_viewport().get_mouse_position())
 	preview.visible = has_ground_point
 	if has_ground_point:
 		preview.position = ground_point
@@ -64,6 +75,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			place_tower(ground_point)
 
 
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		_select_tower(-1)
+		get_viewport().set_input_as_handled()
+
+
 func _update_cursor(screen_position: Vector2) -> void:
 	var origin := camera.project_ray_origin(screen_position)
 	var direction := camera.project_ray_normal(screen_position)
@@ -75,6 +92,29 @@ func _update_cursor(screen_position: Vector2) -> void:
 	if has_ground_point:
 		ground_point = origin + direction * distance
 		ground_point.y = 0.0
+
+
+func _update_hovered_tower(screen_position: Vector2) -> void:
+	var found: Node3D
+	if get_viewport().gui_get_hovered_control() == null:
+		for child in placed_towers.get_children():
+			var tower := child as Node3D
+			var center := tower.global_position + Vector3(0.0, 0.6, 0.0)
+			if camera.is_position_behind(center):
+				continue
+			var center_screen := camera.unproject_position(center)
+			var edge_screen := camera.unproject_position(center + Vector3(TOWER_RADIUS, 0.0, 0.0))
+			var hover_radius := maxf(24.0, center_screen.distance_to(edge_screen) * 1.5)
+			if screen_position.distance_to(center_screen) <= hover_radius:
+				found = tower
+				break
+	if found == hovered_tower:
+		return
+	if hovered_tower != null:
+		hovered_tower.set_ranges_visible(false)
+	hovered_tower = found
+	if hovered_tower != null:
+		hovered_tower.set_ranges_visible(true)
 
 
 func can_place_at(point: Vector3) -> bool:
@@ -96,8 +136,11 @@ func place_tower(point: Vector3) -> void:
 	tower.set_tower_type(selected_type)
 	tower.position = point
 	placed_towers.add_child(tower)
+	var definition := tower_definitions["toy_tank" if selected_type == 0 else "double_tank"] as TowerDefinition
+	tower.set_ranges(definition.attack_range, definition.detection_range)
 	var attack := PlacementTowerAttack.new()
 	attack.name = "Attack"
+	attack.definition = definition
 	attack.enemies = path
 	tower.add_child(attack)
 
@@ -105,9 +148,10 @@ func place_tower(point: Vector3) -> void:
 func spawn_enemy() -> PlacementEnemy:
 	var type := enemy_selector.selected if enemy_selector != null else 0
 	var enemy := ENEMY_SCENE.instantiate() as PlacementEnemy
+	var unit := unit_definitions["red_sphere" if type == 0 else "blue_sphere"] as UnitDefinition
 	enemy_count += 1
 	enemy.name = "Enemy%d" % enemy_count
-	enemy.configure(type, red_speed if type == 0 else blue_speed, red_scale if type == 0 else blue_scale)
+	enemy.configure(type, unit, red_speed if type == 0 else blue_speed, red_scale if type == 0 else blue_scale)
 	path.add_child(enemy)
 	enemy.health_changed.connect(_update_enemy_health)
 	_update_enemy_health()
@@ -157,12 +201,15 @@ func _select_tower(tower_type: int) -> void:
 	for index in tower_buttons.size():
 		tower_buttons[index].button_pressed = index == tower_type
 	if tower_type < 0:
-		status.text = "Select a tower tile. Esc cancels selection."
+		status.text = "Select a tower tile to place it."
 		return
 	preview = TOWER_SCENE.instantiate()
 	preview.set_tower_type(tower_type)
 	preview.set_preview(true)
 	preview_holder.add_child(preview)
+	var definition := tower_definitions["toy_tank" if tower_type == 0 else "double_tank"] as TowerDefinition
+	preview.set_ranges(definition.attack_range, definition.detection_range)
+	preview.set_ranges_visible(true)
 	status.text = "Move over the ground to place"
 
 
@@ -189,7 +236,7 @@ func _build_ui() -> void:
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(status)
 	var help := Label.new()
-	help.text = "Green ground: buildable\nTan path: no towers\nClick to place repeatedly"
+	help.text = "Green range: attack   Yellow range: detection\nTan path: no towers\nRight-click or Esc: empty your hand"
 	column.add_child(help)
 	_build_enemy_ui()
 
