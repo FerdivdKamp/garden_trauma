@@ -62,36 +62,6 @@ func _build_ground() -> void:
 	$Ground.mesh = ground_mesh
 	$Ground.material_override = _material(Color("384b3b"))
 
-	var base_mesh := CylinderMesh.new()
-	base_mesh.top_radius = 0.85
-	base_mesh.bottom_radius = 1.05
-	base_mesh.height = 0.8
-	var base := _mesh_instance(base_mesh, Color("718aa2"))
-	base.position.y = 0.4
-	$Tower.add_child(base)
-	_build_turret()
-
-
-func _build_turret() -> void:
-	for child in turret_pivot.get_children():
-		child.queue_free()
-	var cap_mesh := CylinderMesh.new()
-	cap_mesh.top_radius = 0.55
-	cap_mesh.bottom_radius = 0.65
-	cap_mesh.height = 0.38
-	var cap := _mesh_instance(cap_mesh, Color("a9bed0"))
-	cap.position.y = 0.14
-	turret_pivot.add_child(cap)
-
-	var offsets := [0.0] if tower_type == 0 else [-0.29, 0.29]
-	for offset in offsets:
-		var barrel_mesh := BoxMesh.new()
-		barrel_mesh.size = Vector3(0.22, 0.22, 1.45)
-		var barrel := _mesh_instance(barrel_mesh, Color("e5c46b"))
-		barrel.position = Vector3(offset, 0.17, -0.85)
-		turret_pivot.add_child(barrel)
-
-
 func _build_pawn() -> void:
 	var sphere := SphereMesh.new()
 	sphere.radius = 0.5
@@ -261,7 +231,7 @@ func _reset_aim() -> void:
 
 func _on_tower_selected(index: int) -> void:
 	tower_type = index
-	_build_turret()
+	$Tower.set_tower_type(index)
 	_load_tower()
 	_reset_aim()
 	_refresh_visuals()
