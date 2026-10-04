@@ -1,6 +1,9 @@
 extends Node3D
 
 const TOWER_SCENE: PackedScene = preload("res://scenes/tower_visual.tscn")
+const ENEMY_SCENE: PackedScene = preload("res://scenes/placement_enemy.tscn")
+const PlacementEnemy = preload("res://scripts/placement_enemy.gd")
+const PlacementTowerAttack = preload("res://scripts/placement_tower_attack.gd")
 const GROUND_HALF_SIZE := 18.0
 const TOWER_RADIUS := 1.05
 
@@ -9,6 +12,12 @@ const TOWER_RADIUS := 1.05
 @onready var placed_towers: Node3D = $PlacedTowers
 @onready var preview_holder: Node3D = $Preview
 @onready var palette: PanelContainer = $UI/Palette
+@onready var enemy_panel: PanelContainer = $UI/EnemyPanel
+
+@export_range(0.0, 30.0, 0.1) var red_speed := 3.0
+@export_range(0.0, 30.0, 0.1) var blue_speed := 2.0
+@export_range(0.1, 3.0, 0.05) var red_scale := 1.0
+@export_range(0.1, 3.0, 0.05) var blue_scale := 1.3
 
 var selected_type := -1
 var preview: Node3D
@@ -16,6 +25,9 @@ var has_ground_point := false
 var ground_point := Vector3.ZERO
 var status: Label
 var tower_buttons: Array[Button] = []
+var enemy_selector: OptionButton
+var enemy_health_label: Label
+var enemy_count := 0
 
 
 func _ready() -> void:
@@ -27,6 +39,7 @@ func _ready() -> void:
 	ground_material.albedo_color = Color("384b3b")
 	$Ground.material_override = ground_material
 	_build_ui()
+	spawn_enemy()
 
 
 func _process(_delta: float) -> void:
@@ -83,6 +96,57 @@ func place_tower(point: Vector3) -> void:
 	tower.set_tower_type(selected_type)
 	tower.position = point
 	placed_towers.add_child(tower)
+	var attack := PlacementTowerAttack.new()
+	attack.name = "Attack"
+	attack.enemies = path
+	tower.add_child(attack)
+
+
+func spawn_enemy() -> PlacementEnemy:
+	var type := enemy_selector.selected if enemy_selector != null else 0
+	var enemy := ENEMY_SCENE.instantiate() as PlacementEnemy
+	enemy_count += 1
+	enemy.name = "Enemy%d" % enemy_count
+	enemy.configure(type, red_speed if type == 0 else blue_speed, red_scale if type == 0 else blue_scale)
+	path.add_child(enemy)
+	enemy.health_changed.connect(_update_enemy_health)
+	_update_enemy_health()
+	return enemy
+
+
+func reset_enemies() -> void:
+	for child in path.get_children():
+		if child is PlacementEnemy:
+			path.remove_child(child)
+			child.queue_free()
+	enemy_count = 0
+	spawn_enemy()
+	for tower in placed_towers.get_children():
+		tower.get_node("Attack").shot_clock = 0.0
+
+
+func _set_enemy_value(value: float, key: String) -> void:
+	set(key, value)
+	for child in path.get_children():
+		var enemy := child as PlacementEnemy
+		if enemy == null:
+			continue
+		if (enemy.enemy_type == 0 and key.begins_with("red")) or (enemy.enemy_type == 1 and key.begins_with("blue")):
+			if key.ends_with("speed"):
+				enemy.movement_speed = value
+			else:
+				enemy.visual_scale = value
+
+
+func _update_enemy_health() -> void:
+	if enemy_health_label == null:
+		return
+	var lines: PackedStringArray = []
+	for child in path.get_children():
+		var enemy := child as PlacementEnemy
+		if enemy != null:
+			lines.append("%s (%s): %.0f / %.0f HP" % [enemy.name, "Red" if enemy.enemy_type == 0 else "Blue", enemy.health, enemy.max_health])
+	enemy_health_label.text = "\n".join(lines)
 
 
 func _select_tower(tower_type: int) -> void:
@@ -127,3 +191,50 @@ func _build_ui() -> void:
 	var help := Label.new()
 	help.text = "Green ground: buildable\nTan path: no towers\nClick to place repeatedly"
 	column.add_child(help)
+	_build_enemy_ui()
+
+
+func _build_enemy_ui() -> void:
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	enemy_panel.add_child(scroll)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 7)
+	scroll.add_child(column)
+	var title := Label.new()
+	title.text = "PATH ENEMIES"
+	column.add_child(title)
+	enemy_selector = OptionButton.new()
+	enemy_selector.add_item("Red sphere")
+	enemy_selector.add_item("Blue sphere")
+	column.add_child(enemy_selector)
+	var spawn_button := Button.new()
+	spawn_button.text = "Spawn selected enemy"
+	spawn_button.pressed.connect(spawn_enemy)
+	column.add_child(spawn_button)
+	var reset_button := Button.new()
+	reset_button.text = "Reset enemies"
+	reset_button.pressed.connect(reset_enemies)
+	column.add_child(reset_button)
+	_add_enemy_spin(column, "red_speed", "Red speed", 0.0, 30.0, 0.1)
+	_add_enemy_spin(column, "blue_speed", "Blue speed", 0.0, 30.0, 0.1)
+	_add_enemy_spin(column, "red_scale", "Red visual scale", 0.1, 3.0, 0.05)
+	_add_enemy_spin(column, "blue_scale", "Blue visual scale", 0.1, 3.0, 0.05)
+	enemy_health_label = Label.new()
+	column.add_child(enemy_health_label)
+
+
+func _add_enemy_spin(column: VBoxContainer, key: String, caption: String, minimum: float, maximum: float, step: float) -> void:
+	var row := HBoxContainer.new()
+	column.add_child(row)
+	var label := Label.new()
+	label.text = caption
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(label)
+	var spin := SpinBox.new()
+	spin.min_value = minimum
+	spin.max_value = maximum
+	spin.step = step
+	spin.value = get(key)
+	row.add_child(spin)
+	spin.value_changed.connect(_set_enemy_value.bind(key))
