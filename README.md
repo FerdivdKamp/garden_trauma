@@ -1,5 +1,19 @@
 # Tower playground
 
+## Tower and unit data
+
+Gameplay definitions live in one JSON file per type under `data/towers/` and `data/units/`. To add a type, copy a nearby file, give it a unique lowercase `id` (letters, digits, underscores), and edit its values. Keep the `$schema` line: VS Code uses it to validate fields and offer completion. The corresponding schemas are in `data/schemas/`.
+
+`DefinitionLoader` reads each directory and checks values at runtime before making `TowerDefinition` or `UnitDefinition` resources. A bad file reports an error and is skipped; duplicate IDs are reported and the first file wins. The placement scene currently selects `toy_tank`, `red_sphere`, and `blue_sphere` by ID. To use a newly added type in that prototype, add it to the scene's selection UI and look up its typed definition in the loaded collection. The tower demo's save buttons still store temporary playground settings in `user://`; those saves are separate from gameplay definitions.
+
+The placement prototype applies damage, cooldown, range, target tags, armor, and tag bonuses from these definitions. It still uses instant hits and its existing detection radius, so `projectile_speed`, cost, and reward are available for future projectile and economy features but have no effect yet. Its enemy speed and visual scale controls are runtime experiment controls; initial speed comes from the unit JSON.
+
+Run the definition test with:
+
+```powershell
+& 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_definitions.gd
+```
+
 Open either scene in Godot 4.7 and press **F6** to run it. **F5** runs the placement scene, which is the current main scene.
 
 ## Tower demo (`scenes/tower_demo.tscn`)

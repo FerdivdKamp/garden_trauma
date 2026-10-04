@@ -1,0 +1,18 @@
+{
+  "$schema": "../schemas/tower.schema.json",
+  "id": "toy_tank",
+  "name": "Toy Tank",
+  "cost": 120,
+  "attack": {
+    "damage": 10,
+    "cooldown": 1.0,
+    "range": 6.0,
+    "projectile_speed": 12.0
+  },
+  "targeting": {
+    "targets": ["ground"],
+    "priority": "nearest"
+  },
+  "damage_type": "physical",
+  "tags": ["projectile", "physical"]
+}

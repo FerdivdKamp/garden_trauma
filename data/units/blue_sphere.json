@@ -1,0 +1,10 @@
+{
+  "$schema": "../schemas/unit.schema.json",
+  "id": "blue_sphere",
+  "name": "Blue Sphere",
+  "health": 75,
+  "speed": 2.0,
+  "reward": 15,
+  "armor": { "physical": 0.0 },
+  "tags": ["ground", "mechanical"]
+}

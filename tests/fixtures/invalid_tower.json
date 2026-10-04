@@ -1,0 +1,9 @@
+{
+  "$schema": "../../data/schemas/tower.schema.json",
+  "id": "bad tower id",
+  "name": "Invalid Tower",
+  "cost": -1,
+  "attack": { "damage": -3, "cooldown": 0, "range": 0, "projectile_speed": 12 },
+  "targeting": { "targets": ["unknown"], "priority": "random" },
+  "tags": ["projectile"]
+}

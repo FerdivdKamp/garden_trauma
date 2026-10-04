@@ -1,0 +1,9 @@
+{
+  "$schema": "../../data/schemas/unit.schema.json",
+  "id": "invalid_unit",
+  "name": "Invalid Unit",
+  "health": 0,
+  "speed": 2,
+  "reward": 10,
+  "tags": ["ground"]
+}

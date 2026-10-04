@@ -4,6 +4,9 @@ const TOWER_SCENE: PackedScene = preload("res://scenes/tower_visual.tscn")
 const ENEMY_SCENE: PackedScene = preload("res://scenes/placement_enemy.tscn")
 const PlacementEnemy = preload("res://scripts/placement_enemy.gd")
 const PlacementTowerAttack = preload("res://scripts/placement_tower_attack.gd")
+const DefinitionLoader = preload("res://scripts/definition_loader.gd")
+const TowerDefinition = preload("res://scripts/tower_definition.gd")
+const UnitDefinition = preload("res://scripts/unit_definition.gd")
 const GROUND_HALF_SIZE := 18.0
 const TOWER_RADIUS := 1.05
 
@@ -28,9 +31,17 @@ var tower_buttons: Array[Button] = []
 var enemy_selector: OptionButton
 var enemy_health_label: Label
 var enemy_count := 0
+var tower_definitions: Dictionary
+var unit_definitions: Dictionary
 
 
 func _ready() -> void:
+	# Load once; scene nodes use typed definitions instead of JSON dictionaries.
+	tower_definitions = DefinitionLoader.load_towers()
+	unit_definitions = DefinitionLoader.load_units()
+	assert(tower_definitions.has("toy_tank") and unit_definitions.has("red_sphere") and unit_definitions.has("blue_sphere"))
+	red_speed = (unit_definitions["red_sphere"] as UnitDefinition).speed
+	blue_speed = (unit_definitions["blue_sphere"] as UnitDefinition).speed
 	camera.look_at(Vector3.ZERO, Vector3.UP)
 	var ground_mesh := PlaneMesh.new()
 	ground_mesh.size = Vector2.ONE * GROUND_HALF_SIZE * 2.0
@@ -98,6 +109,7 @@ func place_tower(point: Vector3) -> void:
 	placed_towers.add_child(tower)
 	var attack := PlacementTowerAttack.new()
 	attack.name = "Attack"
+	attack.definition = tower_definitions["toy_tank"] as TowerDefinition
 	attack.enemies = path
 	tower.add_child(attack)
 
@@ -105,9 +117,10 @@ func place_tower(point: Vector3) -> void:
 func spawn_enemy() -> PlacementEnemy:
 	var type := enemy_selector.selected if enemy_selector != null else 0
 	var enemy := ENEMY_SCENE.instantiate() as PlacementEnemy
+	var unit := unit_definitions["red_sphere" if type == 0 else "blue_sphere"] as UnitDefinition
 	enemy_count += 1
 	enemy.name = "Enemy%d" % enemy_count
-	enemy.configure(type, red_speed if type == 0 else blue_speed, red_scale if type == 0 else blue_scale)
+	enemy.configure(type, unit, red_speed if type == 0 else blue_speed, red_scale if type == 0 else blue_scale)
 	path.add_child(enemy)
 	enemy.health_changed.connect(_update_enemy_health)
 	_update_enemy_health()

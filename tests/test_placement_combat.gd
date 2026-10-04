@@ -49,6 +49,11 @@ func _run() -> void:
 	_check(demo.enemy_health_label.text.contains("40 / 50 HP"), "Health display updates after damage")
 	attack._process(0.2)
 	_check(is_equal_approx(red.health, 40.0), "Shot interval limits attacks")
+	# Changing typed definition data affects combat without reading JSON in the attack node.
+	red.definition.armor["physical"] = 0.5
+	attack.definition.bonus_vs_tags["ground"] = 2.0
+	attack._process(0.8)
+	_check(is_equal_approx(red.health, 30.0), "Armor and tag bonus modify damage")
 	red.take_damage(100.0)
 	_check(is_equal_approx(red.health, 0.0), "Health is clamped at zero")
 	var stopped_at := red.progress
