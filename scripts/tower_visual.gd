@@ -1,7 +1,7 @@
 extends Node3D
 
 # Shared by the original tower playground and the placement playground.
-const FOOTPRINT_RADIUS := 1.05
+const FOOTPRINT_RADIUS := 0.95
 const RangeVisual = preload("res://scripts/tower_range_visual.gd")
 
 @onready var turret_pivot: Node3D = $TurretPivot

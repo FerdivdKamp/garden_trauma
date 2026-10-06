@@ -1,41 +1,43 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://cje6i1vlrnifq"]
 
-[ext_resource type="Script" path="res://scripts/tower_placement.gd" id="1_placement"]
+[ext_resource type="Script" uid="uid://c8m2vb7a2xmjv" path="res://scripts/tower_placement.gd" id="1_placement"]
 [ext_resource type="PackedScene" path="res://scenes/placement_path.tscn" id="2_path"]
-[ext_resource type="Script" path="res://scripts/placement_shot_effects.gd" id="3_effects"]
+[ext_resource type="Script" uid="uid://lj17pqkd0jk8" path="res://scripts/placement_shot_effects.gd" id="3_effects"]
+[ext_resource type="Script" uid="uid://byrr5srpyptff" path="res://scripts/level_grid.gd" id="4_grid"]
 
-[node name="TowerPlacement" type="Node3D"]
+[node name="TowerPlacement" type="Node3D" unique_id=1227784002]
 script = ExtResource("1_placement")
 
-[node name="Ground" type="MeshInstance3D" parent="."]
+[node name="LevelGrid" type="Node3D" parent="." unique_id=535366418]
+script = ExtResource("4_grid")
 
-[node name="PlacementPath" parent="." instance=ExtResource("2_path")]
+[node name="PlacementPath" parent="." unique_id=1922296270 instance=ExtResource("2_path")]
 
-[node name="PlacedTowers" type="Node3D" parent="."]
+[node name="PlacedTowers" type="Node3D" parent="." unique_id=1428990228]
 
-[node name="ShotEffects" type="Node3D" parent="."]
+[node name="ShotEffects" type="Node3D" parent="." unique_id=2054604004]
 script = ExtResource("3_effects")
 
-[node name="Preview" type="Node3D" parent="."]
+[node name="Preview" type="Node3D" parent="." unique_id=1866902016]
 
-[node name="Sun" type="DirectionalLight3D" parent="."]
-rotation_degrees = Vector3(-55, -35, 0)
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1309781056]
+transform = Transform3D(0.81915206, 0.46984634, -0.32898995, 0, 0.57357645, 0.81915206, 0.57357645, -0.6710101, 0.46984634, 0, 0, 0)
 light_energy = 1.5
 
-[node name="Camera" type="Camera3D" parent="."]
-position = Vector3(0, 27, 23)
+[node name="Camera" type="Camera3D" parent="." unique_id=2074895266]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 27, 23)
 current = true
 
-[node name="UI" type="CanvasLayer" parent="."]
+[node name="UI" type="CanvasLayer" parent="." unique_id=2012571442]
 
-[node name="Palette" type="PanelContainer" parent="UI"]
+[node name="Palette" type="PanelContainer" parent="UI" unique_id=1065751946]
 offset_left = 12.0
 offset_top = 12.0
 offset_right = 365.0
 offset_bottom = 300.0
 
-[node name="EnemyPanel" type="PanelContainer" parent="UI"]
-anchors_preset = 3
+[node name="EnemyPanel" type="PanelContainer" parent="UI" unique_id=916771041]
+anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0

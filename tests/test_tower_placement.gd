@@ -14,13 +14,11 @@ func _run() -> void:
 	await process_frame
 
 	var path := demo.get_node("PlacementPath")
-	_check(path.curve.point_count == 4, "Path has editable curve points")
+	_check(path.curve.point_count == demo.grid.route.size(), "Enemy path follows the level route")
 	_check(not demo.can_place_at(Vector3(0, 0, -6)), "Path blocks tower placement")
 	_check(demo.can_place_at(Vector3(-8, 0, 8)), "Open ground allows placement")
-	_check(not demo.can_place_at(Vector3(18, 0, 12)), "Tower footprint stays inside ground")
-	path.path_width = 8.0
-	_check(not demo.can_place_at(Vector3(-8, 0, -1)), "Changing width changes blocked area")
-	path.path_width = 3.0
+	_check(not demo.can_place_at(Vector3(20, 0, 12)), "Outside grid blocks placement")
+	_check(not demo.can_place_at(demo.grid.grid_to_world(Vector2i(5, 4))), "Rock tile blocks placement")
 
 	demo._select_tower(1)
 	_check(demo.preview != null and demo.preview.is_preview, "Selecting a tile creates a preview")
@@ -32,6 +30,7 @@ func _run() -> void:
 	_check(preview_vertices.size() > 3 and is_zero_approx(Vector2(preview_vertices[0].x, preview_vertices[0].z).length()), "Preview detection range is filled")
 	demo.place_tower(Vector3(-8, 0, 8))
 	_check(demo.placed_towers.get_child_count() == 1, "Click places a tower")
+	_check(demo.placed_towers.get_child(0).position == demo.grid.grid_to_world(demo.grid.world_to_grid(Vector3(-8, 0, 8))), "Tower snaps to its tile center")
 	_check(not demo.can_place_at(Vector3(-7, 0, 8)), "Towers cannot overlap")
 	demo.place_tower(Vector3(-7, 0, 8))
 	_check(demo.placed_towers.get_child_count() == 1, "Invalid placement creates no tower")

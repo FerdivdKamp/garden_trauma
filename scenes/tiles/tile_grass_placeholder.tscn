@@ -1,0 +1,23 @@
+[gd_scene load_steps=4 format=3]
+
+[sub_resource type="BoxMesh" id="ground"]
+size = Vector3(2, 0.2, 2)
+
+[sub_resource type="StandardMaterial3D" id="green"]
+albedo_color = Color(0.27, 0.49, 0.27, 1)
+roughness = 1.0
+
+[sub_resource type="BoxMesh" id="tuft"]
+size = Vector3(0.12, 0.3, 0.12)
+
+[node name="TileGrassPlaceholder" type="Node3D"]
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+position = Vector3(0, -0.1, 0)
+mesh = SubResource("ground")
+material_override = SubResource("green")
+
+[node name="GrassTuftPlaceholder" type="MeshInstance3D" parent="."]
+position = Vector3(-0.48, 0.15, 0.37)
+mesh = SubResource("tuft")
+material_override = SubResource("green")

@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3]
+
+[sub_resource type="BoxMesh" id="ground"]
+size = Vector3(2, 0.2, 2)
+
+[sub_resource type="StandardMaterial3D" id="sand"]
+albedo_color = Color(0.72, 0.59, 0.38, 1)
+roughness = 1.0
+
+[node name="TilePathSandPlaceholder" type="Node3D"]
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+position = Vector3(0, -0.1, 0)
+mesh = SubResource("ground")
+material_override = SubResource("sand")
