@@ -219,6 +219,35 @@ The document should be written for someone learning Blender/Godot and should inc
 - Basic export steps are documented.
 - The process does not require custom tooling.
 
+### Optional asset helper
+
+`tools/asset_pipeline.py` adds folder setup and export commands, plus a small desktop
+window. Python 3 is required; the window uses Tkinter from the standard library.
+Blender must be on `PATH`, or its executable must be selected in the window or
+passed with `--blender-exe`. Run these commands from the repository root:
+
+```powershell
+python tools/asset_pipeline.py init
+python tools/asset_pipeline.py init --blender
+python tools/asset_pipeline.py init --godot
+python tools/asset_pipeline.py export art/blender/towers/toy_tank.blend
+python tools/asset_pipeline.py gui
+```
+
+The CLI and window use the same folder and export logic. This repository is itself
+the Godot project, so the output is `assets/models/towers/toy_tank.glb`, without
+the example's extra `game/` directory. The helper creates the matching output
+folder during export. It replaces an existing `.glb` only after Blender finishes
+writing a new file successfully.
+
+Save each `.blend` directly in one of the four `art/blender/` category folders,
+using a lowercase snake_case filename. To limit the exported objects, put them
+in a Blender collection named `Export`. If there is no such collection, the
+helper exports visible geometry, armatures, and empties from the active scene.
+Cameras and lights are excluded. Check the result in Godot after export for
+scale, orientation, materials, and animation as needed; the helper does not
+correct the source asset.
+
 ---
 
 # V2 — Asset validation and consistency
