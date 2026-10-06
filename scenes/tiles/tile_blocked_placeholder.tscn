@@ -1,0 +1,27 @@
+[gd_scene load_steps=5 format=3]
+
+[sub_resource type="BoxMesh" id="ground"]
+size = Vector3(2, 0.2, 2)
+
+[sub_resource type="BoxMesh" id="obstacle"]
+size = Vector3(1.45, 0.8, 1.45)
+
+[sub_resource type="StandardMaterial3D" id="base"]
+albedo_color = Color(0.31, 0.35, 0.29, 1)
+roughness = 1.0
+
+[sub_resource type="StandardMaterial3D" id="rock"]
+albedo_color = Color(0.43, 0.45, 0.42, 1)
+roughness = 1.0
+
+[node name="TileBlockedPlaceholder" type="Node3D"]
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+position = Vector3(0, -0.1, 0)
+mesh = SubResource("ground")
+material_override = SubResource("base")
+
+[node name="RockObstaclePlaceholder" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.4, 0)
+mesh = SubResource("obstacle")
+material_override = SubResource("rock")

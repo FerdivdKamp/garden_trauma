@@ -33,7 +33,6 @@ func _ready() -> void:
 	tower_definitions = DefinitionLoader.load_towers(DefinitionLoader.TOWER_OVERRIDE_DIR)
 	_migrate_legacy_tower_saves()
 	$Camera.look_at(Vector3.ZERO, Vector3.UP)
-	_build_ground()
 	_build_pawn()
 	_build_ui()
 	_load_tower()
@@ -63,12 +62,6 @@ func _process(delta: float) -> void:
 		_update_pawn_color()
 	_update_status()
 
-
-func _build_ground() -> void:
-	var ground_mesh := PlaneMesh.new()
-	ground_mesh.size = Vector2(36.0, 36.0)
-	$Ground.mesh = ground_mesh
-	$Ground.material_override = _material(Color("384b3b"))
 
 func _build_pawn() -> void:
 	var sphere := SphereMesh.new()

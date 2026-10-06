@@ -5,12 +5,14 @@ const ENEMY_SCENE: PackedScene = preload("res://scenes/placement_enemy.tscn")
 const PlacementEnemy = preload("res://scripts/placement_enemy.gd")
 const PlacementTowerAttack = preload("res://scripts/placement_tower_attack.gd")
 const ShotEffects = preload("res://scripts/placement_shot_effects.gd")
+const TowerVisual = preload("res://scripts/tower_visual.gd")
+const TileGrid = preload("res://scripts/level_grid.gd")
 const TOWER_IDS := ["toy_tank", "double_tank", "lightning_tower"]
-const GROUND_HALF_SIZE := 18.0
-const TOWER_RADIUS := 1.05
+const TOWER_RADIUS := TowerVisual.FOOTPRINT_RADIUS
 
 @onready var camera: Camera3D = $Camera
 @onready var path: Path3D = $PlacementPath
+@onready var grid: TileGrid = $LevelGrid
 @onready var placed_towers: Node3D = $PlacedTowers
 @onready var shot_effects: ShotEffects = $ShotEffects
 @onready var preview_holder: Node3D = $Preview
@@ -44,12 +46,7 @@ func _ready() -> void:
 	red_speed = (unit_definitions["red_sphere"] as UnitDefinition).speed
 	blue_speed = (unit_definitions["blue_sphere"] as UnitDefinition).speed
 	camera.look_at(Vector3.ZERO, Vector3.UP)
-	var ground_mesh := PlaneMesh.new()
-	ground_mesh.size = Vector2.ONE * GROUND_HALF_SIZE * 2.0
-	$Ground.mesh = ground_mesh
-	var ground_material := StandardMaterial3D.new()
-	ground_material.albedo_color = Color("384b3b")
-	$Ground.material_override = ground_material
+	_setup_route()
 	_build_ui()
 	spawn_enemy()
 
@@ -62,9 +59,9 @@ func _process(_delta: float) -> void:
 		return
 	preview.visible = has_ground_point
 	if has_ground_point:
-		preview.position = ground_point
+		preview.position = grid.grid_to_world(grid.world_to_grid(ground_point))
 		preview.set_placement_valid(can_place_at(ground_point))
-		status.text = "Click to place" if can_place_at(ground_point) else "Blocked: path, edge, or another tower"
+		status.text = "Click to place" if can_place_at(ground_point) else "Blocked: path, rock, edge, or another tower"
 	else:
 		status.text = "Move over the ground to place"
 
@@ -72,6 +69,17 @@ func _process(_delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		_select_tower(-1)
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_G:
+		grid.show_grid = not grid.show_grid
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_C:
+		grid.show_coordinates = not grid.show_coordinates
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_R:
+		grid.show_route = not grid.show_route
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_I:
+		_update_cursor(get_viewport().get_mouse_position())
+		if has_ground_point:
+			var cell := grid.world_to_grid(ground_point)
+			print("Tile %s: %s, buildable=%s, walkable=%s" % [cell, grid.terrain_at(cell), grid.is_buildable(cell), grid.is_walkable(cell)])
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		_update_cursor(event.position)
 		if preview != null and has_ground_point and can_place_at(ground_point):
@@ -121,15 +129,23 @@ func _update_hovered_tower(screen_position: Vector2) -> void:
 
 
 func can_place_at(point: Vector3) -> bool:
-	if absf(point.x) > GROUND_HALF_SIZE - TOWER_RADIUS or absf(point.z) > GROUND_HALF_SIZE - TOWER_RADIUS:
-		return false
-	if path.blocks_circle(point, TOWER_RADIUS):
+	var cell := grid.world_to_grid(point)
+	if not grid.is_buildable(cell):
 		return false
 	for tower in placed_towers.get_children():
-		var delta := Vector2(point.x - tower.position.x, point.z - tower.position.z)
-		if delta.length() < TOWER_RADIUS * 2.0:
+		if grid.world_to_grid(tower.position) == cell:
 			return false
 	return true
+
+
+func _setup_route() -> void:
+	# PathFollow3D still drives the existing enemies. Its curve now comes from
+	# the level's ordered tile route, so there is one source of path truth.
+	var curve := Curve3D.new()
+	for cell in grid.route:
+		curve.add_point(grid.grid_to_world(cell))
+	path.curve = curve
+	path.path_width = TileGrid.TILE_SIZE
 
 
 func place_tower(point: Vector3) -> void:
@@ -137,7 +153,7 @@ func place_tower(point: Vector3) -> void:
 		return
 	var tower := TOWER_SCENE.instantiate()
 	tower.set_tower_type(selected_type)
-	tower.position = point
+	tower.position = grid.grid_to_world(grid.world_to_grid(point))
 	placed_towers.add_child(tower)
 	var definition := tower_definitions[TOWER_IDS[selected_type]] as TowerDefinition
 	tower.set_ranges(definition.attack_range, definition.detection_range)
@@ -240,7 +256,7 @@ func _build_ui() -> void:
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(status)
 	var help := Label.new()
-	help.text = "Green range: attack   Yellow range: detection\nTan path: no towers\nRight-click or Esc: empty your hand"
+	help.text = "Green range: attack   Yellow range: detection\nSand and rocks: no towers\nG grid  C coords  R route  I inspect\nRight-click or Esc: empty your hand"
 	column.add_child(help)
 	_build_enemy_ui()
 

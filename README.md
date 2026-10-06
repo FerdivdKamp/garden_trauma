@@ -32,14 +32,25 @@ Use the tower selector to switch between single and double barrels, each backed 
 
 ## Tower placement (`scenes/tower_placement.tscn`)
 
-Click a single or double barrel tile, move the translucent preview over the ground, then click to place towers. The preview shows both filled ranges; hover over a placed tower to see its ranges too. A red preview means the position is blocked by the tan path, the ground edge, or another tower. Keep clicking to place more; press **Esc** or right-click to clear the selected tile. Select the `PlacementPath` node in the editor to adjust `path_width` or edit its `Curve3D` route.
+Click a tower button, move the translucent preview over a grass tile, then click to place it at that tile's center. The preview shows both filled ranges; hover over a placed tower to see its ranges too. Sand, rocks, and occupied tiles reject placement. Keep clicking to place more; press **Esc** or right-click to clear the selection.
 
-One red enemy starts on the path. The enemy panel lets you choose a red or blue sphere, spawn more, reset the enemies, and adjust each type's movement speed and visual scale. The blue sphere starts slightly larger and has 75 health; red has 50. Each enemy's health appears in the panel. Placed towers detect enemies within 9 units, turn at 90 degrees per second, and deal 10 damage once per second within 6 units when aimed. The reset button removes all enemies and creates one fresh enemy of the selected type; placed towers remain in place. The enemy uses `PathFollow3D` under `PlacementPath`, so editing the curve also changes its route.
+One red enemy starts on the path. The enemy panel lets you choose a red or blue sphere, spawn more, reset the enemies, and adjust each type's movement speed and visual scale. The blue sphere starts slightly larger and has 75 health; red has 50. Each enemy's health appears in the panel. Placed towers detect enemies within 9 units, turn at 90 degrees per second, and deal 10 damage once per second within 6 units when aimed. The reset button removes all enemies and creates one fresh enemy of the selected type; placed towers remain in place. Enemies use `PathFollow3D` under `PlacementPath`; the route in the level JSON builds its curve.
+
+## Tile levels
+
+See [Build a tile level](build_tile_level.md) for a short step-by-step guide and suggested tooling improvements.
+
+`levels/data/garden_test_01.json` is the 20 by 20 example level used by both scenes. `tiles` has one string per row, from low Z to high Z: `.` is buildable grass, `=` is walkable sand, `#` is blocked rock, `S` is the spawn sand tile, and `O` is the objective sand tile. The `spawn`, `objective`, and ordered `route` use integer `[x, z]` tile coordinates. Consecutive route cells must share an edge; the first and last cells must match spawn and objective. Invalid data reports a specific error when the scene loads.
+
+`LevelGrid` owns the shared `TILE_SIZE = 2.0` and `TILE_HEIGHT = 0.2` values. It centers the map on the world origin: on a 20 by 20 map, tile `[0, 0]` is at world `(-19, 0, -19)`, tile `[1, 0]` is at `(-17, 0, -19)`, and the tile top is at Y = 0. Each terrain uses a named placeholder scene under `scenes/tiles/`. Set a scene's `LevelGrid.level_file` property to use another level; the placement scene generates its enemy curve from that level's route on startup.
+
+In the placement scene, press **G** for the grid lines, **C** for tile coordinates, **R** for the ordered route, and **I** to print the tile under the cursor. The `LevelGrid` node also has Inspector toggles for these overlays. Press **F6** on either scene to run it directly. The tower demo uses the same tile grid as its floor while keeping its standalone tower and pawn controls.
 
 Run the unit tests from this directory:
 
 ```powershell
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_tower_rules.gd
+& 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_level_grid.gd
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_tower_demo.gd
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_tower_placement.gd
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_placement_combat.gd
