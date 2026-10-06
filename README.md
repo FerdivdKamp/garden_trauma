@@ -1,5 +1,13 @@
 # Tower playground
 
+## Blender asset helper
+
+The optional [asset pipeline](asset_pipeline.md) tool creates the Blender source and
+Godot model folders and exports `.blend` files to `.glb`. Run
+`python tools/asset_pipeline.py gui` for its small desktop window, or use
+`python tools/asset_pipeline.py init` and `python tools/asset_pipeline.py export <file.blend>`
+from a terminal. See the pipeline document for folder and export conventions.
+
 ## Tower and unit data
 
 Gameplay definitions live in one JSON file per type under `data/towers/` and `data/units/`. To add a type, copy a nearby file, give it a unique lowercase `id` (letters, digits, underscores), and edit its values. Keep the `$schema` line: VS Code uses it to validate fields and offer completion. The corresponding schemas are in `data/schemas/`.
