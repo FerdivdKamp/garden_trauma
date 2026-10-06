@@ -56,6 +56,11 @@ func _run() -> void:
 	_check(first_tower.get_node("RangeVisual").visible, "Hover still shows ranges with an empty hand")
 	demo._select_tower(0)
 	_check(demo.selected_type == 0 and demo.tower_buttons[0].button_pressed, "Clicking a tile selects a builder again")
+	demo._select_tower(2)
+	demo.place_tower(Vector3(0, 0, 8))
+	var lightning_tower := demo.placed_towers.get_child(2) as Node3D
+	_check(demo.tower_buttons.size() == 3 and lightning_tower.tower_type == 2, "Lightning tower is selectable and placeable")
+	_check(lightning_tower.get_node("TurretPivot/Orb/LightningOrigin") != null, "Lightning orb has a strike origin")
 
 	if failures == 0:
 		print("Tower placement tests passed")

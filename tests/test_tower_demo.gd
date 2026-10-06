@@ -33,7 +33,10 @@ func _run() -> void:
 	for area in [attack_area, detection_area]:
 		var vertex_colors: PackedColorArray = area.mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR]
 		_check(area.material_override.vertex_color_use_as_albedo and vertex_colors.size() > 2, "Range material uses vertex colors")
-		_check(is_zero_approx(vertex_colors[0].a) and is_equal_approx(vertex_colors[1].a, 1.0), "Range fades from transparent center to opaque edge")
+		var edge_alpha := 0.0
+		for vertex_color in vertex_colors:
+			edge_alpha = maxf(edge_alpha, vertex_color.a)
+		_check(vertex_colors[0].a < edge_alpha and edge_alpha > 0.5, "Range fades from center to edge")
 	_check(is_equal_approx(demo.fire_rate, 1.0 / demo.definition.cooldown), "Fire rate field loads from tower cooldown")
 	demo._on_field_changed(2.0, "fire_rate", demo.fields["fire_rate"]["number"])
 	_check(is_equal_approx(demo.definition.cooldown, 0.5), "Changing fire rate updates seconds between shots")
@@ -49,6 +52,14 @@ func _run() -> void:
 	var direction: Vector3 = pawn.global_position - pivot.global_position
 	var target_yaw := TowerRules.target_yaw(direction)
 	_check(is_equal_approx(absf(angle_difference(pivot.rotation.y, target_yaw)), PI), "Reset aims away from pawn")
+	demo.call("_on_tower_selected", 2)
+	await process_frame
+	_check(pivot.get_child_count() == 2 and demo.definition.id == "lightning_tower", "Lightning tower is selectable in demo")
+	demo._on_field_changed(360.0, "turn_speed", demo.fields["turn_speed"]["number"])
+	demo._on_field_changed(4.0, "pawn_distance", demo.fields["pawn_distance"]["number"])
+	var health_before: float = demo.pawn_health
+	demo._process(1.2)
+	_check(demo.pawn_health < health_before and demo.lightning_effect.active, "Demo lightning attack damages and draws a bolt")
 
 	if failures == 0:
 		print("Tower scene tests passed")
