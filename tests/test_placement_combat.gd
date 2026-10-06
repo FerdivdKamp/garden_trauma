@@ -45,6 +45,11 @@ func _run() -> void:
 	attack.definition.turn_speed = 360.0
 	attack._process(1.0)
 	_check(is_equal_approx(red.health, 40.0), "Tower damages nearest enemy in attack range")
+	_check(demo.shot_effects.get_node_or_null("LaserBeam") != null, "Single barrel draws a laser beam")
+	var beam := demo.shot_effects.get_node_or_null("LaserBeam") as MeshInstance3D
+	_check(beam != null and beam.mesh == demo.shot_effects.laser_template.mesh, "Laser reuses its preloaded mesh")
+	var red_hit := demo.shot_effects.get_node_or_null("RedHit") as GPUParticles3D
+	_check(red_hit != null and red_hit.process_material == demo.shot_effects.red_hit_template.process_material, "Laser reuses red hit particles")
 	_check(is_equal_approx(blue.health, 75.0), "Out-of-range enemy takes no damage")
 	_check(demo.enemy_health_label.text.contains("40 / 50 HP"), "Health display updates after damage")
 	attack._process(0.2)
@@ -59,10 +64,28 @@ func _run() -> void:
 	var stopped_at := red.progress
 	red._process(1.0)
 	_check(is_equal_approx(red.progress, stopped_at), "Defeated enemy stops moving")
+	# The shell's mesh travels over time and is removed when its tween reaches the hit.
+	demo.shot_effects.fire_shell(Vector3.ZERO, Vector3(1.0, 0.0, 0.0), 10.0)
+	_check(demo.shot_effects.get_node_or_null("Shell") != null, "Shell is visible during flight")
+	_check(demo.shot_effects.get_node_or_null("MuzzleSmoke") != null, "Shell creates muzzle smoke")
+	var smoke := demo.shot_effects.get_node_or_null("MuzzleSmoke") as GPUParticles3D
+	_check(smoke != null and smoke.process_material == demo.shot_effects.smoke_template.process_material, "Smoke reuses its particle material")
+	await create_timer(0.25).timeout
+	await process_frame
+	_check(demo.shot_effects.get_node_or_null("Shell") == null, "Shell disappears on impact")
 
 	demo.reset_enemies()
 	_check(path.get_child_count() == 2, "Reset leaves one enemy and the path surface")
-	_check((path.get_child(1) as PlacementEnemy).health == 75.0, "Reset restores selected enemy health")
+	var fresh_blue := path.get_child(1) as PlacementEnemy
+	_check(fresh_blue.health == 75.0, "Reset restores selected enemy health")
+	demo._select_tower(2)
+	demo.place_tower(Vector3(-8.0, 0.0, -2.5))
+	var lightning_attack := demo.placed_towers.get_child(1).get_node("Attack") as PlacementTowerAttack
+	fresh_blue.movement_speed = 0.0
+	fresh_blue.progress = 6.0
+	lightning_attack.definition.turn_speed = 360.0
+	lightning_attack._process(1.2)
+	_check(fresh_blue.health < 75.0 and demo.shot_effects.lightning_pool[0].active, "Placed lightning tower damages and draws a bolt")
 	if failures == 0:
 		print("Placement combat tests passed")
 	quit(1 if failures > 0 else 0)

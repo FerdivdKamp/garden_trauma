@@ -4,12 +4,15 @@ const TOWER_SCENE: PackedScene = preload("res://scenes/tower_visual.tscn")
 const ENEMY_SCENE: PackedScene = preload("res://scenes/placement_enemy.tscn")
 const PlacementEnemy = preload("res://scripts/placement_enemy.gd")
 const PlacementTowerAttack = preload("res://scripts/placement_tower_attack.gd")
+const ShotEffects = preload("res://scripts/placement_shot_effects.gd")
+const TOWER_IDS := ["toy_tank", "double_tank", "lightning_tower"]
 const GROUND_HALF_SIZE := 18.0
 const TOWER_RADIUS := 1.05
 
 @onready var camera: Camera3D = $Camera
 @onready var path: Path3D = $PlacementPath
 @onready var placed_towers: Node3D = $PlacedTowers
+@onready var shot_effects: ShotEffects = $ShotEffects
 @onready var preview_holder: Node3D = $Preview
 @onready var palette: PanelContainer = $UI/Palette
 @onready var enemy_panel: PanelContainer = $UI/EnemyPanel
@@ -37,7 +40,7 @@ func _ready() -> void:
 	# Load once; scene nodes use typed definitions instead of JSON dictionaries.
 	tower_definitions = DefinitionLoader.load_towers(DefinitionLoader.TOWER_OVERRIDE_DIR)
 	unit_definitions = DefinitionLoader.load_units()
-	assert(tower_definitions.has("toy_tank") and tower_definitions.has("double_tank") and unit_definitions.has("red_sphere") and unit_definitions.has("blue_sphere"))
+	assert(tower_definitions.has("toy_tank") and tower_definitions.has("double_tank") and tower_definitions.has("lightning_tower") and unit_definitions.has("red_sphere") and unit_definitions.has("blue_sphere"))
 	red_speed = (unit_definitions["red_sphere"] as UnitDefinition).speed
 	blue_speed = (unit_definitions["blue_sphere"] as UnitDefinition).speed
 	camera.look_at(Vector3.ZERO, Vector3.UP)
@@ -136,12 +139,13 @@ func place_tower(point: Vector3) -> void:
 	tower.set_tower_type(selected_type)
 	tower.position = point
 	placed_towers.add_child(tower)
-	var definition := tower_definitions["toy_tank" if selected_type == 0 else "double_tank"] as TowerDefinition
+	var definition := tower_definitions[TOWER_IDS[selected_type]] as TowerDefinition
 	tower.set_ranges(definition.attack_range, definition.detection_range)
 	var attack := PlacementTowerAttack.new()
 	attack.name = "Attack"
 	attack.definition = definition
 	attack.enemies = path
+	attack.effects = shot_effects
 	tower.add_child(attack)
 
 
@@ -207,7 +211,7 @@ func _select_tower(tower_type: int) -> void:
 	preview.set_tower_type(tower_type)
 	preview.set_preview(true)
 	preview_holder.add_child(preview)
-	var definition := tower_definitions["toy_tank" if tower_type == 0 else "double_tank"] as TowerDefinition
+	var definition := tower_definitions[TOWER_IDS[tower_type]] as TowerDefinition
 	preview.set_ranges(definition.attack_range, definition.detection_range)
 	preview.set_ranges_visible(true)
 	status.text = "Move over the ground to place"
@@ -223,10 +227,10 @@ func _build_ui() -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	column.add_child(row)
-	for index in 2:
+	for index in TOWER_IDS.size():
 		var tile := Button.new()
-		tile.text = "SINGLE\nBARREL" if index == 0 else "DOUBLE\nBARREL"
-		tile.custom_minimum_size = Vector2(125, 100)
+		tile.text = ["SINGLE\nBARREL", "DOUBLE\nBARREL", "LIGHTNING\nTOWER"][index]
+		tile.custom_minimum_size = Vector2(105, 100)
 		tile.toggle_mode = true
 		tile.pressed.connect(_select_tower.bind(index))
 		row.add_child(tile)

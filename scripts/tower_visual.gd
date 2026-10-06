@@ -54,7 +54,12 @@ func _build_base() -> void:
 
 func _build_turret() -> void:
 	for child in turret_pivot.get_children():
+		turret_pivot.remove_child(child)
 		child.queue_free()
+	if tower_type == 2:
+		_build_lightning_head()
+		_update_materials(true)
+		return
 	var cap_mesh := CylinderMesh.new()
 	cap_mesh.top_radius = 0.55
 	cap_mesh.bottom_radius = 0.65
@@ -68,9 +73,45 @@ func _build_turret() -> void:
 		var barrel_mesh := BoxMesh.new()
 		barrel_mesh.size = Vector3(0.22, 0.22, 1.45)
 		var barrel := _mesh_instance(barrel_mesh, Color("e5c46b"))
+		barrel.name = "Barrel" if tower_type == 0 else ("LeftBarrel" if offset < 0.0 else "RightBarrel")
 		barrel.position = Vector3(offset, 0.17, -0.85)
 		turret_pivot.add_child(barrel)
+		# The marker is in barrel-local space, at its front face. It follows turret rotation.
+		var muzzle := Marker3D.new()
+		muzzle.name = "Muzzle"
+		muzzle.position.z = -0.725
+		barrel.add_child(muzzle)
 	_update_materials(true)
+
+
+func _build_lightning_head() -> void:
+	var column_mesh := CylinderMesh.new()
+	column_mesh.top_radius = 0.21
+	column_mesh.bottom_radius = 0.32
+	column_mesh.height = 1.3
+	var column := _mesh_instance(column_mesh, Color("627890"))
+	column.name = "Column"
+	column.position.y = 0.55
+	turret_pivot.add_child(column)
+	var orb_mesh := SphereMesh.new()
+	orb_mesh.radius = 0.38
+	orb_mesh.height = 0.76
+	var orb := _mesh_instance(orb_mesh, Color("8beaff"))
+	orb.name = "Orb"
+	orb.position.y = 1.32
+	turret_pivot.add_child(orb)
+	var origin := Marker3D.new()
+	origin.name = "LightningOrigin"
+	origin.position.y = 0.38
+	orb.add_child(origin)
+
+
+func get_muzzle_position(barrel_index: int = 0) -> Vector3:
+	if tower_type == 2:
+		return (turret_pivot.get_node("Orb/LightningOrigin") as Marker3D).global_position
+	var barrel_name := "Barrel" if tower_type == 0 else ("LeftBarrel" if barrel_index == 0 else "RightBarrel")
+	var muzzle := turret_pivot.get_node("%s/Muzzle" % barrel_name) as Marker3D
+	return muzzle.global_position
 
 
 func _mesh_instance(shape: Mesh, color: Color) -> MeshInstance3D:

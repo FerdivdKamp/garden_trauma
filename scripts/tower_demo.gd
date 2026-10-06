@@ -1,9 +1,14 @@
 extends Node3D
 
 const PAWN_SAVE_PATH := "user://pawn.json"
+const TOWER_IDS := ["toy_tank", "double_tank", "lightning_tower"]
+const TowerVisual = preload("res://scripts/tower_visual.gd")
+const LightningEffect = preload("res://scripts/lightning_effect.gd")
 
+@onready var tower_visual: TowerVisual = $Tower
 @onready var turret_pivot: Node3D = $Tower/TurretPivot
 @onready var pawn: Node3D = $Pawn
+@onready var lightning_effect: LightningEffect = $LightningEffect
 @onready var settings_panel: PanelContainer = $UI/SettingsPanel
 
 var tower_type := 0
@@ -51,6 +56,8 @@ func _process(delta: float) -> void:
 	if shot_clock >= definition.cooldown and aimed and pawn_health > 0.0 and \
 			TowerRules.can_attack(pawn_distance, attack_radius, detection_radius):
 		shot_clock = 0.0
+		if tower_type == 2:
+			lightning_effect.strike(tower_visual.get_muzzle_position(), pawn_visual.global_position)
 		pawn_health = TowerRules.health_after_hit(pawn_health, definition.damage)
 		_set_field_without_signal("pawn_health", pawn_health)
 		_update_pawn_color()
@@ -103,6 +110,7 @@ func _build_ui() -> void:
 	tower_selector = OptionButton.new()
 	tower_selector.add_item("Single barrel")
 	tower_selector.add_item("Double barrel")
+	tower_selector.add_item("Lightning tower")
 	tower_selector.item_selected.connect(_on_tower_selected)
 	column.add_child(tower_selector)
 
@@ -234,7 +242,7 @@ func _on_tower_selected(index: int) -> void:
 
 
 func _tower_id() -> String:
-	return "toy_tank" if tower_type == 0 else "double_tank"
+	return TOWER_IDS[tower_type]
 
 
 func _migrate_legacy_tower_saves() -> void:
