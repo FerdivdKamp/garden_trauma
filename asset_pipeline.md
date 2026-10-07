@@ -231,6 +231,7 @@ python tools/asset_pipeline.py init
 python tools/asset_pipeline.py init --blender
 python tools/asset_pipeline.py init --godot
 python tools/asset_pipeline.py export art/blender/towers/toy_tank.blend
+python tools/asset_pipeline.py validate art/blender/environment/garden/tiles/tile_grass4.blend
 python tools/asset_pipeline.py gui
 ```
 
@@ -240,23 +241,67 @@ the example's extra `game/` directory. The helper creates the matching output
 folder during export. It replaces an existing `.glb` only after Blender finishes
 writing a new file successfully.
 
-Save each `.blend` directly in one of the four `art/blender/` category folders,
-using a lowercase snake_case filename. To limit the exported objects, put them
-in a Blender collection named `Export`. If there is no such collection, the
+Save each `.blend` in one of the four `art/blender/` category folders or a
+subfolder beneath one, using a lowercase snake_case filename. Subfolders are
+mirrored under `assets/models/`; for example,
+`art/blender/environment/garden/tiles/tile_grass4.blend` exports to
+`assets/models/environment/garden/tiles/tile_grass4.glb`. To limit the exported
+objects, put them in a Blender collection named `Export`. If there is no such collection, the
 helper exports visible geometry, armatures, and empties from the active scene.
 Cameras and lights are excluded. Check the result in Godot after export for
 scale, orientation, materials, and animation as needed; the helper does not
 correct the source asset.
+Validation runs before export and can also run alone using `validate` or the
+window's **Validate asset** button. It checks generic object and material names,
+mesh geometry, material presence, unapplied scale, and procedural nodes. Tile
+dimensions use faces assigned to a material ending in `Sides`, or vertical side
+faces when no such material exists. Bumps and dips in the top surface do not
+affect the expected `2 x 2 x 0.25` metres. Missing side faces produce a warning
+because their dimensions cannot be checked.
+Warnings allow export; errors such as a mesh with no usable faces stop it.
+Neither command changes the `.blend` file.
+
+V3 also inspects the connected material graph during validation and export.
+For each GLB, export writes a matching sidecar such as
+`assets/models/environment/garden/tiles/tile_grass4.materials.json`.
+The JSON lists materials by name and classifies them as `directly_exportable`,
+`translatable`, or `unsupported`. A direct material is a Principled BSDF linked
+to Material Output with constant Base Color, Metallic, Roughness, and Alpha.
+The supported procedural pattern is Generated coordinates (or an unlinked
+Vector input) → Noise Texture Factor → Color Ramp Color → Principled Base Color.
+Its noise settings, ramp colors and positions, and Principled values are stored
+as raw Blender values for later Godot translation. Other connected graphs are
+marked `unsupported` with a reason. They still get the normal GLB export, but
+their Blender appearance may not survive. `validate` reports classifications
+without writing a sidecar; V3 does not create Godot shaders or materials.
+
+V4 uses `res://tools/godot_material_post_import.gd` as the GLB's Import Script.
+The `tile_grass4.glb.import` file already points to it. For another GLB, set
+**Import → Import Script → Path** to that script and reimport. The script reads
+the matching `.materials.json`, creates a `ShaderMaterial` on each supported
+surface, and uses the shared
+`res://shaders/procedural_noise_color_ramp.gdshader`. It stores the generated
+material inside Godot's imported scene, so reimporting replaces its parameters
+without creating separate material files. Materials marked unsupported or
+directly exportable keep their GLB material.
+
+The shader approximates Blender's 3D Noise Texture with a two-stop linear RGB
+Color Ramp. It transfers Blender's ramp colors and positions, noise scale,
+detail, roughness, lacunarity and distortion, plus Principled roughness and
+metallic. It currently accepts opaque colors and up to eight noise octaves.
+Other ramp shapes and
+transparent materials keep their GLB fallback and produce a warning during
+import. The noise pattern is intentionally approximate; inspect the tile in
+Godot and adjust the Blender source when its artistic intent changes.
+Open `res://examples/grass_material_preview.tscn` and run that scene to view
+the imported tile under a light.
 
 ---
 
 # V2 — Asset validation and consistency
 
-Once the basic workflow is being used, add checks that prevent common modelling/export problems.
-
-This may be implemented as a Blender script, export helper, CI check, or combination thereof.
-
-Do not implement V2 until the V1 conventions have been used enough to know which checks are actually useful.
+The helper now runs validation before export and supports a validate-only command.
+The checks below are possible later additions to that initial validation.
 
 ## Candidate V2 checks
 

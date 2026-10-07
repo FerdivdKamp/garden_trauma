@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 from pathlib import Path
 import queue
@@ -47,8 +48,8 @@ def export_destination(root: Path, source: Path) -> Path:
         relative = source.relative_to(root / "art" / "blender")
     except ValueError as exc:
         raise ValueError("Source must be inside art/blender/<category>/") from exc
-    if len(relative.parts) != 2 or relative.parts[0] not in CATEGORIES:
-        raise ValueError("Source must be directly inside art/blender/<category>/")
+    if len(relative.parts) < 2 or relative.parts[0] not in CATEGORIES:
+        raise ValueError("Source must be inside art/blender/<category>/")
     if not ASSET_NAME.fullmatch(source.stem):
         raise ValueError("Asset filename must use lowercase snake_case and start with a letter")
     return root / "assets" / "models" / relative.parent / (source.stem + ".glb")
@@ -63,27 +64,51 @@ def blender_executable(value: str | None) -> str:
     return executable
 
 
+def run_blender(source: Path, executable: str, *script_args: str) -> tuple[int, str]:
+    result = subprocess.run(
+        [executable, "--background", str(source.resolve()), "--python-exit-code", "1",
+         "--python", str(EXPORT_SCRIPT), "--", *script_args],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", check=False,
+    )
+    output = "\n".join(part for part in (result.stdout.strip(), result.stderr.strip()) if part)
+    return result.returncode, output
+
+
+def validate_asset(root: Path, source: Path, blender_exe: str | None = None) -> str:
+    export_destination(root, source)  # Apply the same source and naming rules as export.
+    executable = blender_executable(blender_exe)
+    returncode, output = run_blender(source, executable, "validate")
+    if returncode != 0:
+        raise RuntimeError(f"Blender validation failed (exit {returncode}).\n{output}")
+    return output
+
+
 def export_asset(root: Path, source: Path, blender_exe: str | None = None) -> tuple[Path, str]:
     destination = export_destination(root, source)
+    manifest_destination = destination.with_suffix(".materials.json")
     executable = blender_executable(blender_exe)
     destination.parent.mkdir(parents=True, exist_ok=True)
     # Blender writes a temporary file so a failed export leaves the previous GLB intact.
     fd, temporary_name = tempfile.mkstemp(suffix=".glb", dir=destination.parent)
     os.close(fd)
     temporary = Path(temporary_name)
+    manifest_fd, manifest_name = tempfile.mkstemp(suffix=".materials.json", dir=destination.parent)
+    os.close(manifest_fd)
+    temporary_manifest = Path(manifest_name)
     try:
-        result = subprocess.run(
-            [executable, "--background", str(source.resolve()), "--python-exit-code", "1",
-             "--python", str(EXPORT_SCRIPT), "--", str(temporary)],
-            capture_output=True, text=True, encoding="utf-8", errors="replace", check=False,
-        )
-        output = "\n".join(part for part in (result.stdout.strip(), result.stderr.strip()) if part)
-        if result.returncode != 0 or not temporary.is_file() or temporary.stat().st_size == 0:
-            raise RuntimeError(f"Blender export failed (exit {result.returncode}).\n{output}")
+        returncode, output = run_blender(source, executable, "export", str(temporary), str(temporary_manifest))
+        if (returncode != 0 or temporary.stat().st_size == 0
+                or temporary_manifest.stat().st_size == 0):
+            raise RuntimeError(f"Blender export failed (exit {returncode}).\n{output}")
+        with temporary_manifest.open(encoding="utf-8") as manifest_file:
+            json.load(manifest_file)
         temporary.replace(destination)
+        temporary_manifest.replace(manifest_destination)
+        output += f"\nMaterial manifest: {manifest_destination}"
         return destination, output
     finally:
         temporary.unlink(missing_ok=True)
+        temporary_manifest.unlink(missing_ok=True)
 
 
 def run_gui(initial_root: Path) -> None:
@@ -158,26 +183,31 @@ def run_gui(initial_root: Path) -> None:
             window.after(100, finish_export)
             return
         export_button.configure(state="normal")
+        validate_button.configure(state="normal")
         write(message)
         if not success:
-            messagebox.showerror("Export failed", message)
+            messagebox.showerror("Asset check failed", message)
 
-    def start_export() -> None:
+    def start_job(export: bool) -> None:
         try:
             root = project_root(root_text.get())
             source = Path(source_text.get())
             export_destination(root, source)
             executable = blender_executable(blender_text.get().strip() or None)
         except (OSError, ValueError) as exc:
-            messagebox.showerror("Export failed", str(exc))
+            messagebox.showerror("Asset check failed", str(exc))
             return
         export_button.configure(state="disabled")
-        write(f"Exporting {source}…")
+        validate_button.configure(state="disabled")
+        write(f"{'Exporting' if export else 'Validating'} {source}…")
 
         def worker() -> None:
             try:
-                destination, output = export_asset(root, source, executable)
-                events.put((True, f"Exported: {destination}\n{output}"))
+                if export:
+                    destination, output = export_asset(root, source, executable)
+                    events.put((True, f"Exported: {destination}\n{output}"))
+                else:
+                    events.put((True, validate_asset(root, source, executable)))
             except (OSError, ValueError, RuntimeError) as exc:
                 events.put((False, str(exc)))
 
@@ -185,7 +215,9 @@ def run_gui(initial_root: Path) -> None:
         window.after(100, finish_export)
 
     ttk.Button(frame, text="Create folders", command=initialize).grid(row=5, column=0, sticky="w", pady=(8, 0))
-    export_button = ttk.Button(frame, text="Export asset", command=start_export)
+    validate_button = ttk.Button(frame, text="Validate asset", command=lambda: start_job(False))
+    validate_button.grid(row=5, column=1, sticky="e", pady=(8, 0))
+    export_button = ttk.Button(frame, text="Export asset", command=lambda: start_job(True))
     export_button.grid(row=5, column=2, sticky="e", pady=(8, 0))
     window.mainloop()
 
@@ -200,6 +232,9 @@ def main() -> int:
     export = subcommands.add_parser("export", help="Export one .blend file to its matching .glb")
     export.add_argument("source", type=Path)
     export.add_argument("--blender-exe", help="Blender executable path if it is not on PATH")
+    validate = subcommands.add_parser("validate", help="Check one .blend file without exporting")
+    validate.add_argument("source", type=Path)
+    validate.add_argument("--blender-exe", help="Blender executable path if it is not on PATH")
     subcommands.add_parser("gui", help="Open the desktop window")
     args = parser.parse_args()
     try:
@@ -213,6 +248,8 @@ def main() -> int:
             if output:
                 print(output)
             print(f"Exported: {destination}")
+        elif args.command == "validate":
+            print(validate_asset(root, args.source, args.blender_exe))
         else:
             run_gui(root)
     except (OSError, ValueError, RuntimeError) as exc:
