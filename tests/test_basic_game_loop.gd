@@ -10,6 +10,11 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	# The headless test runs in a restricted workspace; keep its save isolated.
+	var progress: Variant = root.get_node("LevelProgress")
+	progress.save_path = "res://tests/.basic_game_loop_progress.cfg"
+	progress.completed_ids.clear()
+	progress.selected_level_id = "garden_test_01"
 	var scene := load("res://scenes/tower_placement.tscn") as PackedScene
 	var garden := scene.instantiate()
 	root.add_child(garden)
@@ -98,6 +103,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_check(current_scene != null and current_scene.scene_file_path == "res://scenes/main_menu.tscn" and not paused, "Result returns to main menu")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(progress.save_path))
 	if failures == 0:
 		print("Basic game loop tests passed")
 	quit(1 if failures > 0 else 0)

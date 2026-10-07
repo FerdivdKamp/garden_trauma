@@ -17,6 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+LevelProgress="*res://scripts/level_progress.gd"
 AudioSettings="*res://scripts/audio_settings.gd"
 AudioManager="*res://scripts/audio_manager.gd"
 
