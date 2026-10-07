@@ -13,7 +13,9 @@ func _initialize() -> void:
 func _run() -> void:
 	var scene := load("res://scenes/tower_placement.tscn") as PackedScene
 	var demo := scene.instantiate()
+	demo.debug_mode = true
 	root.add_child(demo)
+	demo.currency = 1000
 	await process_frame
 	var path := demo.path as Path3D
 	var red := path.get_node("Enemy1") as PlacementEnemy

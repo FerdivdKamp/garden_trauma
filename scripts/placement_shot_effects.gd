@@ -135,11 +135,11 @@ func _make_particle_template(template_name: String, color: Color, count: int, li
 	process.color = color
 	if smoke:
 		# The curves change size and opacity over each particle's short lifetime.
-		var scale := Curve.new()
-		scale.add_point(Vector2(0.0, 0.2))
-		scale.add_point(Vector2(1.0, 1.0))
+		var size_curve := Curve.new()
+		size_curve.add_point(Vector2(0.0, 0.2))
+		size_curve.add_point(Vector2(1.0, 1.0))
 		var scale_texture := CurveTexture.new()
-		scale_texture.curve = scale
+		scale_texture.curve = size_curve
 		process.scale_curve = scale_texture
 		var fade := Curve.new()
 		fade.add_point(Vector2(0.0, 1.0))

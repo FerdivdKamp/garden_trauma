@@ -58,6 +58,8 @@ func _run() -> void:
 	_check(current_scene != null and current_scene.scene_file_path == "res://scenes/tower_placement.tscn", "Start loads garden")
 	_check(is_instance_valid(music) and music.get_instance_id() == music_instance_id and music.playing, "Music survives scene change")
 	var garden := current_scene
+	garden.waves.start_next_wave()
+	garden.waves._process(0.0)
 	var enemy := garden.get_node("PlacementPath/Enemy1")
 	_check(enemy.get_node("DestroyedAudio") is AudioStreamPlayer3D and enemy.get_node("ObjectiveAudio").bus == "SFX", "Enemy cues use positional SFX")
 	var tower_scene := load("res://scenes/tower_visual.tscn") as PackedScene
