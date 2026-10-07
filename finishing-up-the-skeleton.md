@@ -25,10 +25,72 @@ The project already has a main menu, a tile-based garden level, three placeable 
 
 ## 3. Close the basic playability gaps
 
-- [ ] Move prototype controls such as enemy speed, scale, and tile debugging behind a debug mode so the normal HUD stays focused on play.
-- [ ] Add a short in-game hint for placing a tower, starting a wave, and the objective's health.
-- [ ] Decide whether one simple tower upgrade is needed for the first complete level; if so, make its cost and effect visible before purchase.
-- [ ] Play through both levels from a fresh save: win, lose, retry, unlock level 2, restart the game, and confirm completion remains saved.
+- [x] Move prototype controls such as enemy speed, scale, and tile debugging behind a debug mode so the normal HUD stays focused on play.
+- [x] Add a short in-game hint for placing a tower, starting a wave, and the objective's health.
+- [x] Decide whether one simple tower upgrade is needed for the first complete level; if so, make its cost and effect visible before purchase.
+- [x] Play through both levels from a fresh save: win, lose, retry, unlock level 2, restart the game, and confirm completion remains saved.
+
+Headless gameplay tests cover the fresh-save, loss, retry, win, unlock, and save-reload paths for both levels. A visual playthrough in the editor remains to be done.
+
+Example upgrades
+{
+  "$schema": "../schemas/tower.schema.json",
+  "id": "double_tank",
+  "name": "Double Barrel Toy Tank",
+  "cost": 120,
+  "detection_range": 9.0,
+  "turn_speed": 90.0,
+  "attack": {
+    "damage": 10,
+    "cooldown": 1.0,
+    "range": 6.0,
+    "projectile_speed": 12.0
+  },
+  "targeting": {
+    "targets": ["ground"],
+    "priority": "nearest"
+  },
+  "damage_type": "physical",
+  "tags": ["projectile", "physical"],
+  "upgrades": [
+    {
+      "id": "reinforced_ammo",
+      "name": "Reinforced Ammo",
+      "cost": 40,
+      "attack": {
+        "damage": 14
+      }
+    },
+    {
+      "id": "rapid_loader",
+      "name": "Rapid Loader",
+      "cost": 60,
+      "attack": {
+        "damage": 18,
+        "cooldown": 0.8
+      }
+    },
+    {
+      "id": "heavy_shells",
+      "name": "Heavy Shells",
+      "cost": 80,
+      "attack": {
+        "damage": 25,
+        "cooldown": 0.7,
+        "range": 7.0
+      }
+    }
+  ]
+}
+
+Add a simple linear tower upgrade system with exactly 3 upgrades per tower.
+Extend tower.schema.json so towers may define an upgrades array. Each upgrade must contain id, name, cost, and an attack object containing one or more explicit replacement values from the normal attack configuration.
+Upgrades are sequential: upgrade 2 requires upgrade 1, and upgrade 3 requires upgrade 2. Do not implement percentage/stat modifiers. An upgrade value replaces the current value; unspecified attack properties remain unchanged.
+Add runtime support for tracking the current upgrade level and applying the next upgrade after its cost is paid. Keep the implementation generic so different towers can have different values without tower-specific code.
+For V1, upgrades may only change fields under attack. Do not yet support branching upgrade paths, special abilities, targeting changes, visual changes, or selling/refunds.
+Add tests for config parsing, upgrade ordering/costs, partial attack overrides, and preventing upgrades beyond level 3.
+
+Clicking the tower should open some ui element that allows to click the upgrade button.
 
 ## Keep outside this skeleton pass
 

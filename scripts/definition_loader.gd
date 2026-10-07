@@ -30,6 +30,8 @@ static func load_tower(path: String) -> TowerDefinition:
 	result.targets = PackedStringArray(data.targeting.targets)
 	result.priority = data.targeting.priority
 	result.tags = PackedStringArray(data.tags)
+	for upgrade in data.get("upgrades", []):
+		result.upgrades.append((upgrade as Dictionary).duplicate(true))
 	return result
 
 
@@ -57,6 +59,9 @@ static func load_towers(override_directory := "") -> Dictionary:
 			if FileAccess.file_exists(path):
 				var override := load_tower(path)
 				if override != null and override.id == id:
+					# Older playground saves predate upgrades; retain the built-in path.
+					if override.upgrades.is_empty():
+						override.upgrades = definitions[id].upgrades.duplicate(true)
 					definitions[id] = override
 	return definitions
 
@@ -69,7 +74,7 @@ static func save_tower_override(definition: TowerDefinition, directory := TOWER_
 		"targeting": {"targets": Array(definition.targets), "priority": definition.priority},
 		"damage_type": definition.damage_type, "bonus_vs_tags": definition.bonus_vs_tags,
 		"tags": Array(definition.tags), "detection_range": definition.detection_range,
-		"turn_speed": definition.turn_speed
+		"turn_speed": definition.turn_speed, "upgrades": definition.upgrades
 	}
 	if not _valid_tower(data):
 		push_error("Cannot save invalid tower definition: %s" % definition.id)
@@ -159,6 +164,24 @@ static func _valid_tower(data: Dictionary) -> bool:
 	for tag in bonuses:
 		if tag not in KNOWN_TAGS or not _number(bonuses[tag], 0.0):
 			return false
+	if data.has("upgrades"):
+		if not data.upgrades is Array or data.upgrades.size() != 3:
+			return false
+		var ids := {}
+		for upgrade in data.upgrades:
+			if not upgrade is Dictionary or not _identity(upgrade) or not _number(upgrade.get("cost"), 1.0, true):
+				return false
+			if ids.has(upgrade.id) or not upgrade.get("attack") is Dictionary or upgrade.attack.is_empty():
+				return false
+			ids[upgrade.id] = true
+			for key in upgrade:
+				if key not in ["id", "name", "cost", "attack"]:
+					return false
+			for key in upgrade.attack:
+				if key not in ["damage", "cooldown", "range", "projectile_speed"]:
+					return false
+				if not _number(upgrade.attack[key], 0.0, false, key != "damage"):
+					return false
 	return true
 
 

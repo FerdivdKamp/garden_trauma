@@ -11,6 +11,26 @@ var enemies: Node3D
 var effects: ShotEffects
 var shot_clock := 0.0
 var next_barrel := 0
+var upgrade_level := 0
+
+
+func next_upgrade() -> Dictionary:
+	if definition == null or upgrade_level >= definition.upgrades.size():
+		return {}
+	return definition.upgrades[upgrade_level]
+
+
+func buy_next_upgrade(available_currency: int) -> int:
+	var upgrade := next_upgrade()
+	if upgrade.is_empty() or available_currency < int(upgrade.cost):
+		return 0
+	# This node owns a copy of the definition, so other placed towers stay unchanged.
+	for key in upgrade.attack:
+		var property_name: String = "attack_range" if key == "range" else key
+		definition.set(property_name, upgrade.attack[key])
+	upgrade_level += 1
+	(get_parent() as TowerVisual).set_ranges(definition.attack_range, definition.detection_range)
+	return int(upgrade.cost)
 
 
 func _process(delta: float) -> void:

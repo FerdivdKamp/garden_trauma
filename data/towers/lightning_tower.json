@@ -16,5 +16,10 @@
     "priority": "nearest"
   },
   "damage_type": "electric",
-  "tags": ["electric"]
+  "tags": ["electric"],
+  "upgrades": [
+    {"id": "charged_coil", "name": "Charged Coil", "cost": 50, "attack": {"damage": 17}},
+    {"id": "fast_discharge", "name": "Fast Discharge", "cost": 70, "attack": {"cooldown": 0.9}},
+    {"id": "storm_coil", "name": "Storm Coil", "cost": 90, "attack": {"damage": 24, "range": 7.0}}
+  ]
 }
