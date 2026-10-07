@@ -1,0 +1,7 @@
+{
+  "waves": [
+    {"enemy_id": "red_sphere", "count": 6, "spawn_interval": 1.4, "break_seconds": 5.0},
+    {"enemy_id": "blue_sphere", "count": 5, "spawn_interval": 1.6, "break_seconds": 5.0},
+    {"enemy_id": "red_sphere", "count": 8, "spawn_interval": 1.1, "break_seconds": 0.0}
+  ]
+}

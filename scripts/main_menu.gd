@@ -1,6 +1,6 @@
 extends Control
 
-const GARDEN_LEVEL := "res://scenes/tower_placement.tscn"
+const LEVEL_SELECT := "res://scenes/level_select.tscn"
 
 @onready var menu: VBoxContainer = $Center/Menu
 @onready var options_panel: PanelContainer = $Center/OptionsPanel
@@ -27,7 +27,7 @@ func _ready() -> void:
 
 
 func _start() -> void:
-	get_tree().change_scene_to_file(GARDEN_LEVEL)
+	get_tree().change_scene_to_file(LEVEL_SELECT)
 
 
 func _show_options() -> void:

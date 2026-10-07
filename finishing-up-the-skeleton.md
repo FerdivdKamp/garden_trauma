@@ -17,11 +17,11 @@ The project already has a main menu, a tile-based garden level, three placeable 
 
 ## 2. Turn the level into a small progression loop
 
-- [ ] Give levels stable IDs and connect each ID to a map file and wave schedule. Keep `garden_test_02.json` as a second playable entry once it has its own waves.
-- [ ] Add a simple level selection screen after **Start**, showing which levels are available and completed.
-- [ ] Save completed level IDs in `user://` when the player wins, and load them when the game starts. Keep this separate from `user://settings.cfg`, which stores audio preferences.
-- [ ] Decide the unlock rule for the first two levels, then apply it in level selection; a simple “finish level 1 to unlock level 2” rule is enough.
-- [ ] After victory, offer **Next level** when one is available; otherwise return to level selection.
+- [x] Give levels stable IDs and connect each ID to a map file and wave schedule. Keep `garden_test_02.json` as a second playable entry once it has its own waves.
+- [x] Add a simple level selection screen after **Start**, showing which levels are available and completed.
+- [x] Save completed level IDs in `user://` when the player wins, and load them when the game starts. Keep this separate from `user://settings.cfg`, which stores audio preferences.
+- [x] Decide the unlock rule for the first two levels, then apply it in level selection; a simple “finish level 1 to unlock level 2” rule is enough.
+- [x] After victory, offer **Next level** when one is available; otherwise return to level selection.
 
 ## 3. Close the basic playability gaps
 

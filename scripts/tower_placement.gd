@@ -52,6 +52,19 @@ var wave_label: Label
 var enemies_label: Label
 var next_wave_button: Button
 var pause_button: Button
+var level_id := LevelProgress.DEFAULT_LEVEL_ID
+var result_action_button: Button
+
+
+func _enter_tree() -> void:
+	# Child _ready calls load the grid and waves. Set their files first.
+	level_id = LevelProgress.selected_level_id
+	var level := LevelProgress.level_for(level_id)
+	if level.is_empty():
+		level_id = LevelProgress.DEFAULT_LEVEL_ID
+		level = LevelProgress.level_for(level_id)
+	$LevelGrid.level_file = level.map
+	$Waves.schedule_file = level.waves
 
 
 func _ready() -> void:
@@ -74,6 +87,8 @@ func _ready() -> void:
 	$UI/PauseOverlay/Center/Panel/Actions/MainMenu.pressed.connect(_return_to_menu)
 	$UI/ResultOverlay/Center/Panel/Actions/Restart.pressed.connect(_restart_level)
 	$UI/ResultOverlay/Center/Panel/Actions/MainMenu.pressed.connect(_return_to_menu)
+	result_action_button = $UI/ResultOverlay/Center/Panel/Actions/NextLevel
+	result_action_button.pressed.connect(_advance_from_result)
 	if debug_mode:
 		spawn_enemy()
 	_refresh_hud()
@@ -461,7 +476,7 @@ func _resume_battle() -> void:
 
 func _restart_level() -> void:
 	get_tree().paused = false
-	get_tree().change_scene_to_file("res://scenes/tower_placement.tscn")
+	get_tree().change_scene_to_file(LevelProgress.BATTLE_SCENE)
 
 
 func _return_to_menu() -> void:
@@ -469,10 +484,20 @@ func _return_to_menu() -> void:
 	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
 
 
+func _advance_from_result() -> void:
+	var next_id := LevelProgress.next_level_id(level_id)
+	if battle_result == "victory" and next_id != "" and LevelProgress.select_level(next_id):
+		get_tree().change_scene_to_file(LevelProgress.BATTLE_SCENE)
+	else:
+		get_tree().change_scene_to_file("res://scenes/level_select.tscn")
+
+
 func _finish_battle(result: String) -> void:
 	if battle_result != "":
 		return
 	battle_result = result
+	if result == "victory":
+		LevelProgress.complete_level(level_id)
 	waves.stop()
 	for tower in placed_towers.get_children():
 		tower.get_node("Attack").set_process(false)
@@ -480,5 +505,7 @@ func _finish_battle(result: String) -> void:
 		if child is PlacementEnemy:
 			child.set_process(false)
 	$UI/ResultOverlay/Center/Panel/Actions/Title.text = "Garden defended!" if result == "victory" else "Garden overrun"
+	var next_id := LevelProgress.next_level_id(level_id)
+	result_action_button.text = "Next level" if result == "victory" and next_id != "" else "Level selection"
 	result_overlay.show()
 	_refresh_hud()

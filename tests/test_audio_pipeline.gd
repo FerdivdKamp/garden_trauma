@@ -55,8 +55,13 @@ func _run() -> void:
 	menu.get_node("Center/Menu/Start").pressed.emit()
 	await process_frame
 	await process_frame
-	_check(current_scene != null and current_scene.scene_file_path == "res://scenes/tower_placement.tscn", "Start loads garden")
+	_check(current_scene != null and current_scene.scene_file_path == "res://scenes/level_select.tscn", "Start loads level selection")
 	_check(is_instance_valid(music) and music.get_instance_id() == music_instance_id and music.playing, "Music survives scene change")
+	current_scene.get_node("Center/Panel/Content/Levels").get_child(0).pressed.emit()
+	await process_frame
+	await process_frame
+	_check(current_scene != null and current_scene.scene_file_path == "res://scenes/tower_placement.tscn", "Level selection loads garden")
+	_check(is_instance_valid(music) and music.get_instance_id() == music_instance_id and music.playing, "Music survives second scene change")
 	var garden := current_scene
 	garden.waves.start_next_wave()
 	garden.waves._process(0.0)
