@@ -34,6 +34,10 @@ const TOWER_RADIUS := TowerVisual.FOOTPRINT_RADIUS
 var selected_type := -1
 var preview: Node3D
 var hovered_tower: Node3D
+var selected_tower: Node3D
+var upgrade_panel: PanelContainer
+var upgrade_details: Label
+var upgrade_button: Button
 var has_ground_point := false
 var ground_point := Vector3.ZERO
 var status: Label
@@ -120,28 +124,37 @@ func _unhandled_input(event: InputEvent) -> void:
 	if battle_result != "":
 		return
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
-		_select_tower(-1)
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_G:
+		if selected_tower != null:
+			_select_placed_tower(null)
+		else:
+			_select_tower(-1)
+	elif debug_mode and event is InputEventKey and event.pressed and event.keycode == KEY_G:
 		grid.show_grid = not grid.show_grid
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_C:
+	elif debug_mode and event is InputEventKey and event.pressed and event.keycode == KEY_C:
 		grid.show_coordinates = not grid.show_coordinates
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_R:
+	elif debug_mode and event is InputEventKey and event.pressed and event.keycode == KEY_R:
 		grid.show_route = not grid.show_route
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_I:
+	elif debug_mode and event is InputEventKey and event.pressed and event.keycode == KEY_I:
 		_update_cursor(get_viewport().get_mouse_position())
 		if has_ground_point:
 			var cell := grid.world_to_grid(ground_point)
 			print("Tile %s: %s, buildable=%s, walkable=%s" % [cell, grid.terrain_at(cell), grid.is_buildable(cell), grid.is_walkable(cell)])
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		_update_cursor(event.position)
-		if preview != null and has_ground_point and can_place_at(ground_point) and _can_afford_selected():
+		_update_hovered_tower(event.position)
+		if hovered_tower != null:
+			_select_placed_tower(hovered_tower)
+		elif preview != null and has_ground_point and can_place_at(ground_point) and _can_afford_selected():
 			place_tower(ground_point)
+		else:
+			_select_placed_tower(null)
 
 
 func _input(event: InputEvent) -> void:
 	if battle_result != "":
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		_select_placed_tower(null)
 		_select_tower(-1)
 		get_viewport().set_input_as_handled()
 
@@ -175,7 +188,7 @@ func _update_hovered_tower(screen_position: Vector2) -> void:
 				break
 	if found == hovered_tower:
 		return
-	if hovered_tower != null:
+	if hovered_tower != null and hovered_tower != selected_tower:
 		hovered_tower.set_ranges_visible(false)
 	hovered_tower = found
 	if hovered_tower != null:
@@ -214,7 +227,7 @@ func place_tower(point: Vector3) -> void:
 	tower.set_ranges(definition.attack_range, definition.detection_range)
 	var attack := PlacementTowerAttack.new()
 	attack.name = "Attack"
-	attack.definition = definition
+	attack.definition = definition.copy()
 	attack.enemies = path
 	attack.effects = shot_effects
 	tower.add_child(attack)
@@ -318,6 +331,7 @@ func _update_enemy_health() -> void:
 func _select_tower(tower_type: int) -> void:
 	if battle_result != "":
 		return
+	_select_placed_tower(null)
 	selected_type = tower_type
 	if preview != null:
 		preview.queue_free()
@@ -335,6 +349,73 @@ func _select_tower(tower_type: int) -> void:
 	preview.set_ranges(definition.attack_range, definition.detection_range)
 	preview.set_ranges_visible(true)
 	status.text = "Move over the ground to place"
+
+
+func _build_upgrade_ui(column: VBoxContainer) -> void:
+	upgrade_panel = PanelContainer.new()
+	upgrade_panel.visible = false
+	column.add_child(upgrade_panel)
+	var contents := VBoxContainer.new()
+	upgrade_panel.add_child(contents)
+	upgrade_details = Label.new()
+	upgrade_details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	contents.add_child(upgrade_details)
+	upgrade_button = Button.new()
+	upgrade_button.pressed.connect(_buy_selected_upgrade)
+	contents.add_child(upgrade_button)
+	var close_button := Button.new()
+	close_button.text = "Close"
+	close_button.pressed.connect(func() -> void: _select_placed_tower(null))
+	contents.add_child(close_button)
+
+
+func _select_placed_tower(tower: Node3D) -> void:
+	if tower != null and selected_type >= 0:
+		selected_type = -1
+		if preview != null:
+			preview.queue_free()
+			preview = null
+		for button in tower_buttons:
+			button.button_pressed = false
+	if selected_tower != null and selected_tower != hovered_tower:
+		selected_tower.set_ranges_visible(false)
+	selected_tower = tower
+	if selected_tower != null:
+		selected_tower.set_ranges_visible(true)
+	_refresh_upgrade_ui()
+
+
+func _refresh_upgrade_ui() -> void:
+	if upgrade_panel == null:
+		return
+	upgrade_panel.visible = selected_tower != null and battle_result == ""
+	if not upgrade_panel.visible:
+		return
+	var attack := selected_tower.get_node("Attack") as PlacementTowerAttack
+	var definition := attack.definition
+	var upgrade := attack.next_upgrade()
+	var stats := "Damage %.0f   Cooldown %.2fs   Range %.1f   Speed %.1f" % [definition.damage, definition.cooldown, definition.attack_range, definition.projectile_speed]
+	if upgrade.is_empty():
+		upgrade_details.text = "%s  |  Level 3/3\n%s\nFully upgraded" % [definition.name, stats]
+		upgrade_button.disabled = true
+		upgrade_button.text = "Max level"
+		return
+	var changes: PackedStringArray = []
+	for key in upgrade.attack:
+		changes.append("%s: %s" % [key.capitalize(), str(upgrade.attack[key])])
+	upgrade_details.text = "%s  |  Level %d/3\n%s\nNext: %s (%d coins)\nReplaces %s" % [definition.name, attack.upgrade_level, stats, upgrade.name, upgrade.cost, ", ".join(changes)]
+	upgrade_button.text = "Buy %s - %d coins" % [upgrade.name, upgrade.cost]
+	upgrade_button.disabled = currency < int(upgrade.cost)
+
+
+func _buy_selected_upgrade() -> void:
+	if selected_tower == null or battle_result != "":
+		return
+	var attack := selected_tower.get_node("Attack") as PlacementTowerAttack
+	var paid := attack.buy_next_upgrade(currency)
+	if paid > 0:
+		currency -= paid
+		_refresh_hud()
 
 
 func _build_ui() -> void:
@@ -361,8 +442,11 @@ func _build_ui() -> void:
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(status)
 	var help := Label.new()
-	help.text = "Green range: attack   Yellow range: detection\nSand and rocks: no towers\nG grid  C coords  R route  I inspect\nRight-click or Esc: empty your hand"
+	help.text = "Select a tower, then click grass to place it.\nClick a placed tower to upgrade it.\nRight-click or Esc: cancel selection."
+	if debug_mode:
+		help.text += "\nDebug: G grid  C coords  R route  I inspect"
 	column.add_child(help)
+	_build_upgrade_ui(column)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	enemy_panel.add_child(scroll)
@@ -382,6 +466,10 @@ func _build_battle_ui(column: VBoxContainer) -> void:
 	column.add_child(currency_label)
 	objective_label = Label.new()
 	column.add_child(objective_label)
+	var hint := Label.new()
+	hint.text = "Garden health: enemies that reach GOAL reduce it.\nBuild towers, then press Start wave."
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(hint)
 	wave_label = Label.new()
 	column.add_child(wave_label)
 	enemies_label = Label.new()
@@ -460,6 +548,7 @@ func _refresh_hud() -> void:
 	for index in tower_buttons.size():
 		var definition := tower_definitions[TOWER_IDS[index]] as TowerDefinition
 		tower_buttons[index].disabled = battle_result != "" or currency < definition.cost
+	_refresh_upgrade_ui()
 
 
 func _pause_battle() -> void:

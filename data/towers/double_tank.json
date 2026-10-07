@@ -2,13 +2,13 @@
   "$schema": "../schemas/tower.schema.json",
   "id": "double_tank",
   "name": "Double Barrel Toy Tank",
-  "cost": 120,
+  "cost": 130,
   "detection_range": 9.0,
   "turn_speed": 90.0,
   "attack": {
-    "damage": 10,
-    "cooldown": 1.0,
-    "range": 6.0,
+    "damage": 20,
+    "cooldown": 1.5,
+    "range": 7.0,
     "projectile_speed": 12.0
   },
   "targeting": {
@@ -16,5 +16,10 @@
     "priority": "nearest"
   },
   "damage_type": "physical",
-  "tags": ["projectile", "physical"]
+  "tags": ["projectile", "physical"],
+  "upgrades": [
+    {"id": "reinforced_shells", "name": "Reinforced Shells", "cost": 45, "attack": {"damage": 25}},
+    {"id": "rapid_loader", "name": "Rapid Loader", "cost": 65, "attack": {"cooldown": 1.1}},
+    {"id": "heavy_shells", "name": "Heavy Shells", "cost": 85, "attack": {"damage": 34, "range": 8.0}}
+  ]
 }

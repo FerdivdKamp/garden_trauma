@@ -17,7 +17,7 @@ func _initialize() -> void:
 	if lightning_tower != null:
 		_check(lightning_tower.damage_type == "electric" and lightning_tower.tags.has("electric"), "Lightning tower loads electric damage")
 	if tower != null and red != null:
-		_check(tower.cost == 120 and tower.damage == 10.0 and tower.cooldown == 1.0, "Tower attack values come from JSON")
+		_check(tower.cost == 90 and tower.damage == 10.0 and tower.cooldown == 1.0, "Tower attack values come from JSON")
 		_check(tower.attack_range == 6.0 and tower.targets.has("ground"), "Tower targeting comes from JSON")
 		_check(tower.detection_range == 9.0 and tower.turn_speed == 90.0, "Tower aiming values come from JSON")
 		_check(red.health == 50.0 and red.speed == 3.0 and red.reward == 10, "Unit values come from JSON")

@@ -10,6 +10,7 @@ func _initialize() -> void:
 func _run() -> void:
 	var progress: Variant = root.get_node("LevelProgress")
 	progress.save_path = "res://tests/.level_progress_test.cfg"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(progress.save_path))
 	progress.completed_ids.clear()
 	progress.selected_level_id = "garden_test_01"
 	_check(progress.is_unlocked("garden_test_01") and not progress.is_unlocked("garden_test_02"), "Only the first level starts unlocked")
@@ -45,6 +46,18 @@ func _run() -> void:
 	_check(second.level_id == "garden_test_02" and second.grid.level_file == "res://levels/data/garden_test_02.json", "Next level loads its own map")
 	_check(second.grid.error_message == "" and second.grid.route.size() > first_route_size, "Second map has a valid, distinct route")
 	_check(second.waves.schedule_file == "res://levels/waves/garden_test_02.json" and second.waves.waves.size() == 3, "Second level loads its own waves")
+	second.objective_health = 1
+	second.waves.start_next_wave()
+	second.waves._process(0.0)
+	var escaping: PathFollow3D = second.path.get_node("Enemy1")
+	escaping.progress = second.path.curve.get_baked_length() - 0.5
+	escaping._process(1.0)
+	_check(second.battle_result == "defeat" and not progress.is_completed("garden_test_02"), "Losing Garden 2 does not save completion")
+	second.get_node("UI/ResultOverlay/Center/Panel/Actions/Restart").pressed.emit()
+	await process_frame
+	await process_frame
+	second = current_scene
+	_check(second.level_id == "garden_test_02" and second.battle_result == "" and second.objective_health == second.starting_objective_health, "Retry restarts Garden 2")
 	for wave_index in second.waves.waves.size():
 		_check(second.waves.start_next_wave(), "Garden 2 wave %d starts" % [wave_index + 1])
 		second.waves._process(100.0)
@@ -61,6 +74,9 @@ func _run() -> void:
 	_check(current_scene.scene_file_path == "res://scenes/level_select.tscn", "Final victory returns to selection")
 	level_buttons = current_scene.get_node("Center/Panel/Content/Levels")
 	_check(level_buttons.get_child(0).text.contains("Completed") and level_buttons.get_child(1).text.contains("Completed"), "Selection shows completed levels")
+	progress.completed_ids.clear()
+	progress.load_progress()
+	_check(progress.is_completed("garden_test_01") and progress.is_completed("garden_test_02"), "Both completions survive a reload")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(progress.save_path))
 	if failures == 0:
 		print("Level progression tests passed")

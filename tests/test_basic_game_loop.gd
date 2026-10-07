@@ -29,6 +29,7 @@ func _run() -> void:
 	garden.place_tower(Vector3(-10, 0, -1))
 	_check(garden.placed_towers.get_child_count() == 1 and garden.currency == 240 - tower_cost, "Tower purchase deducts its cost")
 	garden._select_tower(2)
+	garden.currency = (garden.tower_definitions["lightning_tower"] as TowerDefinition).cost - 1
 	var before_unaffordable: int = garden.currency
 	garden.place_tower(Vector3(-8, 0, -1))
 	_check(garden.placed_towers.get_child_count() == 1 and garden.currency == before_unaffordable, "Unaffordable tower cannot be placed")
