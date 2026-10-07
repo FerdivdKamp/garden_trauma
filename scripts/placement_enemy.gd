@@ -10,11 +10,14 @@ signal health_changed
 			_update_visual_scale()
 
 @onready var visual: MeshInstance3D = $Visual
+@onready var destroyed_audio: AudioStreamPlayer3D = $DestroyedAudio
+@onready var objective_audio: AudioStreamPlayer3D = $ObjectiveAudio
 
 var enemy_type := 0
 var definition: UnitDefinition
 var max_health := 50.0
 var health := 50.0
+var reached_objective := false
 
 
 func _ready() -> void:
@@ -24,9 +27,12 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if health > 0.0:
+	if health > 0.0 and not reached_objective:
 		var route := get_parent() as Path3D
 		progress = minf(progress + movement_speed * delta, route.curve.get_baked_length())
+		if progress >= route.curve.get_baked_length():
+			reached_objective = true
+			objective_audio.play()
 
 
 func configure(type: int, unit: UnitDefinition, speed: float, size: float) -> void:
@@ -36,15 +42,18 @@ func configure(type: int, unit: UnitDefinition, speed: float, size: float) -> vo
 	visual_scale = size
 	max_health = unit.health
 	health = max_health
+	reached_objective = false
 	if is_node_ready():
 		_update_color()
 	health_changed.emit()
 
 
 func take_damage(amount: float) -> void:
-	if health <= 0.0:
+	if health <= 0.0 or reached_objective:
 		return
 	health = TowerRules.health_after_hit(health, amount)
+	if health <= 0.0:
+		destroyed_audio.play()
 	_update_color()
 	health_changed.emit()
 

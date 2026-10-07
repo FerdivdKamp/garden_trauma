@@ -24,7 +24,11 @@ Run the definition test with:
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_definitions.gd
 ```
 
-Open either scene in Godot 4.7 and press **F6** to run it. **F5** runs the placement scene, which is the current main scene.
+Open either prototype scene in Godot 4.7 and press **F6** to run it. **F5** starts at the main menu; Start opens the placement garden.
+
+## Sound V1
+
+The main menu's Options panel changes the `Music` and `SFX` buses and saves the choices in `user://settings.cfg`. `AudioSettings` owns those preferences. `AudioManager` owns one looping music player, so the track continues when Start changes scenes. The three placed towers have positional fire players; enemies have positional cues for defeat and reaching the objective. Audio assets and their known provenance are listed in [audio sources](assets/audio/audio-sources.md). The two enemy sounds are temporary copies to replace later.
 
 ## Tower demo (`scenes/tower_demo.tscn`)
 
@@ -54,6 +58,7 @@ Run the unit tests from this directory:
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_tower_demo.gd
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_tower_placement.gd
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_placement_combat.gd
+& 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_audio_pipeline.gd
 ```
 
 `scripts/tower_rules.gd` holds the range, turning, and damage rules. Both scenes share the basic-shape tower visual, which can later be replaced by Blender models.

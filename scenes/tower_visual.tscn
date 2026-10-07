@@ -13,6 +13,10 @@ position = Vector3(0, 0.9, 0)
 visible = false
 script = ExtResource("2_range")
 
+[node name="FireAudio" type="AudioStreamPlayer3D" parent="."]
+position = Vector3(0, 1.2, 0)
+bus = &"SFX"
+
 [node name="AttackArea" type="MeshInstance3D" parent="RangeVisual"]
 
 [node name="DetectionArea" type="MeshInstance3D" parent="RangeVisual"]

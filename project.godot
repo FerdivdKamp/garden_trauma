@@ -11,9 +11,18 @@ config_version=5
 [application]
 
 config/name="garden-trauma"
-run/main_scene="res://scenes/tower_placement.tscn"
+run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"
+
+[autoload]
+
+AudioSettings="*res://scripts/audio_settings.gd"
+AudioManager="*res://scripts/audio_manager.gd"
+
+[audio]
+
+buses/default_bus_layout="res://assets/audio/audio_bus_layout.tres"
 
 [display]
 

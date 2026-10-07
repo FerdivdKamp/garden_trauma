@@ -3,9 +3,15 @@ extends Node3D
 # Shared by the original tower playground and the placement playground.
 const FOOTPRINT_RADIUS := 0.95
 const RangeVisual = preload("res://scripts/tower_range_visual.gd")
+const FIRE_SOUNDS: Array[AudioStream] = [
+	preload("res://assets/audio/sfx/towers/tower_01_fire.ogg"),
+	preload("res://assets/audio/sfx/towers/tower_02_fire.ogg"),
+	preload("res://assets/audio/sfx/towers/tower_03_fire.ogg"),
+]
 
 @onready var turret_pivot: Node3D = $TurretPivot
 @onready var range_visual: RangeVisual = $RangeVisual
+@onready var fire_audio: AudioStreamPlayer3D = $FireAudio
 
 var tower_type := 0
 var is_preview := false
@@ -14,12 +20,18 @@ var is_preview := false
 func _ready() -> void:
 	_build_base()
 	_build_turret()
+	fire_audio.stream = FIRE_SOUNDS[tower_type]
 
 
 func set_tower_type(value: int) -> void:
 	tower_type = value
 	if is_node_ready():
 		_build_turret()
+		fire_audio.stream = FIRE_SOUNDS[tower_type]
+
+
+func play_fire_sound() -> void:
+	fire_audio.play()
 
 
 func set_preview(value: bool) -> void:
