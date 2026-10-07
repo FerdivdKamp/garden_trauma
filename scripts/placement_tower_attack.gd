@@ -27,6 +27,8 @@ func _process(delta: float) -> void:
 			continue
 		if enemy.health <= 0.0:
 			continue
+		if enemy.reached_objective:
+			continue
 		if not _can_target(enemy):
 			continue
 		var distance := tower.global_position.distance_to(enemy.global_position)
@@ -59,6 +61,7 @@ func _process(delta: float) -> void:
 				next_barrel = 1 - next_barrel
 			else:
 				effects.fire_lightning(muzzle_position, hit_position)
+		tower.play_fire_sound()
 		var multiplier := 1.0 - target.definition.armor_for(definition.damage_type)
 		for tag in target.definition.tags:
 			if definition.bonus_vs_tags.has(tag):

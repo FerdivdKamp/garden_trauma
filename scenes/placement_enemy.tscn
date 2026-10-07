@@ -1,6 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/placement_enemy.gd" id="1_enemy"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/enemies/enemy_destroyed_01.ogg" id="2_destroyed"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/enemies/enemy_objective_reached_01.ogg" id="3_objective"]
 
 [sub_resource type="SphereMesh" id="SphereMesh_enemy"]
 radius = 0.5
@@ -13,3 +15,11 @@ loop = false
 [node name="Visual" type="MeshInstance3D" parent="."]
 position = Vector3(0, 0.55, 0)
 mesh = SubResource("SphereMesh_enemy")
+
+[node name="DestroyedAudio" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("2_destroyed")
+bus = &"SFX"
+
+[node name="ObjectiveAudio" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("3_objective")
+bus = &"SFX"

@@ -1,0 +1,95 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_menu"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Menu" type="VBoxContainer" parent="Center"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Center/Menu"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "GARDEN TRAUMA"
+horizontal_alignment = 1
+
+[node name="Start" type="Button" parent="Center/Menu"]
+custom_minimum_size = Vector2(260, 48)
+layout_mode = 2
+text = "Start"
+
+[node name="Options" type="Button" parent="Center/Menu"]
+layout_mode = 2
+text = "Options"
+
+[node name="Quit" type="Button" parent="Center/Menu"]
+layout_mode = 2
+text = "Quit"
+
+[node name="OptionsPanel" type="PanelContainer" parent="Center"]
+visible = false
+layout_mode = 2
+
+[node name="Settings" type="VBoxContainer" parent="Center/OptionsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Heading" type="Label" parent="Center/OptionsPanel/Settings"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Audio Options"
+
+[node name="MusicHeading" type="Label" parent="Center/OptionsPanel/Settings"]
+layout_mode = 2
+text = "Music"
+
+[node name="MusicEnabled" type="CheckBox" parent="Center/OptionsPanel/Settings"]
+layout_mode = 2
+text = "Enabled"
+
+[node name="MusicVolumeLabel" type="Label" parent="Center/OptionsPanel/Settings"]
+layout_mode = 2
+text = "Volume"
+
+[node name="MusicVolume" type="HSlider" parent="Center/OptionsPanel/Settings"]
+custom_minimum_size = Vector2(260, 24)
+layout_mode = 2
+max_value = 100.0
+step = 1.0
+
+[node name="SfxHeading" type="Label" parent="Center/OptionsPanel/Settings"]
+layout_mode = 2
+text = "Sound Effects"
+
+[node name="SfxEnabled" type="CheckBox" parent="Center/OptionsPanel/Settings"]
+layout_mode = 2
+text = "Enabled"
+
+[node name="SfxVolumeLabel" type="Label" parent="Center/OptionsPanel/Settings"]
+layout_mode = 2
+text = "Volume"
+
+[node name="SfxVolume" type="HSlider" parent="Center/OptionsPanel/Settings"]
+layout_mode = 2
+max_value = 100.0
+step = 1.0
+
+[node name="Back" type="Button" parent="Center/OptionsPanel/Settings"]
+layout_mode = 2
+text = "Back"

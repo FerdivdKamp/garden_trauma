@@ -26,6 +26,7 @@ func _run() -> void:
 	red.progress = path.curve.get_baked_length() - 0.5
 	red._process(1.0)
 	_check(is_equal_approx(red.progress, path.curve.get_baked_length()), "Enemy stops at route end")
+	_check(red.reached_objective and red.objective_audio.playing, "Objective cue plays on arrival")
 
 	demo.enemy_selector.select(1)
 	var blue := demo.spawn_enemy() as PlacementEnemy
@@ -41,6 +42,8 @@ func _run() -> void:
 	var tower := demo.placed_towers.get_child(0) as Node3D
 	var attack := tower.get_node("Attack") as PlacementTowerAttack
 	red.progress = 6.0
+	# Reuse this enemy for the combat checks after testing its arrival state.
+	red.reached_objective = false
 	blue.progress = path.curve.get_baked_length()
 	attack.definition.turn_speed = 360.0
 	attack._process(1.0)
