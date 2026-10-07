@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/environment/garden/tiles/tile_grass4.glb" id="1_tile"]
+
+[node name="GrassMaterialPreview" type="Node3D"]
+
+[node name="Tile" parent="." instance=ExtResource("1_tile")]
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-50, 35, 0)
+light_energy = 1.8
+
+[node name="Camera" type="Camera3D" parent="."]
+position = Vector3(3, 2.5, 3)
+rotation_degrees = Vector3(-30, 45, 0)
+current = true

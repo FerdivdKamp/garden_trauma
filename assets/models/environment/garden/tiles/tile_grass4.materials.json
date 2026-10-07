@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "asset": "tile_grass4",
+  "materials": [
+    {
+      "name": "GrassSides",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.01099158264696598,
+          0.0850282683968544,
+          0.004941832739859819,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "GrassTop",
+      "classification": "translatable",
+      "type": "procedural_noise_color_ramp",
+      "noise": {
+        "dimensions": "3D",
+        "coordinates": "Generated",
+        "scale": 3.0,
+        "detail": 2.0,
+        "roughness": 0.6000000238418579,
+        "lacunarity": 2.0,
+        "distortion": 0.0
+      },
+      "color_ramp": {
+        "color_mode": "RGB",
+        "interpolation": "LINEAR",
+        "elements": [
+          {
+            "position": 0.0,
+            "color": [
+              0.011889869347214699,
+              0.12517209351062775,
+              0.0023026145063340664,
+              1.0
+            ]
+          },
+          {
+            "position": 1.0,
+            "color": [
+              0.08751203119754791,
+              0.32745203375816345,
+              0.016100814566016197,
+              1.0
+            ]
+          }
+        ]
+      },
+      "principled": {
+        "base_color": [
+          0.07967038452625275,
+          0.4033816456794739,
+          0.056785810738801956,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    }
+  ]
+}
