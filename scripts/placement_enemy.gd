@@ -1,6 +1,8 @@
 extends PathFollow3D
 
 signal health_changed
+signal defeated(enemy: Node)
+signal objective_reached(enemy: Node)
 
 @export_range(0.0, 30.0, 0.1) var movement_speed := 3.0
 @export_range(0.1, 3.0, 0.05) var visual_scale := 1.0:
@@ -18,6 +20,7 @@ var definition: UnitDefinition
 var max_health := 50.0
 var health := 50.0
 var reached_objective := false
+var auto_cleanup := true
 
 
 func _ready() -> void:
@@ -33,6 +36,8 @@ func _process(delta: float) -> void:
 		if progress >= route.curve.get_baked_length():
 			reached_objective = true
 			objective_audio.play()
+			objective_reached.emit(self)
+			_finish_after_sound(objective_audio)
 
 
 func configure(type: int, unit: UnitDefinition, speed: float, size: float) -> void:
@@ -54,6 +59,8 @@ func take_damage(amount: float) -> void:
 	health = TowerRules.health_after_hit(health, amount)
 	if health <= 0.0:
 		destroyed_audio.play()
+		defeated.emit(self)
+		_finish_after_sound(destroyed_audio)
 	_update_color()
 	health_changed.emit()
 
@@ -67,3 +74,11 @@ func _update_color() -> void:
 func _update_visual_scale() -> void:
 	visual.scale = Vector3.ONE * visual_scale
 	visual.position.y = 0.55 * visual_scale
+
+
+func _finish_after_sound(audio: AudioStreamPlayer3D) -> void:
+	if not auto_cleanup:
+		return
+	visual.hide()
+	# The audio player remains in the world until its one-shot has finished.
+	audio.finished.connect(queue_free, CONNECT_ONE_SHOT)

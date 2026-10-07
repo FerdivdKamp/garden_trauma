@@ -180,8 +180,8 @@ func _rebuild_visuals() -> void:
 
 
 func _update_debug() -> void:
-	for name in ["GridOverlay", "Coordinates", "RouteOverlay"]:
-		var old := get_node_or_null(name)
+	for overlay_name in ["GridOverlay", "Coordinates", "RouteOverlay"]:
+		var old := get_node_or_null(overlay_name)
 		if old != null:
 			remove_child(old)
 			old.queue_free()

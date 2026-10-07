@@ -14,10 +14,17 @@ const TOWER_RADIUS := TowerVisual.FOOTPRINT_RADIUS
 @onready var path: Path3D = $PlacementPath
 @onready var grid: TileGrid = $LevelGrid
 @onready var placed_towers: Node3D = $PlacedTowers
+@onready var waves: WaveController = $Waves
 @onready var shot_effects: ShotEffects = $ShotEffects
 @onready var preview_holder: Node3D = $Preview
 @onready var palette: PanelContainer = $UI/Palette
 @onready var enemy_panel: PanelContainer = $UI/EnemyPanel
+@onready var pause_overlay: Control = $UI/PauseOverlay
+@onready var result_overlay: Control = $UI/ResultOverlay
+
+@export var debug_mode := false
+@export_range(1, 100, 1) var starting_objective_health := 10
+@export_range(0, 10000, 1) var starting_currency := 240
 
 @export_range(0.0, 30.0, 0.1) var red_speed := 3.0
 @export_range(0.0, 30.0, 0.1) var blue_speed := 2.0
@@ -36,6 +43,15 @@ var enemy_health_label: Label
 var enemy_count := 0
 var tower_definitions: Dictionary
 var unit_definitions: Dictionary
+var objective_health := 10
+var currency := 240
+var battle_result := ""
+var currency_label: Label
+var objective_label: Label
+var wave_label: Label
+var enemies_label: Label
+var next_wave_button: Button
+var pause_button: Button
 
 
 func _ready() -> void:
@@ -45,13 +61,28 @@ func _ready() -> void:
 	assert(tower_definitions.has("toy_tank") and tower_definitions.has("double_tank") and tower_definitions.has("lightning_tower") and unit_definitions.has("red_sphere") and unit_definitions.has("blue_sphere"))
 	red_speed = (unit_definitions["red_sphere"] as UnitDefinition).speed
 	blue_speed = (unit_definitions["blue_sphere"] as UnitDefinition).speed
+	objective_health = starting_objective_health
+	currency = starting_currency
 	camera.look_at(Vector3.ZERO, Vector3.UP)
 	_setup_route()
 	_build_ui()
-	spawn_enemy()
+	waves.spawn_requested.connect(_on_wave_spawn_requested)
+	waves.state_changed.connect(_refresh_hud)
+	waves.all_waves_cleared.connect(func() -> void: _finish_battle("victory"))
+	$UI/PauseOverlay/Center/Panel/Actions/Resume.pressed.connect(_resume_battle)
+	$UI/PauseOverlay/Center/Panel/Actions/Restart.pressed.connect(_restart_level)
+	$UI/PauseOverlay/Center/Panel/Actions/MainMenu.pressed.connect(_return_to_menu)
+	$UI/ResultOverlay/Center/Panel/Actions/Restart.pressed.connect(_restart_level)
+	$UI/ResultOverlay/Center/Panel/Actions/MainMenu.pressed.connect(_return_to_menu)
+	if debug_mode:
+		spawn_enemy()
+	_refresh_hud()
 
 
 func _process(_delta: float) -> void:
+	if battle_result != "":
+		return
+	_refresh_hud()
 	var mouse_position := get_viewport().get_mouse_position()
 	_update_cursor(mouse_position)
 	_update_hovered_tower(mouse_position)
@@ -60,13 +91,19 @@ func _process(_delta: float) -> void:
 	preview.visible = has_ground_point
 	if has_ground_point:
 		preview.position = grid.grid_to_world(grid.world_to_grid(ground_point))
-		preview.set_placement_valid(can_place_at(ground_point))
-		status.text = "Click to place" if can_place_at(ground_point) else "Blocked: path, rock, edge, or another tower"
+		var valid := can_place_at(ground_point) and _can_afford_selected()
+		preview.set_placement_valid(valid)
+		if not _can_afford_selected():
+			status.text = "Not enough currency for this tower"
+		else:
+			status.text = "Click to place" if valid else "Blocked: path, rock, edge, or another tower"
 	else:
 		status.text = "Move over the ground to place"
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if battle_result != "":
+		return
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		_select_tower(-1)
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_G:
@@ -82,11 +119,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			print("Tile %s: %s, buildable=%s, walkable=%s" % [cell, grid.terrain_at(cell), grid.is_buildable(cell), grid.is_walkable(cell)])
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		_update_cursor(event.position)
-		if preview != null and has_ground_point and can_place_at(ground_point):
+		if preview != null and has_ground_point and can_place_at(ground_point) and _can_afford_selected():
 			place_tower(ground_point)
 
 
 func _input(event: InputEvent) -> void:
+	if battle_result != "":
+		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 		_select_tower(-1)
 		get_viewport().set_input_as_handled()
@@ -149,13 +188,14 @@ func _setup_route() -> void:
 
 
 func place_tower(point: Vector3) -> void:
-	if selected_type < 0 or not can_place_at(point):
+	if battle_result != "" or selected_type < 0 or not can_place_at(point) or not _can_afford_selected():
 		return
+	var definition := tower_definitions[TOWER_IDS[selected_type]] as TowerDefinition
+	currency -= definition.cost
 	var tower := TOWER_SCENE.instantiate()
 	tower.set_tower_type(selected_type)
 	tower.position = grid.grid_to_world(grid.world_to_grid(point))
 	placed_towers.add_child(tower)
-	var definition := tower_definitions[TOWER_IDS[selected_type]] as TowerDefinition
 	tower.set_ranges(definition.attack_range, definition.detection_range)
 	var attack := PlacementTowerAttack.new()
 	attack.name = "Attack"
@@ -163,22 +203,30 @@ func place_tower(point: Vector3) -> void:
 	attack.enemies = path
 	attack.effects = shot_effects
 	tower.add_child(attack)
+	_refresh_hud()
 
 
-func spawn_enemy() -> PlacementEnemy:
-	var type := enemy_selector.selected if enemy_selector != null else 0
+func spawn_enemy(type: int = -1, from_wave: bool = false) -> PlacementEnemy:
+	if type < 0:
+		type = enemy_selector.selected if enemy_selector != null else 0
 	var enemy := ENEMY_SCENE.instantiate() as PlacementEnemy
 	var unit := unit_definitions["red_sphere" if type == 0 else "blue_sphere"] as UnitDefinition
 	enemy_count += 1
 	enemy.name = "Enemy%d" % enemy_count
+	enemy.auto_cleanup = from_wave
+	enemy.set_meta("wave_enemy", from_wave)
 	enemy.configure(type, unit, red_speed if type == 0 else blue_speed, red_scale if type == 0 else blue_scale)
 	path.add_child(enemy)
 	enemy.health_changed.connect(_update_enemy_health)
+	enemy.defeated.connect(_on_enemy_defeated)
+	enemy.objective_reached.connect(_on_enemy_objective_reached)
 	_update_enemy_health()
 	return enemy
 
 
 func reset_enemies() -> void:
+	if not debug_mode:
+		return
 	for child in path.get_children():
 		if child is PlacementEnemy:
 			path.remove_child(child)
@@ -187,6 +235,45 @@ func reset_enemies() -> void:
 	spawn_enemy()
 	for tower in placed_towers.get_children():
 		tower.get_node("Attack").shot_clock = 0.0
+
+
+func _on_wave_spawn_requested(enemy_id: String) -> void:
+	var type := 0 if enemy_id == "red_sphere" else 1
+	if enemy_id != "red_sphere" and enemy_id != "blue_sphere":
+		push_error("Unknown wave enemy: " + enemy_id)
+		waves.enemy_resolved()
+		return
+	spawn_enemy(type, true)
+
+
+func _on_enemy_defeated(enemy: Node) -> void:
+	if battle_result != "":
+		return
+	currency += (enemy as PlacementEnemy).definition.reward
+	_resolve_wave_enemy(enemy)
+	_refresh_hud()
+
+
+func _on_enemy_objective_reached(enemy: Node) -> void:
+	if battle_result != "":
+		return
+	objective_health = maxi(0, objective_health - 1)
+	if objective_health == 0:
+		_finish_battle("defeat")
+	else:
+		_resolve_wave_enemy(enemy)
+	_refresh_hud()
+
+
+func _resolve_wave_enemy(enemy: Node) -> void:
+	if enemy.get_meta("wave_enemy", false):
+		waves.enemy_resolved()
+
+
+func _can_afford_selected() -> bool:
+	if selected_type < 0:
+		return false
+	return currency >= (tower_definitions[TOWER_IDS[selected_type]] as TowerDefinition).cost
 
 
 func _set_enemy_value(value: float, key: String) -> void:
@@ -214,6 +301,8 @@ func _update_enemy_health() -> void:
 
 
 func _select_tower(tower_type: int) -> void:
+	if battle_result != "":
+		return
 	selected_type = tower_type
 	if preview != null:
 		preview.queue_free()
@@ -245,7 +334,8 @@ func _build_ui() -> void:
 	column.add_child(row)
 	for index in TOWER_IDS.size():
 		var tile := Button.new()
-		tile.text = ["SINGLE\nBARREL", "DOUBLE\nBARREL", "LIGHTNING\nTOWER"][index]
+		var definition := tower_definitions[TOWER_IDS[index]] as TowerDefinition
+		tile.text = "%s\n%d coins" % [["LASER", "DOUBLE BARREL", "LIGHTNING"][index], definition.cost]
 		tile.custom_minimum_size = Vector2(105, 100)
 		tile.toggle_mode = true
 		tile.pressed.connect(_select_tower.bind(index))
@@ -258,18 +348,46 @@ func _build_ui() -> void:
 	var help := Label.new()
 	help.text = "Green range: attack   Yellow range: detection\nSand and rocks: no towers\nG grid  C coords  R route  I inspect\nRight-click or Esc: empty your hand"
 	column.add_child(help)
-	_build_enemy_ui()
-
-
-func _build_enemy_ui() -> void:
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	enemy_panel.add_child(scroll)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 7)
-	scroll.add_child(column)
+	var sidebar := VBoxContainer.new()
+	sidebar.add_theme_constant_override("separation", 9)
+	scroll.add_child(sidebar)
+	_build_battle_ui(sidebar)
+	if debug_mode:
+		_build_enemy_ui(sidebar)
+
+
+func _build_battle_ui(column: VBoxContainer) -> void:
 	var title := Label.new()
-	title.text = "PATH ENEMIES"
+	title.text = "GARDEN DEFENSE"
+	column.add_child(title)
+	currency_label = Label.new()
+	column.add_child(currency_label)
+	objective_label = Label.new()
+	column.add_child(objective_label)
+	wave_label = Label.new()
+	column.add_child(wave_label)
+	enemies_label = Label.new()
+	column.add_child(enemies_label)
+	next_wave_button = Button.new()
+	next_wave_button.text = "Start wave 1"
+	next_wave_button.pressed.connect(waves.start_next_wave)
+	column.add_child(next_wave_button)
+	pause_button = Button.new()
+	pause_button.text = "Pause"
+	pause_button.pressed.connect(_pause_battle)
+	column.add_child(pause_button)
+	var restart_button := Button.new()
+	restart_button.text = "Restart level"
+	restart_button.pressed.connect(_restart_level)
+	column.add_child(restart_button)
+
+
+func _build_enemy_ui(column: VBoxContainer) -> void:
+	var title := Label.new()
+	title.text = "DEBUG: PATH ENEMIES"
 	column.add_child(title)
 	enemy_selector = OptionButton.new()
 	enemy_selector.add_item("Red sphere")
@@ -305,3 +423,62 @@ func _add_enemy_spin(column: VBoxContainer, key: String, caption: String, minimu
 	spin.value = get(key)
 	row.add_child(spin)
 	spin.value_changed.connect(_set_enemy_value.bind(key))
+
+
+func _refresh_hud() -> void:
+	if currency_label == null:
+		return
+	currency_label.text = "Coins: %d" % currency
+	objective_label.text = "Garden health: %d / %d" % [objective_health, starting_objective_health]
+	wave_label.text = "Wave: %d / %d" % [waves.current_wave + 1, waves.waves.size()]
+	enemies_label.text = "Enemies remaining: %d" % [waves.active_enemies + waves.remaining_to_spawn]
+	next_wave_button.disabled = waves.state != WaveController.State.READY or battle_result != ""
+	match waves.state:
+		WaveController.State.READY:
+			next_wave_button.text = "Start wave %d" % [waves.current_wave + 2]
+		WaveController.State.SPAWNING:
+			next_wave_button.text = "Wave in progress"
+		WaveController.State.INTERMISSION:
+			next_wave_button.text = "Next wave in %d s" % ceili(waves.break_remaining)
+		WaveController.State.DONE:
+			next_wave_button.text = "Waves complete"
+	for index in tower_buttons.size():
+		var definition := tower_definitions[TOWER_IDS[index]] as TowerDefinition
+		tower_buttons[index].disabled = battle_result != "" or currency < definition.cost
+
+
+func _pause_battle() -> void:
+	if battle_result != "":
+		return
+	pause_overlay.show()
+	get_tree().paused = true
+
+
+func _resume_battle() -> void:
+	get_tree().paused = false
+	pause_overlay.hide()
+
+
+func _restart_level() -> void:
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://scenes/tower_placement.tscn")
+
+
+func _return_to_menu() -> void:
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
+
+
+func _finish_battle(result: String) -> void:
+	if battle_result != "":
+		return
+	battle_result = result
+	waves.stop()
+	for tower in placed_towers.get_children():
+		tower.get_node("Attack").set_process(false)
+	for child in path.get_children():
+		if child is PlacementEnemy:
+			child.set_process(false)
+	$UI/ResultOverlay/Center/Panel/Actions/Title.text = "Garden defended!" if result == "victory" else "Garden overrun"
+	result_overlay.show()
+	_refresh_hud()

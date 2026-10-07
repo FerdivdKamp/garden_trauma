@@ -38,7 +38,9 @@ Use the tower selector to switch between single and double barrels, each backed 
 
 Click a tower button, move the translucent preview over a grass tile, then click to place it at that tile's center. The preview shows both filled ranges; hover over a placed tower to see its ranges too. Sand, rocks, and occupied tiles reject placement. Keep clicking to place more; press **Esc** or right-click to clear the selection.
 
-One red enemy starts on the path. The enemy panel lets you choose a red or blue sphere, spawn more, reset the enemies, and adjust each type's movement speed and visual scale. The blue sphere starts slightly larger and has 75 health; red has 50. Each enemy's health appears in the panel. Placed towers detect enemies within 9 units, turn at 90 degrees per second, and deal 10 damage once per second within 6 units when aimed. The reset button removes all enemies and creates one fresh enemy of the selected type; placed towers remain in place. Enemies use `PathFollow3D` under `PlacementPath`; the route in the level JSON builds its curve.
+The normal game begins with 240 coins and 10 garden health. Buy and place towers before pressing **Start wave 1**. Three waves are defined in `levels/waves/garden_test_01.json`; after clearing a wave, a short break ends before the next wave can be started. Defeated enemies pay their unit's reward once. Each enemy that reaches the objective removes one garden health. Clear the last wave to win, or lose all garden health to be defeated. The sidebar shows coins, health, wave, and remaining enemies; Pause, Restart, Retry, and Main menu controls complete the loop.
+
+For the original enemy playground, enable `debug_mode` on the `TowerPlacement` scene root in the Inspector. This restores the manual spawn/reset panel, type selector, and speed/scale controls, and starts one red enemy. These manually spawned enemies remain visible after defeat for testing. Placed towers detect enemies within 9 units, turn at 90 degrees per second, and deal 10 damage once per second within 6 units when aimed. Enemies use `PathFollow3D` under `PlacementPath`; the route in the level JSON builds its curve.
 
 ## Tile levels
 
@@ -59,6 +61,7 @@ Run the unit tests from this directory:
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_tower_placement.gd
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_placement_combat.gd
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_audio_pipeline.gd
+& 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_basic_game_loop.gd
 ```
 
 `scripts/tower_rules.gd` holds the range, turning, and damage rules. Both scenes share the basic-shape tower visual, which can later be replaced by Blender models.

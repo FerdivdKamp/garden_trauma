@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" path="res://scenes/placement_path.tscn" id="2_path"]
 [ext_resource type="Script" uid="uid://lj17pqkd0jk8" path="res://scripts/placement_shot_effects.gd" id="3_effects"]
 [ext_resource type="Script" uid="uid://byrr5srpyptff" path="res://scripts/level_grid.gd" id="4_grid"]
+[ext_resource type="Script" path="res://scripts/wave_controller.gd" id="5_waves"]
 
 [node name="TowerPlacement" type="Node3D" unique_id=1227784002]
 script = ExtResource("1_placement")
@@ -14,6 +15,9 @@ script = ExtResource("4_grid")
 [node name="PlacementPath" parent="." unique_id=1922296270 instance=ExtResource("2_path")]
 
 [node name="PlacedTowers" type="Node3D" parent="." unique_id=1428990228]
+
+[node name="Waves" type="Node" parent="."]
+script = ExtResource("5_waves")
 
 [node name="ShotEffects" type="Node3D" parent="." unique_id=2054604004]
 script = ExtResource("3_effects")
@@ -45,3 +49,104 @@ offset_left = -325.0
 offset_top = 12.0
 offset_right = -12.0
 offset_bottom = -12.0
+
+[node name="PauseOverlay" type="Control" parent="UI"]
+visible = false
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Shade" type="ColorRect" parent="UI/PauseOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.65)
+
+[node name="Center" type="CenterContainer" parent="UI/PauseOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="UI/PauseOverlay/Center"]
+layout_mode = 2
+
+[node name="Actions" type="VBoxContainer" parent="UI/PauseOverlay/Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="UI/PauseOverlay/Center/Panel/Actions"]
+layout_mode = 2
+text = "Paused"
+horizontal_alignment = 1
+
+[node name="Resume" type="Button" parent="UI/PauseOverlay/Center/Panel/Actions"]
+custom_minimum_size = Vector2(220, 42)
+layout_mode = 2
+text = "Resume"
+
+[node name="Restart" type="Button" parent="UI/PauseOverlay/Center/Panel/Actions"]
+layout_mode = 2
+text = "Restart level"
+
+[node name="MainMenu" type="Button" parent="UI/PauseOverlay/Center/Panel/Actions"]
+layout_mode = 2
+text = "Main menu"
+
+[node name="ResultOverlay" type="Control" parent="UI"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Shade" type="ColorRect" parent="UI/ResultOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.65)
+
+[node name="Center" type="CenterContainer" parent="UI/ResultOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="UI/ResultOverlay/Center"]
+layout_mode = 2
+
+[node name="Actions" type="VBoxContainer" parent="UI/ResultOverlay/Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="UI/ResultOverlay/Center/Panel/Actions"]
+layout_mode = 2
+text = "Level complete"
+horizontal_alignment = 1
+
+[node name="Restart" type="Button" parent="UI/ResultOverlay/Center/Panel/Actions"]
+custom_minimum_size = Vector2(220, 42)
+layout_mode = 2
+text = "Retry"
+
+[node name="MainMenu" type="Button" parent="UI/ResultOverlay/Center/Panel/Actions"]
+layout_mode = 2
+text = "Main menu"
