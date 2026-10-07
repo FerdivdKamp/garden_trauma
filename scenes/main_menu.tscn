@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_menu"]
+[ext_resource type="Theme" path="res://ui/game_theme.tres" id="2_theme"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -9,6 +10,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_theme")
 script = ExtResource("1_menu")
 
 [node name="Center" type="CenterContainer" parent="."]
@@ -25,21 +27,24 @@ theme_override_constants/separation = 16
 
 [node name="Title" type="Label" parent="Center/Menu"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 36
+theme_type_variation = &"MainTitle"
 text = "GARDEN TRAUMA"
 horizontal_alignment = 1
 
 [node name="Start" type="Button" parent="Center/Menu"]
 custom_minimum_size = Vector2(260, 48)
 layout_mode = 2
+theme_type_variation = &"PrimaryButton"
 text = "Start"
 
 [node name="Options" type="Button" parent="Center/Menu"]
 layout_mode = 2
+theme_type_variation = &"SecondaryButton"
 text = "Options"
 
 [node name="Quit" type="Button" parent="Center/Menu"]
 layout_mode = 2
+theme_type_variation = &"TextButton"
 text = "Quit"
 
 [node name="OptionsPanel" type="PanelContainer" parent="Center"]
@@ -52,7 +57,7 @@ theme_override_constants/separation = 12
 
 [node name="Heading" type="Label" parent="Center/OptionsPanel/Settings"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 26
+theme_type_variation = &"SectionHeading"
 text = "Audio Options"
 
 [node name="MusicHeading" type="Label" parent="Center/OptionsPanel/Settings"]
@@ -92,4 +97,5 @@ step = 1.0
 
 [node name="Back" type="Button" parent="Center/OptionsPanel/Settings"]
 layout_mode = 2
+theme_type_variation = &"SecondaryButton"
 text = "Back"

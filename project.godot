@@ -15,20 +15,28 @@ run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"
 
-[autoload]
-
-LevelProgress="*res://scripts/level_progress.gd"
-AudioSettings="*res://scripts/audio_settings.gd"
-AudioManager="*res://scripts/audio_manager.gd"
-
 [audio]
 
 buses/default_bus_layout="res://assets/audio/audio_bus_layout.tres"
+
+[autoload]
+
+AudioSettings="*res://scripts/audio_settings.gd"
+AudioManager="*res://scripts/audio_manager.gd"
+LevelProgress="*res://scripts/level_progress.gd"
 
 [display]
 
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+
+[editor]
+
+movie_writer/movie_file="C:/GameDesign/Godot/test_01/recordings/test.ogv"
+
+[filesystem]
+
+import/blender/enabled=false
 
 [physics]
 
