@@ -14,8 +14,10 @@ func _run() -> void:
 	await process_frame
 	_check(grid.error_message.is_empty(), "Example level loads")
 	_check(grid.width == 20 and grid.height == 20 and grid.get_node("Tile_19_19") != null, "20x20 tiles render")
-	var grass_mesh := grid.get_node("Tile_5_5/Ground") as MeshInstance3D
-	_check(grass_mesh.mesh is BoxMesh and grass_mesh.mesh.size.is_equal_approx(Vector3(2, 0.2, 2)) and is_equal_approx(grass_mesh.position.y, -0.1), "Tile footprint and top surface match the design")
+	var grass_visual := grid.get_node("Tile_5_5/GrassVisual") as Node3D
+	var grass_mesh := _find_mesh(grass_visual)
+	_check(is_equal_approx(grass_visual.position.y, -0.25), "Grass side top aligns with the Y=0 ground plane")
+	_check(grass_mesh != null and is_equal_approx(grass_mesh.mesh.get_aabb().size.x, 2.0) and is_equal_approx(grass_mesh.mesh.get_aabb().size.z, 2.0), "Imported grass keeps its 2x2 footprint")
 	_check(grid.grid_to_world(Vector2i(0, 0)) == Vector3(-19, 0, -19), "Even grid centers on origin")
 	_check(grid.grid_to_world(Vector2i(1, 0)) == Vector3(-17, 0, -19), "Grid step is 2 meters")
 	_check(grid.world_to_grid(Vector3(-19, 0, -19)) == Vector2i.ZERO, "World converts back to grid")
@@ -43,3 +45,13 @@ func _check(condition: bool, message: String) -> void:
 	if not condition:
 		push_error(message)
 		failures += 1
+
+
+func _find_mesh(node: Node) -> MeshInstance3D:
+	if node is MeshInstance3D:
+		return node
+	for child: Node in node.get_children():
+		var mesh: MeshInstance3D = _find_mesh(child)
+		if mesh != null:
+			return mesh
+	return null
