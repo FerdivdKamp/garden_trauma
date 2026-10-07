@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/level_select.gd" id="1_select"]
+[ext_resource type="Theme" path="res://ui/game_theme.tres" id="2_theme"]
 
 [node name="LevelSelect" type="Control"]
 layout_mode = 3
@@ -9,6 +10,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_theme")
 script = ExtResource("1_select")
 
 [node name="Center" type="CenterContainer" parent="."]
@@ -28,7 +30,7 @@ theme_override_constants/separation = 16
 
 [node name="Title" type="Label" parent="Center/Panel/Content"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_type_variation = &"SectionHeading"
 text = "SELECT A GARDEN"
 horizontal_alignment = 1
 
@@ -39,4 +41,5 @@ theme_override_constants/separation = 10
 [node name="Back" type="Button" parent="Center/Panel/Content"]
 custom_minimum_size = Vector2(280, 44)
 layout_mode = 2
+theme_type_variation = &"SecondaryButton"
 text = "Main menu"
