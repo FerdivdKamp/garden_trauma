@@ -1,5 +1,8 @@
 # Finishing up the skeleton
 
+!!! note "Historical checklist"
+    The opening description below predates the playable wave and economy loop. See [Current status](../roadmap/index.md) and [Playing and testing](../guides/playing-and-testing.md) for the current project.
+
 The project already has a main menu, a tile-based garden level, three placeable towers, two enemy definitions, targeting and damage, attack effects, and basic audio. The current garden scene is still a playground: enemies are spawned manually, towers cost nothing, and a battle has no outcome. This checklist aims for one complete, short level first, then simple progress across levels.
 
 ## 1. Make one level playable from start to finish

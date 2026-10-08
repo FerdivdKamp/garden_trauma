@@ -1,3 +1,8 @@
+# Asset pipeline plan
+
+!!! note "Planning reference"
+    This document includes older proposed paths and phases. Use the [Blender asset workflow](../../guides/blender-workflow.md) for current export instructions and [Current status](../index.md) for implemented work.
+
 ## Goal
 
 Establish a simple, documented and repeatable workflow for creating 3D assets in Blender and importing them into Godot.

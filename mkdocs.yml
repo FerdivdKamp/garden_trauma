@@ -1,0 +1,48 @@
+site_name: Garden Trauma
+site_description: Project guide and development roadmap for Garden Trauma
+docs_dir: docs
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - content.code.copy
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+nav:
+  - Home: index.md
+  - Guides:
+      - Getting started: guides/getting-started.md
+      - Playing and testing: guides/playing-and-testing.md
+      - Tower and unit data: guides/game-data.md
+      - Build a tile level: guides/build-tile-level.md
+      - Blender asset workflow: guides/blender-workflow.md
+      - Tower shot effects: guides/shot-effects-and-particles.md
+      - Lightning effect: guides/lightning-effect.md
+  - Reference:
+      - Project structure: reference/project-structure.md
+      - Audio sources: reference/audio-sources.md
+  - Roadmap:
+      - Current status: roadmap/index.md
+      - Next steps and open questions: roadmap/next.md
+      - Design and planning notes:
+          - Game design: roadmap/plans/game-design.md
+          - Tile system: roadmap/plans/tile-system.md
+          - Asset pipeline: roadmap/plans/asset-pipeline.md
+          - Blender import: roadmap/plans/blender-asset-import.md
+          - Sound design: roadmap/plans/sound-design.md
+          - Menu theme: roadmap/plans/menu-theme.md
+          - Art direction: roadmap/plans/art-direction.md
+  - History:
+      - Earlier work: archive/index.md
+      - Skeleton checklist: archive/skeleton-checklist.md
+      - Tasks 1–7:
+          - Tower demo: archive/task_01.md
+          - Tower placement: archive/task_02.md
+          - Moving enemy: archive/task_03.md
+          - Enemy variants: archive/task_04.md
+          - Data definitions: archive/task_05.md
+          - Shot effects: archive/task_06.md
+          - Asset import follow-up: archive/task_07.md

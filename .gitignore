@@ -3,6 +3,7 @@
 /android/
 __pycache__/
 *.pyc
+/site/
 
 
 # Ignore all Blender files, except the actual source files

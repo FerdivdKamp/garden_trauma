@@ -1,5 +1,8 @@
 # Toy Tower Defense — Design Notes & Build Roadmap
 
+!!! note "Design proposal"
+    This document explores possible mechanics and development phases. See [Current status](../index.md) for implemented work and [Next steps](../next.md) for the active questions.
+
 ## 1. High-Level Concept
 
 A slow-paced, toy-themed tower defense game built around **low mechanical intensity but high player attention**.

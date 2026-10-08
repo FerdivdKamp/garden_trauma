@@ -1,6 +1,6 @@
 # Tower shot effects
 
-Open `scenes/tower_placement.tscn`, place both tower types near the path, and spawn enemies with the panel. The single barrel draws a short red laser and a red hit burst. The double barrel alternates small shells between its barrels; each shot emits a little expanding smoke at the muzzle and debris when the shell reaches its captured hit point.
+Open `scenes/tower_placement.tscn`, place the Toy Tank and Double Tank near the path, and start a wave. To spawn enemies manually, enable `debug_mode` on the scene root in the Inspector. The Toy Tank draws a short red laser and a red hit burst. The Double Tank alternates small shells between its barrels; each shot emits a little expanding smoke at the muzzle and debris when the shell reaches its captured hit point.
 
 ## How the nodes work
 
