@@ -19,7 +19,7 @@ Before making significant changes, consult the relevant project documentation.
 Reference:
 
 ```text
-<UPDATE_WITH_DESIGN_DOCUMENT_PATH>
+docs/roadmap/plans/game-design.md
 ```
 
 This document describes:
@@ -43,7 +43,8 @@ Do not treat every idea in the design document as a requirement. Some ideas are 
 Reference:
 
 ```text
-<UPDATE_WITH_INFRA_DOCUMENT_PATH>
+docs/reference/project-structure.md
+docs/guides/getting-started.md
 ```
 
 This document describes technical decisions such as:

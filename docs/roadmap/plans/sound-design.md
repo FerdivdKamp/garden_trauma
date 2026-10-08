@@ -71,7 +71,7 @@ Placeholder assets are fine.
 If external placeholder assets are used, add:
 
 ```text
-assets/audio/audio-sources.md
+docs/reference/audio-sources.md
 ```
 
 Record:
