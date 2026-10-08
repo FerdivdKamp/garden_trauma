@@ -18,6 +18,10 @@ func _run() -> void:
 	var grass_mesh := _find_mesh(grass_visual)
 	_check(is_equal_approx(grass_visual.position.y, -0.25), "Grass side top aligns with the Y=0 ground plane")
 	_check(grass_mesh != null and is_equal_approx(grass_mesh.mesh.get_aabb().size.x, 2.0) and is_equal_approx(grass_mesh.mesh.get_aabb().size.z, 2.0), "Imported grass keeps its 2x2 footprint")
+	var path_visual := grid.get_node("Tile_5_7/PathVisual") as Node3D
+	var path_mesh := _find_mesh(path_visual)
+	_check(is_equal_approx(path_visual.position.y, -0.25), "Path side top aligns with the Y=0 ground plane")
+	_check(path_mesh != null and is_equal_approx(path_mesh.mesh.get_aabb().size.x, 2.0) and is_equal_approx(path_mesh.mesh.get_aabb().size.z, 2.0), "Imported path keeps its 2x2 footprint")
 	_check(grid.grid_to_world(Vector2i(0, 0)) == Vector3(-19, 0, -19), "Even grid centers on origin")
 	_check(grid.grid_to_world(Vector2i(1, 0)) == Vector3(-17, 0, -19), "Grid step is 2 meters")
 	_check(grid.world_to_grid(Vector3(-19, 0, -19)) == Vector2i.ZERO, "World converts back to grid")

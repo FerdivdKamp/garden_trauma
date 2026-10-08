@@ -6,7 +6,7 @@ const TILE_HEIGHT := 0.2
 const TERRAIN := {".": "grass", "=": "path_sand", "#": "blocked", "S": "path_sand", "O": "path_sand"}
 const TILE_SCENES := {
 	"grass": preload("res://scenes/tiles/tile_grass.tscn"),
-	"path_sand": preload("res://scenes/tiles/tile_path_sand_placeholder.tscn"),
+	"path_sand": preload("res://scenes/tiles/tile_path.tscn"),
 	"blocked": preload("res://scenes/tiles/tile_blocked_placeholder.tscn"),
 }
 
