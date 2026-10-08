@@ -30,6 +30,8 @@ const TILE_SCENES := {
 var width := 0
 var height := 0
 var level_name := ""
+var level_seed := 0
+var visual_seeds: Dictionary = {}
 var tiles: Array[String] = []
 var route: Array[Vector2i] = []
 var spawn := Vector2i.ZERO
@@ -53,6 +55,8 @@ func load_level(path: String) -> bool:
 	if not problem.is_empty():
 		return _fail("%s: %s" % [path, problem])
 	level_name = str(data.get("name", "Unnamed level"))
+	level_seed = int(data.level_seed)
+	visual_seeds = data.get("visual_seeds", {}).duplicate()
 	width = int(data.width)
 	height = int(data.height)
 	tiles.clear()
@@ -69,6 +73,10 @@ func load_level(path: String) -> bool:
 
 
 func _validate(data: Dictionary) -> String:
+	if not _valid_seed(data.get("level_seed")):
+		return "level_seed must be an integer from 0 to 2147483647"
+	if not data.get("visual_seeds", {}) is Dictionary:
+		return "visual_seeds must be a coordinate-to-seed object"
 	if not _json_integer(data.get("width")) or not _json_integer(data.get("height")):
 		return "width and height must be integers"
 	var w: int = data.width
@@ -84,6 +92,15 @@ func _validate(data: Dictionary) -> String:
 		for x in w:
 			if not TERRAIN.has(row.substr(x, 1)):
 				return "unknown terrain at (%d, %d)" % [x, z]
+	for key: String in data.get("visual_seeds", {}):
+		var parts := key.split(",")
+		if parts.size() != 2 or not parts[0].is_valid_int() or not parts[1].is_valid_int():
+			return "visual_seeds key must be an x,z coordinate: %s" % key
+		var cell := Vector2i(int(parts[0]), int(parts[1]))
+		if cell.x < 0 or cell.y < 0 or cell.x >= w or cell.y >= h:
+			return "visual_seeds coordinate is outside the grid: %s" % key
+		if not _valid_seed(data.visual_seeds[key]):
+			return "visual_seeds value must be an integer from 0 to 2147483647: %s" % key
 	for key in ["spawn", "objective"]:
 		if not _valid_cell(data.get(key), w, h):
 			return "%s must be an in-bounds integer [x, z]" % key
@@ -115,6 +132,18 @@ func _valid_cell(value: Variant, w: int, h: int) -> bool:
 func _json_integer(value: Variant) -> bool:
 	# Godot's JSON parser represents JSON numbers as floats.
 	return (value is int or value is float) and is_equal_approx(float(value), roundf(float(value)))
+
+
+func _valid_seed(value: Variant) -> bool:
+	return _json_integer(value) and value >= 0 and value <= 2147483647
+
+
+func visual_seed_for(cell: Vector2i) -> int:
+	var key := "%d,%d" % [cell.x, cell.y]
+	if visual_seeds.has(key):
+		return int(visual_seeds[key])
+	# Keep tile choices stable regardless of build order or other random calls.
+	return (level_seed + cell.x * 73856093 + cell.y * 19349663) % 2147483647
 
 
 func _cell(raw: Array) -> Vector2i:
@@ -162,7 +191,12 @@ func _rebuild_visuals() -> void:
 	for z in height:
 		for x in width:
 			var cell := Vector2i(x, z)
-			var tile := TILE_SCENES[terrain_at(cell)].instantiate() as Node3D
+			var terrain := terrain_at(cell)
+			var tile := TILE_SCENES[terrain].instantiate() as Node3D
+			if terrain == "grass":
+				(tile as GrassTileVisual).visual_seed = visual_seed_for(cell)
+			elif terrain == "path_sand":
+				(tile as PathTileVisual).visual_seed = visual_seed_for(cell)
 			tile.name = "Tile_%d_%d" % [x, z]
 			tile.position = grid_to_world(cell)
 			add_child(tile)

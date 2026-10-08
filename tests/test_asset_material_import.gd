@@ -35,6 +35,7 @@ func _initialize() -> void:
 			if override is ShaderMaterial:
 				var translated: ShaderMaterial = override
 				_expect(translated.shader == SHADER, "GrassTop uses the shared shader")
+				_expect(translated.get_shader_parameter("use_world_space") == true, "Grass uses world-space noise")
 				_expect(is_equal_approx(float(translated.get_shader_parameter("noise_scale")), float(grass_top["noise"]["scale"])), "Noise scale matches Blender")
 				_expect(is_equal_approx(float(translated.get_shader_parameter("material_roughness")), float(grass_top["principled"]["roughness"])), "Roughness matches Blender")
 				var first_color: Color = translated.get_shader_parameter("color_a")
@@ -43,6 +44,22 @@ func _initialize() -> void:
 		elif original.resource_name == "GrassSides":
 			_expect(override == null, "GrassSides keeps its GLB material")
 	_expect(translated_count == 1, "One GrassTop surface was translated")
+	for variant_name: String in ["tile_grass", "tile_grass2", "tile_grass3"]:
+		var variant_path := "res://assets/models/environment/garden/tiles/%s.glb" % variant_name
+		var variant_scene := (load(variant_path) as PackedScene).instantiate()
+		var variant_mesh := _find_mesh(variant_scene)
+		_expect(variant_mesh != null, "%s has an imported mesh" % variant_name)
+		if variant_mesh != null:
+			var translated := false
+			for surface: int in variant_mesh.mesh.get_surface_count():
+				var material := variant_mesh.mesh.surface_get_material(surface)
+				if material != null and material.resource_name == "GrassTop":
+					var variant_override := variant_mesh.get_surface_override_material(surface)
+					translated = variant_override is ShaderMaterial
+					if variant_override is ShaderMaterial:
+						_expect(variant_override.get_shader_parameter("use_world_space") == true, "%s uses world-space noise" % variant_name)
+			_expect(translated, "%s translates its grass top material" % variant_name)
+		variant_scene.free()
 	var path_scene: Node = PATH_MODEL.instantiate()
 	var path_mesh: MeshInstance3D = _find_mesh(path_scene)
 	_expect(path_mesh != null, "Imported path has a MeshInstance3D")
@@ -55,9 +72,26 @@ func _initialize() -> void:
 				_expect(path_override is ShaderMaterial, "Path top has a ShaderMaterial override")
 				if path_override is ShaderMaterial:
 					_expect(path_override.shader == SHADER, "Path top uses the shared shader")
+					_expect(path_override.get_shader_parameter("use_world_space") == true, "Path uses world-space noise")
 				path_shader_count += 1
 		_expect(path_shader_count == 1, "One path top surface was translated")
 	path_scene.free()
+	for variant_name: String in ["tile_path2", "tile_path3", "tile_path4"]:
+		var variant_path := "res://assets/models/environment/garden/tiles/%s.glb" % variant_name
+		var variant_scene := (load(variant_path) as PackedScene).instantiate()
+		var variant_mesh := _find_mesh(variant_scene)
+		_expect(variant_mesh != null, "%s has an imported mesh" % variant_name)
+		if variant_mesh != null:
+			var translated := false
+			for surface: int in variant_mesh.mesh.get_surface_count():
+				var material := variant_mesh.mesh.surface_get_material(surface)
+				if material != null and material.resource_name == "GrassTop":
+					var variant_override := variant_mesh.get_surface_override_material(surface)
+					translated = variant_override is ShaderMaterial
+					if variant_override is ShaderMaterial:
+						_expect(variant_override.get_shader_parameter("use_world_space") == true, "%s uses world-space noise" % variant_name)
+			_expect(translated, "%s translates its path top material" % variant_name)
+		variant_scene.free()
 	var preview: Node = PREVIEW.instantiate()
 	_expect(preview.get_node_or_null("Camera") is Camera3D, "Preview scene has a camera")
 	preview.free()

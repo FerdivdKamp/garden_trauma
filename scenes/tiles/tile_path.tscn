@@ -1,8 +1,10 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/models/environment/garden/tiles/tile_path.glb" id="1_path"]
+[ext_resource type="Script" path="res://scripts/path_tile_visual.gd" id="2_visual"]
 
 [node name="TilePath" type="Node3D"]
+script = ExtResource("2_visual")
 
 [node name="PathVisual" parent="." instance=ExtResource("1_path")]
 position = Vector3(0, -0.25, 0)

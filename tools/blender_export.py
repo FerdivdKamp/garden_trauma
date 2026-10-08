@@ -231,11 +231,18 @@ def main() -> None:
     if mode == "validate":
         return
 
+    # A .blend saved while editing a mesh restores Edit mode in background
+    # Blender; selection operators require Object mode before GLB export.
+    if bpy.context.object is not None and bpy.context.object.mode != "OBJECT":
+        bpy.ops.object.mode_set(mode="OBJECT")
     bpy.ops.object.select_all(action="DESELECT")
     for obj in objects:
         obj.select_set(True)
     bpy.context.view_layer.objects.active = objects[0]
-    bpy.ops.export_scene.gltf(filepath=arguments[1], export_format="GLB", use_selection=True, export_cameras=False, export_lights=False)
+    bpy.ops.export_scene.gltf(
+        filepath=arguments[1], export_format="GLB", use_selection=True,
+        export_cameras=False, export_lights=False, export_apply=True,
+    )
     with open(arguments[2], "w", encoding="utf-8") as manifest_file:
         json.dump(manifest, manifest_file, indent=2)
         manifest_file.write("\n")

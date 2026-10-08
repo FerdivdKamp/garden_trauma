@@ -16,11 +16,13 @@ func _post_import(scene: Node) -> Object:
 	for entry: Variant in parsed.get("materials", []):
 		if entry is Dictionary and entry.has("name"):
 			entries[entry["name"]] = entry
-	_apply_materials(scene, entries)
+	var source_name := get_source_file().get_file()
+	var world_space_tile := source_name.begins_with("tile_grass") or source_name.begins_with("tile_path")
+	_apply_materials(scene, entries, world_space_tile)
 	return scene
 
 
-func _apply_materials(node: Node, entries: Dictionary) -> void:
+func _apply_materials(node: Node, entries: Dictionary, world_space_tile: bool) -> void:
 	if node is MeshInstance3D:
 		var instance: MeshInstance3D = node
 		var mesh: Mesh = instance.mesh
@@ -30,14 +32,14 @@ func _apply_materials(node: Node, entries: Dictionary) -> void:
 				if original == null or not entries.has(original.resource_name):
 					continue
 				var entry: Dictionary = entries[original.resource_name]
-				var translated: ShaderMaterial = _make_material(entry, mesh.get_aabb())
+				var translated: ShaderMaterial = _make_material(entry, mesh.get_aabb(), world_space_tile)
 				if translated != null:
 					instance.set_surface_override_material(surface_index, translated)
 	for child: Node in node.get_children():
-		_apply_materials(child, entries)
+		_apply_materials(child, entries, world_space_tile)
 
 
-func _make_material(entry: Dictionary, bounds: AABB) -> ShaderMaterial:
+func _make_material(entry: Dictionary, bounds: AABB, world_space_tile: bool) -> ShaderMaterial:
 	if entry.get("classification") != "translatable" or entry.get("type") != "procedural_noise_color_ramp":
 		return null
 	var noise: Dictionary = entry.get("noise", {})
@@ -77,4 +79,6 @@ func _make_material(entry: Dictionary, bounds: AABB) -> ShaderMaterial:
 	result.set_shader_parameter("material_metallic", float(principled.get("metallic", 0.0)))
 	result.set_shader_parameter("generated_min", bounds.position)
 	result.set_shader_parameter("generated_size", bounds.size)
+	result.set_shader_parameter("use_world_space", world_space_tile)
+	result.set_shader_parameter("world_noise_tile_size", 2.0)
 	return result

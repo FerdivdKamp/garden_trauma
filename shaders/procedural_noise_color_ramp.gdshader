@@ -1,7 +1,8 @@
 shader_type spatial;
 
 // A compact 3D value-noise approximation of Blender's Noise -> Color Ramp.
-// Generated coordinates come from the imported mesh's local bounding box.
+// Ground tiles can use world coordinates so noise continues across tile edges.
+// Other imported materials retain Blender-style generated coordinates.
 uniform vec4 color_a : source_color;
 uniform vec4 color_b : source_color;
 uniform float ramp_start = 0.0;
@@ -15,8 +16,10 @@ uniform float material_roughness = 0.5;
 uniform float material_metallic = 0.0;
 uniform vec3 generated_min = vec3(0.0);
 uniform vec3 generated_size = vec3(1.0);
+uniform bool use_world_space = false;
+uniform float world_noise_tile_size = 2.0;
 
-varying vec3 generated_position;
+varying vec3 noise_position;
 
 float hash3(vec3 point) {
 	return fract(sin(dot(point, vec3(127.1, 311.7, 74.7))) * 43758.5453);
@@ -40,11 +43,15 @@ float value_noise(vec3 point) {
 }
 
 void vertex() {
-	generated_position = (VERTEX - generated_min) / max(generated_size, vec3(0.0001));
+	if (use_world_space) {
+		noise_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz / world_noise_tile_size;
+	} else {
+		noise_position = (VERTEX - generated_min) / max(generated_size, vec3(0.0001));
+	}
 }
 
 void fragment() {
-	vec3 point = generated_position * noise_scale;
+	vec3 point = noise_position * noise_scale;
 	if (noise_distortion != 0.0) {
 		point += vec3(
 			value_noise(point + vec3(17.0)),
