@@ -1,12 +1,35 @@
 # Tower playground
 
-## Blender asset helper
+## Blender assets and material import
 
-The optional [asset pipeline](asset_pipeline.md) tool creates the Blender source and
-Godot model folders and exports `.blend` files to `.glb`. Run
-`python tools/asset_pipeline.py gui` for its small desktop window, or use
-`python tools/asset_pipeline.py init` and `python tools/asset_pipeline.py export <file.blend>`
-from a terminal. See the pipeline document for folder and export conventions.
+Run commands from the project root. `tools/asset_pipeline.py` is the Python entry
+point for Blender exports; it runs `tools/blender_export.py` inside Blender. Each
+export writes a `.glb` model and a matching `.materials.json` file under
+`assets/models/`, mirroring the source path below `art/blender/`.
+
+```powershell
+python tools/asset_pipeline.py export art/blender/environment/garden/tiles/tile_path.blend
+```
+
+If Blender is not on `PATH`, add `--blender-exe 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe'`
+with your installed Blender path. Use `validate` in place of `export` to check a
+source without writing output, or `python tools/asset_pipeline.py gui` for the
+desktop window. `init` creates the asset folders if needed.
+
+For supported procedural materials, `tools/blender_export.py` records the shader
+settings in `.materials.json`. Godot's GLB **Import Script** must point to
+`res://tools/godot_material_post_import.gd`; that script reads the JSON and
+rebuilds the material with `shaders/procedural_noise_color_ramp.gdshader` when
+the GLB is imported. `tile_path.glb.import` and `tile_grass4.glb.import` already
+have this setting. After changing a `.blend`, export again, then open Godot or
+reimport the GLB so the model and material update together. Unsupported Blender
+node graphs keep the GLB material and may look different in Godot.
+
+The path tile uses `tile_path.blend` through `scenes/tiles/tile_path.tscn`; grass
+uses `tile_grass4.blend`. The current path Blender file still names its mesh and
+materials `tile_grass`, `GrassTop`, and `GrassSides`; those names come from the
+source and do not change where the path GLB is used. See [asset pipeline](asset_pipeline.md)
+for export conventions and material limitations.
 
 ## Tower and unit data
 
@@ -56,7 +79,7 @@ See [Build a tile level](build_tile_level.md) for a short step-by-step guide and
 
 `levels/data/garden_test_01.json` is the 20 by 20 example level used by the tower demo and Garden 1; `garden_test_02.json` is Garden 2. `tiles` has one string per row, from low Z to high Z: `.` is buildable grass, `=` is walkable sand, `#` is blocked rock, `S` is the spawn sand tile, and `O` is the objective sand tile. The `spawn`, `objective`, and ordered `route` use integer `[x, z]` tile coordinates. Consecutive route cells must share an edge; the first and last cells must match spawn and objective. Invalid data reports a specific error when the scene loads.
 
-`LevelGrid` owns the shared `TILE_SIZE = 2.0` and `TILE_HEIGHT = 0.2` values. It centers the map on the world origin: on a 20 by 20 map, tile `[0, 0]` is at world `(-19, 0, -19)`, tile `[1, 0]` is at `(-17, 0, -19)`, and the tile top is at Y = 0. Each terrain uses a named placeholder scene under `scenes/tiles/`. Set a scene's `LevelGrid.level_file` property to use another level; the placement scene generates its enemy curve from that level's route on startup.
+`LevelGrid` owns the shared `TILE_SIZE = 2.0` and `TILE_HEIGHT = 0.2` values. It centers the map on the world origin: on a 20 by 20 map, tile `[0, 0]` is at world `(-19, 0, -19)`, tile `[1, 0]` is at `(-17, 0, -19)`, and the tile top is at Y = 0. Grass and path use GLB-backed scenes under `scenes/tiles/`; blocked rock still uses a placeholder scene. Set a scene's `LevelGrid.level_file` property to use another level; the placement scene generates its enemy curve from that level's route on startup.
 
 In the placement scene, press **G** for the grid lines, **C** for tile coordinates, **R** for the ordered route, and **I** to print the tile under the cursor. The `LevelGrid` node also has Inspector toggles for these overlays. Press **F6** on either scene to run it directly. The tower demo uses the same tile grid as its floor while keeping its standalone tower and pawn controls.
 
@@ -65,6 +88,7 @@ Run the unit tests from this directory:
 ```powershell
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_tower_rules.gd
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_level_grid.gd
+& 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_asset_material_import.gd
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_tower_demo.gd
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_tower_placement.gd
 & 'C:\GameDesign\Godot\Godot_v4.7.2-stable_win64.exe' --headless --path . --script res://tests/test_placement_combat.gd

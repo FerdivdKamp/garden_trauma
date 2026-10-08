@@ -1,6 +1,7 @@
 extends SceneTree
 
 const MODEL: PackedScene = preload("res://assets/models/environment/garden/tiles/tile_grass4.glb")
+const PATH_MODEL: PackedScene = preload("res://assets/models/environment/garden/tiles/tile_path.glb")
 const PREVIEW: PackedScene = preload("res://examples/grass_material_preview.tscn")
 const SHADER: Shader = preload("res://shaders/procedural_noise_color_ramp.gdshader")
 const MANIFEST_PATH := "res://assets/models/environment/garden/tiles/tile_grass4.materials.json"
@@ -42,6 +43,21 @@ func _initialize() -> void:
 		elif original.resource_name == "GrassSides":
 			_expect(override == null, "GrassSides keeps its GLB material")
 	_expect(translated_count == 1, "One GrassTop surface was translated")
+	var path_scene: Node = PATH_MODEL.instantiate()
+	var path_mesh: MeshInstance3D = _find_mesh(path_scene)
+	_expect(path_mesh != null, "Imported path has a MeshInstance3D")
+	if path_mesh != null:
+		var path_shader_count := 0
+		for index: int in path_mesh.mesh.get_surface_count():
+			var original: Material = path_mesh.mesh.surface_get_material(index)
+			if original != null and original.resource_name == "GrassTop":
+				var path_override: Material = path_mesh.get_surface_override_material(index)
+				_expect(path_override is ShaderMaterial, "Path top has a ShaderMaterial override")
+				if path_override is ShaderMaterial:
+					_expect(path_override.shader == SHADER, "Path top uses the shared shader")
+				path_shader_count += 1
+		_expect(path_shader_count == 1, "One path top surface was translated")
+	path_scene.free()
 	var preview: Node = PREVIEW.instantiate()
 	_expect(preview.get_node_or_null("Camera") is Camera3D, "Preview scene has a camera")
 	preview.free()
