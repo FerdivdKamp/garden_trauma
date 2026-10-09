@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "asset": "laser_tower",
+  "materials": [
+    {
+      "name": "BallJoint",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.016699545085430145,
+          0.013923263177275658,
+          0.09202483296394348,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "BallJointArms",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.1409907042980194,
+          0.02725093439221382,
+          0.03632798045873642,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "Barrel",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.16504545509815216,
+          0.16504545509815216,
+          0.16504545509815216,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "BarrelAccents",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.2982516288757324,
+          0.022496897727251053,
+          0.024287967011332512,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "BaseLower",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.01828247681260109,
+          0.03200488165020943,
+          0.06892518699169159,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "GunBase",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.022186279296875,
+          0.0261383056640625,
+          0.090576171875,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "Material.003",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.02219332382082939,
+          0.07036656141281128,
+          0.18590469658374786,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    }
+  ]
+}

@@ -18,6 +18,22 @@ Regenerate the deterministic grass color field with `Godot --headless --path . -
 
 The current path and grass tiles use GLB-backed scenes under `scenes/tiles/`. The blocked rock tile remains a placeholder. The older [pipeline plan](../roadmap/plans/asset-pipeline.md) and [import design](../roadmap/plans/blender-asset-import.md) describe the intended conventions and possible extensions; their proposed phases are not all implemented.
 
+## Tower pivot template
+
+`art/blender/towers/laser_tower.blend` contains four laser tower collections. Export each collection to its own GLB:
+
+```powershell
+$blender = "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe"
+python tools/asset_pipeline.py export art/blender/towers/laser_tower.blend --blender-exe $blender --collection tower_laser_mk1 --output-name laser_tower
+python tools/asset_pipeline.py export art/blender/towers/laser_tower.blend --blender-exe $blender --collection tower_laser_mk2 --output-name laser_tower_mk2
+python tools/asset_pipeline.py export art/blender/towers/laser_tower.blend --blender-exe $blender --collection tower_laser_mk3 --output-name laser_tower_mk3
+python tools/asset_pipeline.py export art/blender/towers/laser_tower.blend --blender-exe $blender --collection tower_laser_mk4 --output-name laser_tower_mk4
+```
+
+`scenes/tower_visual.tscn` contains mk1 so it is visible in the editor. `scripts/tower_visual.gd` swaps to mk2, mk3, then mk4 after each purchase. The explicit `--collection` option includes models hidden in Blender while another version is being edited. Keep the base mesh at the origin, place a yaw empty at the turret's turning center, nest a pitch empty at the gun's hinge, and put a muzzle empty at the barrel tip in each collection. The script uses those imported pivots directly for aiming and shot origins. Future towers can follow this hierarchy, but each should get its own definition and scene wiring when its model is added.
+
+The scales are applied in the current source. Blender still reports one generic material name; renaming it would make later edits easier to inspect.
+
 ## Garden grass mesh variants
 
 The Garden uses `tile_grass.blend`, `tile_grass2.blend`, and `tile_grass3.blend`. Exact copies of their original, rougher sources are in `art/blender/environment/garden/tiles/backups/`. The current sources have baked geometry: matching subdivision density, reduced height variation, and flat border normals. This lets the three variants meet without a square lighting seam while preserving small interior differences.

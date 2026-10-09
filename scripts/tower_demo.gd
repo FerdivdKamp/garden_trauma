@@ -1,12 +1,12 @@
 extends Node3D
 
 const PAWN_SAVE_PATH := "user://pawn.json"
-const TOWER_IDS := ["toy_tank", "double_tank", "lightning_tower"]
+const TOWER_IDS := ["laser_tower", "double_tank", "lightning_tower"]
 const TowerVisual = preload("res://scripts/tower_visual.gd")
 const LightningEffect = preload("res://scripts/lightning_effect.gd")
 
 @onready var tower_visual: TowerVisual = $Tower
-@onready var turret_pivot: Node3D = $Tower/TurretPivot
+@onready var turret_pivot: Node3D = tower_visual.get_yaw_pivot()
 @onready var pawn: Node3D = $Pawn
 @onready var lightning_effect: LightningEffect = $LightningEffect
 @onready var settings_panel: PanelContainer = $UI/SettingsPanel
@@ -49,6 +49,8 @@ func _process(delta: float) -> void:
 		turret_pivot.rotation.y = TowerRules.step_yaw(
 			turret_pivot.rotation.y, desired_yaw, deg_to_rad(turn_speed), delta
 		)
+		if tower_type == 0:
+			tower_visual.aim_pitch_at(pawn_visual.global_position, turn_speed, delta)
 
 	shot_clock += delta
 	var aimed := absf(angle_difference(turret_pivot.rotation.y, desired_yaw)) < deg_to_rad(5.0)
@@ -101,7 +103,7 @@ func _build_ui() -> void:
 	column.add_child(help)
 
 	tower_selector = OptionButton.new()
-	tower_selector.add_item("Single barrel")
+	tower_selector.add_item("Laser Tower")
 	tower_selector.add_item("Double barrel")
 	tower_selector.add_item("Lightning tower")
 	tower_selector.item_selected.connect(_on_tower_selected)
@@ -229,6 +231,7 @@ func _reset_aim() -> void:
 func _on_tower_selected(index: int) -> void:
 	tower_type = index
 	$Tower.set_tower_type(index)
+	turret_pivot = tower_visual.get_yaw_pivot()
 	_load_tower()
 	_reset_aim()
 	_refresh_visuals()
@@ -241,11 +244,11 @@ func _tower_id() -> String:
 func _migrate_legacy_tower_saves() -> void:
 	# Older playground builds saved only four fields. Keep those edits when moving
 	# to complete tower definitions, leaving all other fields at their defaults.
-	for id in ["toy_tank", "double_tank"]:
+	for id in ["laser_tower", "double_tank"]:
 		var override_path := DefinitionLoader.TOWER_OVERRIDE_DIR.path_join(id + ".json")
 		if FileAccess.file_exists(override_path):
 			continue
-		var old_name := "single" if id == "toy_tank" else "double"
+		var old_name := "single" if id == "laser_tower" else "double"
 		var old_path := "user://tower_%s.json" % old_name
 		if not FileAccess.file_exists(old_path):
 			continue

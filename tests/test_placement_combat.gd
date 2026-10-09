@@ -50,7 +50,7 @@ func _run() -> void:
 	attack.definition.turn_speed = 360.0
 	attack._process(1.0)
 	_check(is_equal_approx(red.health, 40.0), "Tower damages nearest enemy in attack range")
-	_check(demo.shot_effects.get_node_or_null("LaserBeam") != null, "Single barrel draws a laser beam")
+	_check(demo.shot_effects.get_node_or_null("LaserBeam") != null, "Laser Tower draws a laser beam")
 	var beam := demo.shot_effects.get_node_or_null("LaserBeam") as MeshInstance3D
 	_check(beam != null and beam.mesh == demo.shot_effects.laser_template.mesh, "Laser reuses its preloaded mesh")
 	var red_hit := demo.shot_effects.get_node_or_null("RedHit") as GPUParticles3D

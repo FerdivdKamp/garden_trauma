@@ -83,8 +83,13 @@ def validate_asset(root: Path, source: Path, blender_exe: str | None = None) -> 
     return output
 
 
-def export_asset(root: Path, source: Path, blender_exe: str | None = None) -> tuple[Path, str]:
+def export_asset(root: Path, source: Path, blender_exe: str | None = None,
+                 collection: str | None = None, output_name: str | None = None) -> tuple[Path, str]:
     destination = export_destination(root, source)
+    if output_name:
+        if not ASSET_NAME.fullmatch(output_name):
+            raise ValueError("Output name must use lowercase snake_case and start with a letter")
+        destination = destination.with_name(output_name + ".glb")
     manifest_destination = destination.with_suffix(".materials.json")
     executable = blender_executable(blender_exe)
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -96,7 +101,10 @@ def export_asset(root: Path, source: Path, blender_exe: str | None = None) -> tu
     os.close(manifest_fd)
     temporary_manifest = Path(manifest_name)
     try:
-        returncode, output = run_blender(source, executable, "export", str(temporary), str(temporary_manifest))
+        script_args = ["export", str(temporary), str(temporary_manifest)]
+        if collection:
+            script_args.extend(("--collection", collection))
+        returncode, output = run_blender(source, executable, *script_args)
         if (returncode != 0 or temporary.stat().st_size == 0
                 or temporary_manifest.stat().st_size == 0):
             raise RuntimeError(f"Blender export failed (exit {returncode}).\n{output}")
@@ -232,6 +240,8 @@ def main() -> int:
     export = subcommands.add_parser("export", help="Export one .blend file to its matching .glb")
     export.add_argument("source", type=Path)
     export.add_argument("--blender-exe", help="Blender executable path if it is not on PATH")
+    export.add_argument("--collection", help="Export this Blender collection, including hidden objects")
+    export.add_argument("--output-name", help="GLB filename without extension (for collection variants)")
     validate = subcommands.add_parser("validate", help="Check one .blend file without exporting")
     validate.add_argument("source", type=Path)
     validate.add_argument("--blender-exe", help="Blender executable path if it is not on PATH")
@@ -244,7 +254,8 @@ def main() -> int:
             for folder in folders:
                 print(folder)
         elif args.command == "export":
-            destination, output = export_asset(root, args.source, args.blender_exe)
+            destination, output = export_asset(root, args.source, args.blender_exe,
+                                               args.collection, args.output_name)
             if output:
                 print(output)
             print(f"Exported: {destination}")

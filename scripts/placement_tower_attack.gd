@@ -29,7 +29,10 @@ func buy_next_upgrade(available_currency: int) -> int:
 		var property_name: String = "attack_range" if key == "range" else key
 		definition.set(property_name, upgrade.attack[key])
 	upgrade_level += 1
-	(get_parent() as TowerVisual).set_ranges(definition.attack_range, definition.detection_range)
+	var tower := get_parent() as TowerVisual
+	tower.set_ranges(definition.attack_range, definition.detection_range)
+	if tower.tower_type == 0:
+		tower.set_laser_upgrade_level(upgrade_level)
 	return int(upgrade.cost)
 
 
@@ -37,7 +40,7 @@ func _process(delta: float) -> void:
 	if enemies == null:
 		return
 	var tower := get_parent() as TowerVisual
-	var pivot := tower.get_node("TurretPivot") as Node3D
+	var pivot := tower.get_yaw_pivot()
 	var target: PlacementEnemy
 	var target_distance := INF
 	var best_priority := -INF
@@ -68,6 +71,8 @@ func _process(delta: float) -> void:
 	var desired_yaw := TowerRules.target_yaw(direction)
 	pivot.rotation.y = TowerRules.step_yaw(pivot.rotation.y, desired_yaw, deg_to_rad(definition.turn_speed), delta)
 	var aimed := absf(angle_difference(pivot.rotation.y, desired_yaw)) < deg_to_rad(5.0)
+	if tower.tower_type == 0:
+		aimed = tower.aim_pitch_at(target.visual.global_position, definition.turn_speed, delta) and aimed
 	if shot_clock >= definition.cooldown and aimed and TowerRules.can_attack(target_distance, definition.attack_range, definition.detection_range):
 		shot_clock = 0.0
 		# Capture world positions now. Shell visuals can finish after the target has moved.
