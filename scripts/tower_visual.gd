@@ -3,6 +3,12 @@ extends Node3D
 # Shared by the original tower playground and the placement playground.
 const FOOTPRINT_RADIUS := 0.95
 const RangeVisual = preload("res://scripts/tower_range_visual.gd")
+const LASER_MODELS: Array[PackedScene] = [
+	preload("res://assets/models/towers/laser_tower.glb"),
+	preload("res://assets/models/towers/laser_tower_mk2.glb"),
+	preload("res://assets/models/towers/laser_tower_mk3.glb"),
+	preload("res://assets/models/towers/laser_tower_mk4.glb"),
+]
 const FIRE_SOUNDS: Array[AudioStream] = [
 	preload("res://assets/audio/sfx/towers/tower_01_fire.ogg"),
 	preload("res://assets/audio/sfx/towers/tower_02_fire.ogg"),
@@ -10,6 +16,11 @@ const FIRE_SOUNDS: Array[AudioStream] = [
 ]
 
 @onready var turret_pivot: Node3D = $TurretPivot
+@onready var laser_model: Node3D = $LaserTower
+var laser_yaw: Node3D
+var laser_pitch: Node3D
+var laser_muzzle: Node3D
+var laser_upgrade_level := 0
 @onready var range_visual: RangeVisual = $RangeVisual
 @onready var fire_audio: AudioStreamPlayer3D = $FireAudio
 
@@ -18,16 +29,54 @@ var is_preview := false
 
 
 func _ready() -> void:
-	_build_base()
+	_bind_laser_pivots()
+	if tower_type != 0:
+		_build_base()
 	_build_turret()
+	laser_model.visible = tower_type == 0
 	fire_audio.stream = FIRE_SOUNDS[tower_type]
 
 
 func set_tower_type(value: int) -> void:
 	tower_type = value
 	if is_node_ready():
+		laser_model.visible = tower_type == 0
+		var base := get_node_or_null("Base")
+		if tower_type == 0 and base != null:
+			base.queue_free()
+		elif tower_type != 0 and base == null:
+			_build_base()
 		_build_turret()
 		fire_audio.stream = FIRE_SOUNDS[tower_type]
+
+
+func set_laser_upgrade_level(level: int) -> void:
+	assert(level >= 0 and level < LASER_MODELS.size())
+	if laser_model != null and laser_upgrade_level == level:
+		return
+	var previous_yaw := laser_yaw.rotation.y if laser_yaw != null else 0.0
+	var previous_pitch := laser_pitch.rotation.x if laser_pitch != null else 0.0
+	if laser_model != null:
+		remove_child(laser_model)
+		laser_model.queue_free()
+	laser_upgrade_level = level
+	laser_model = LASER_MODELS[level].instantiate() as Node3D
+	laser_model.name = "LaserTower"
+	add_child(laser_model)
+	_bind_laser_pivots()
+	laser_yaw.rotation.y = previous_yaw
+	laser_pitch.rotation.x = previous_pitch
+	laser_model.visible = tower_type == 0
+	if is_node_ready():
+		_update_materials(true)
+
+
+func _bind_laser_pivots() -> void:
+	# Godot changes Blender's .001 style suffixes to _001 on import.
+	var suffix := "" if laser_upgrade_level == 0 else "_%03d" % laser_upgrade_level
+	laser_yaw = laser_model.get_node("turret_yaw%s" % suffix) as Node3D
+	laser_pitch = laser_yaw.get_node("gunbase%s/turret_pitch%s" % [suffix, suffix]) as Node3D
+	laser_muzzle = laser_pitch.get_node("gun%s/muzzle%s" % [suffix, suffix]) as Node3D
 
 
 func play_fire_sound() -> void:
@@ -68,6 +117,9 @@ func _build_turret() -> void:
 	for child in turret_pivot.get_children():
 		turret_pivot.remove_child(child)
 		child.queue_free()
+	if tower_type == 0:
+		_update_materials(true)
+		return
 	if tower_type == 2:
 		_build_lightning_head()
 		_update_materials(true)
@@ -119,11 +171,29 @@ func _build_lightning_head() -> void:
 
 
 func get_muzzle_position(barrel_index: int = 0) -> Vector3:
+	if tower_type == 0:
+		return laser_muzzle.global_position
 	if tower_type == 2:
 		return (turret_pivot.get_node("Orb/LightningOrigin") as Marker3D).global_position
 	var barrel_name := "Barrel" if tower_type == 0 else ("LeftBarrel" if barrel_index == 0 else "RightBarrel")
 	var muzzle := turret_pivot.get_node("%s/Muzzle" % barrel_name) as Marker3D
 	return muzzle.global_position
+
+
+func get_yaw_pivot() -> Node3D:
+	return laser_yaw if tower_type == 0 else turret_pivot
+
+
+func aim_pitch_at(target_position: Vector3, turn_speed: float, delta: float) -> bool:
+	if tower_type != 0:
+		return true
+	# The Blender pitch empty points along -Z, matching Godot's forward direction.
+	var local_target := laser_yaw.to_local(target_position)
+	var local_pivot := laser_yaw.to_local(laser_pitch.global_position)
+	var direction := local_target - local_pivot
+	var desired := atan2(direction.y, Vector2(direction.x, direction.z).length())
+	laser_pitch.rotation.x = move_toward(laser_pitch.rotation.x, desired, deg_to_rad(turn_speed) * delta)
+	return absf(laser_pitch.rotation.x - desired) < deg_to_rad(5.0)
 
 
 func _mesh_instance(shape: Mesh, color: Color) -> MeshInstance3D:
@@ -134,7 +204,10 @@ func _mesh_instance(shape: Mesh, color: Color) -> MeshInstance3D:
 
 
 func _update_materials(valid: bool) -> void:
-	var parts := [get_node("Base")]
+	var parts := []
+	var base := get_node_or_null("Base")
+	if base != null:
+		parts.append(base)
 	parts.append_array(turret_pivot.get_children())
 	for part in parts:
 		var mesh_part := part as MeshInstance3D
@@ -150,3 +223,14 @@ func _update_materials(valid: bool) -> void:
 		if is_preview:
 			material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		mesh_part.material_override = material
+	# Keep the GLB's own materials. Geometry transparency and an overlay make
+	# previews readable without replacing each imported material slot.
+	for mesh_part in laser_model.find_children("*", "MeshInstance3D", true, false):
+		mesh_part.transparency = 0.5 if is_preview else 0.0
+		if is_preview and not valid:
+			var warning := StandardMaterial3D.new()
+			warning.albedo_color = Color(1.0, 0.15, 0.15, 0.7)
+			warning.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			mesh_part.material_overlay = warning
+		else:
+			mesh_part.material_overlay = null

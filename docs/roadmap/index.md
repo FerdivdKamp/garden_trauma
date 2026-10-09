@@ -1,11 +1,11 @@
 # Current status
 
-This page describes the repository as of 8 October 2026. The detailed planning documents under **Design and planning notes** include older proposals and do not by themselves indicate completion.
+This page describes the repository as of 9 October 2026. The detailed planning documents under **Design and planning notes** include older proposals and do not by themselves indicate completion.
 
 ## Implemented
 
 - **Playable loop:** main menu, level selection, two gardens, wave schedules, placement costs, kill rewards, garden health, victory and defeat, pause, retry, restart, and progress saving.
-- **Combat:** three tower definitions (toy tank, double tank, lightning tower), two enemy definitions, automatic targeting and turning, attack effects, and three sequential attack upgrades per tower.
+- **Combat:** three tower definitions (laser tower, double tank, lightning tower), two enemy definitions, automatic targeting and turning, attack effects, and three sequential attack upgrades per tower. The laser tower uses an imported Blender model.
 - **Level system:** JSON tile maps with validated routes, a shared grid, buildable grass, path sand, blocked rock, and a route-following enemy.
 - **Tools:** tower demo, debug placement controls, JSON schemas and runtime validation, Blender export and material import, a balance report, and headless checks.
 - **Presentation:** basic audio buses and saved volume preferences, positional tower and enemy cues, a shared UI theme foundation, laser, shell, particles, and lightning visuals.

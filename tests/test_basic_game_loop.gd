@@ -25,7 +25,7 @@ func _run() -> void:
 	_check(garden.objective_health == 10 and garden.currency == 240, "Level starts with health and coins")
 
 	garden._select_tower(0)
-	var tower_cost: int = garden.tower_definitions["toy_tank"].cost
+	var tower_cost: int = garden.tower_definitions["laser_tower"].cost
 	garden.place_tower(Vector3(-10, 0, -1))
 	_check(garden.placed_towers.get_child_count() == 1 and garden.currency == 240 - tower_cost, "Tower purchase deducts its cost")
 	garden._select_tower(2)

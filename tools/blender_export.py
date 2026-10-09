@@ -19,7 +19,13 @@ TILE_SIZE = (2.0, 2.0, 0.25)
 TOLERANCE = 0.001
 
 
-def selected_objects():
+def selected_objects(collection_name=None):
+    if collection_name:
+        collection = bpy.data.collections.get(collection_name)
+        if collection is None:
+            raise ValueError(f"Collection not found: {collection_name}")
+        # Explicit exports include versions hidden while another version is edited.
+        return [obj for obj in collection.all_objects if obj.type in ALLOWED_TYPES]
     export_collection = bpy.data.collections.get("Export")
     candidates = export_collection.all_objects if export_collection else bpy.context.scene.objects
     return [obj for obj in candidates if obj.type in ALLOWED_TYPES and not obj.hide_render and obj.visible_get()]
@@ -217,6 +223,10 @@ def main() -> None:
     if "--" not in sys.argv:
         raise ValueError("Expected 'validate' or 'export <output.glb> <manifest.json>' after --")
     arguments = sys.argv[sys.argv.index("--") + 1:]
+    collection_name = None
+    if len(arguments) >= 2 and arguments[-2] == "--collection":
+        collection_name = arguments[-1]
+        arguments = arguments[:-2]
     if arguments == ["validate"]:
         mode = "validate"
     elif len(arguments) == 3 and arguments[0] == "export":
@@ -224,7 +234,7 @@ def main() -> None:
     else:
         raise ValueError("Expected 'validate' or 'export <output.glb> <manifest.json>' after --")
 
-    objects = selected_objects()
+    objects = selected_objects(collection_name)
     if not validate(objects):
         raise ValueError("Asset validation failed")
     manifest = material_manifest(objects)
@@ -237,6 +247,10 @@ def main() -> None:
         bpy.ops.object.mode_set(mode="OBJECT")
     bpy.ops.object.select_all(action="DESELECT")
     for obj in objects:
+        if collection_name:
+            obj.hide_set(False)
+            obj.hide_viewport = False
+            obj.hide_render = False
         obj.select_set(True)
     bpy.context.view_layer.objects.active = objects[0]
     bpy.ops.export_scene.gltf(

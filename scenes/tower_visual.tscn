@@ -1,13 +1,16 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/tower_visual.gd" id="1_tower"]
 [ext_resource type="Script" path="res://scripts/tower_range_visual.gd" id="2_range"]
+[ext_resource type="PackedScene" path="res://assets/models/towers/laser_tower.glb" id="3_laser"]
 
 [node name="Tower" type="Node3D"]
 script = ExtResource("1_tower")
 
 [node name="TurretPivot" type="Node3D" parent="."]
 position = Vector3(0, 0.9, 0)
+
+[node name="LaserTower" parent="." instance=ExtResource("3_laser")]
 
 [node name="RangeVisual" type="Node3D" parent="."]
 visible = false

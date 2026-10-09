@@ -1,10 +1,10 @@
 # Tower shot effects
 
-Open `scenes/tower_placement.tscn`, place the Toy Tank and Double Tank near the path, and start a wave. To spawn enemies manually, enable `debug_mode` on the scene root in the Inspector. The Toy Tank draws a short red laser and a red hit burst. The Double Tank alternates small shells between its barrels; each shot emits a little expanding smoke at the muzzle and debris when the shell reaches its captured hit point.
+Open `scenes/tower_placement.tscn`, place the Laser Tower and Double Tank near the path, and start a wave. To spawn enemies manually, enable `debug_mode` on the scene root in the Inspector. The Laser Tower draws a short red laser and a red hit burst. The Double Tank alternates small shells between its barrels; each shot emits a little expanding smoke at the muzzle and debris when the shell reaches its captured hit point.
 
 ## How the nodes work
 
-1. `tower_visual.gd` creates a `Marker3D` named `Muzzle` inside each barrel. A marker has no visible geometry; its `global_position` gives the barrel tip after the turret rotates. In the editor's **Remote** scene tree, expand a placed tower's `TurretPivot` to inspect it.
+1. The Laser Tower uses the `turret_yaw`, `turret_pitch`, and `muzzle` empties from `laser_tower.blend`. Their imported `Node3D` transforms drive aiming and the shot origin. The placeholder Double Tank still creates `Marker3D` muzzle nodes in `tower_visual.gd`. In the editor's **Remote** scene tree, expand `LaserTower` or `TurretPivot` on a placed tower to inspect them.
 2. `placement_tower_attack.gd` chooses a target and applies the existing damage rules. It asks `ShotEffects` to show the corresponding shot. Damage still occurs when the attack fires; the shell's flight is visual feedback and does not change combat timing.
 3. `placement_shot_effects.gd` keeps a hidden, one-unit `CylinderMesh` ready from startup. A shot copies its node, scales its local Y axis to the muzzle-to-target distance, places it at the midpoint, and rotates it toward the target. A scene timer removes it after 0.12 seconds.
 4. A shell copies a ready `SphereMesh` and moves it with a `Tween`. The tween calls `_shell_impact()` when it reaches the captured target position. Capturing that position makes the shot understandable even when an enemy moves or is defeated during flight.

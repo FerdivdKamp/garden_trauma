@@ -15,8 +15,17 @@ func _run() -> void:
 
 	var pivot := demo.get_node("Tower/TurretPivot") as Node3D
 	var pawn := demo.get_node("Pawn") as Node3D
-	_check(pivot.get_child_count() == 2, "Single barrel has a cap and one barrel")
-	_check(demo.definition.id == "toy_tank" and demo.damage == demo.definition.damage, "Single barrel loads tower definition")
+	_check(demo.tower_visual.get_yaw_pivot().name == "turret_yaw", "Laser tower uses the imported yaw pivot")
+	var pitch := demo.tower_visual.get_node("LaserTower/turret_yaw/gunbase/turret_pitch") as Node3D
+	var muzzle_before: Vector3 = demo.tower_visual.get_muzzle_position()
+	var laser_yaw: Node3D = demo.tower_visual.get_yaw_pivot()
+	laser_yaw.rotation.y = TowerRules.target_yaw(pawn.global_position - laser_yaw.global_position)
+	demo.tower_visual.aim_pitch_at(pawn.global_position, 360.0, 1.0)
+	_check(not is_zero_approx(pitch.rotation.x) and demo.tower_visual.get_muzzle_position().distance_to(muzzle_before) > 0.1, "Imported pitch pivot moves the muzzle")
+	var barrel_direction: Vector3 = (demo.tower_visual.get_muzzle_position() - pitch.global_position).normalized()
+	var target_direction: Vector3 = (pawn.global_position - pitch.global_position).normalized()
+	_check(barrel_direction.dot(target_direction) > 0.95, "Imported barrel points toward the target")
+	_check(demo.definition.id == "laser_tower" and demo.damage == demo.definition.damage, "Laser tower loads its definition")
 	var attack_area := demo.get_node("Tower/RangeVisual/AttackArea") as MeshInstance3D
 	var detection_area := demo.get_node("Tower/RangeVisual/DetectionArea") as MeshInstance3D
 	_check(demo.get_node("Tower/RangeVisual").visible, "Demo shows the filled ranges")

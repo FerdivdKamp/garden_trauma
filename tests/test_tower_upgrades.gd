@@ -14,7 +14,7 @@ func _run() -> void:
 	for id in definitions:
 		var definition := definitions[id] as TowerDefinition
 		_check(definition.upgrades.size() == 3, "%s has three parsed upgrades" % id)
-	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/towers/toy_tank.json"))
+	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/towers/laser_tower.json"))
 	var invalid := data.duplicate(true)
 	invalid.upgrades[0].attack = {}
 	_check(not DefinitionLoader.validate_tower_data(invalid), "Empty attack override is rejected")
@@ -35,16 +35,24 @@ func _run() -> void:
 	var base_damage := attack.definition.damage
 	var base_cooldown := attack.definition.cooldown
 	var base_range := attack.definition.attack_range
+	var mk1_model: Node3D = tower.laser_model
+	tower.get_yaw_pivot().rotation.y = 0.4
 	var first_cost: int = attack.next_upgrade().cost
 	_check(attack.buy_next_upgrade(first_cost - 1) == 0 and attack.upgrade_level == 0, "Unaffordable upgrade is blocked")
+	_check(tower.laser_model == mk1_model, "Unaffordable upgrade keeps the mk1 model")
 	_check(attack.buy_next_upgrade(first_cost) == first_cost and attack.upgrade_level == 1, "First purchase uses first cost")
+	_check(tower.laser_upgrade_level == 1 and tower.get_node_or_null("LaserTower/turret_yaw_001") != null, "First purchase shows mk2")
+	_check(is_equal_approx(tower.get_yaw_pivot().rotation.y, 0.4), "Model swap keeps the turret aim")
 	_check(attack.definition.damage > base_damage and attack.definition.cooldown == base_cooldown and attack.definition.attack_range == base_range, "Partial override preserves other attack values")
-	_check(garden.tower_definitions["toy_tank"].damage == base_damage, "Placed tower has independent attack stats")
+	_check(garden.tower_definitions["laser_tower"].damage == base_damage, "Placed tower has independent attack stats")
 	var second_cost: int = attack.next_upgrade().cost
 	_check(attack.buy_next_upgrade(second_cost) == second_cost and attack.upgrade_level == 2, "Second purchase follows first")
+	_check(tower.laser_upgrade_level == 2 and tower.get_node_or_null("LaserTower/turret_yaw_002") != null, "Second purchase shows mk3")
 	_check(attack.definition.cooldown < base_cooldown, "Second override replaces cooldown")
 	var third_cost: int = attack.next_upgrade().cost
 	_check(attack.buy_next_upgrade(third_cost) == third_cost and attack.upgrade_level == 3, "Third purchase follows second")
+	_check(tower.laser_upgrade_level == 3 and tower.get_node_or_null("LaserTower/turret_yaw_003") != null, "Third purchase shows mk4")
+	_check(tower.get_muzzle_position().is_finite(), "Mk4 keeps a working muzzle")
 	_check(attack.next_upgrade().is_empty() and attack.buy_next_upgrade(10000) == 0 and attack.upgrade_level == 3, "Upgrade stops at level three")
 	garden.currency = 100
 	garden._select_placed_tower(tower)

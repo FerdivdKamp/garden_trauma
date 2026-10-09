@@ -9,7 +9,7 @@ func _initialize() -> void:
 	var towers := DefinitionLoader.load_towers()
 	var units := DefinitionLoader.load_units()
 	_check(towers.size() == 3 and units.size() == 2, "Each JSON file loads once")
-	var tower := towers.get("toy_tank") as TowerDefinition
+	var tower := towers.get("laser_tower") as TowerDefinition
 	var double_tower := towers.get("double_tank") as TowerDefinition
 	var lightning_tower := towers.get("lightning_tower") as TowerDefinition
 	var red := units.get("red_sphere") as UnitDefinition
@@ -24,12 +24,12 @@ func _initialize() -> void:
 		_check(is_equal_approx(red.armor_for("physical"), 0.0), "Armor is accessed through the typed unit")
 	_check(not DefinitionLoader.validate_tower_data(_read_fixture("invalid_tower")), "Invalid tower is rejected")
 	_check(not DefinitionLoader.validate_unit_data(_read_fixture("invalid_unit")), "Invalid unit is rejected")
-	var edited := DefinitionLoader.load_tower("res://data/towers/toy_tank.json")
+	var edited := DefinitionLoader.load_tower("res://data/towers/laser_tower.json")
 	edited.damage = 17.0
 	_check(DefinitionLoader.save_tower_override(edited, TEST_OVERRIDE_DIR), "Tower override can be saved")
-	var overridden := DefinitionLoader.load_towers(TEST_OVERRIDE_DIR).get("toy_tank") as TowerDefinition
+	var overridden := DefinitionLoader.load_towers(TEST_OVERRIDE_DIR).get("laser_tower") as TowerDefinition
 	_check(overridden != null and overridden.damage == 17.0, "Tower override loads through the normal loader")
-	DirAccess.remove_absolute(TEST_OVERRIDE_DIR.path_join("toy_tank.json"))
+	DirAccess.remove_absolute(TEST_OVERRIDE_DIR.path_join("laser_tower.json"))
 	DirAccess.remove_absolute(TEST_OVERRIDE_DIR)
 	if failures == 0:
 		print("Definition tests passed")

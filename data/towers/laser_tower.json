@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/tower.schema.json",
-  "id": "toy_tank",
-  "name": "Toy Tank",
+  "id": "laser_tower",
+  "name": "Laser Tower",
   "cost": 90,
   "detection_range": 9.0,
   "turn_speed": 90.0,
@@ -18,8 +18,8 @@
   "damage_type": "physical",
   "tags": ["projectile", "physical"],
   "upgrades": [
-    {"id": "reinforced_ammo", "name": "Reinforced Ammo", "cost": 35, "attack": {"damage": 14}},
+    {"id": "focused_beam", "name": "Focused Beam", "cost": 35, "attack": {"damage": 14}},
     {"id": "quick_trigger", "name": "Quick Trigger", "cost": 55, "attack": {"cooldown": 0.75}},
-    {"id": "long_barrel", "name": "Long Barrel", "cost": 75, "attack": {"damage": 20, "range": 7.0}}
+    {"id": "extended_lens", "name": "Extended Lens", "cost": 75, "attack": {"damage": 20, "range": 7.0}}
   ]
 }

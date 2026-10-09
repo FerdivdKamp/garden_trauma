@@ -27,11 +27,11 @@ class AssetPipelineTests(unittest.TestCase):
             self.assertEqual(len(folders), 4)
             self.assertTrue(all(folder.is_dir() for folder in folders))
             self.assertFalse((root / "assets").exists())
-            source = root / "art" / "blender" / "towers" / "toy_tank.blend"
+            source = root / "art" / "blender" / "towers" / "laser_tower.blend"
             source.touch()
             self.assertEqual(
                 pipeline.export_destination(root, source),
-                root / "assets" / "models" / "towers" / "toy_tank.glb",
+                root / "assets" / "models" / "towers" / "laser_tower.glb",
             )
             nested = root / "art" / "blender" / "environment" / "garden" / "tiles" / "tile_grass3.blend"
             nested.parent.mkdir(parents=True)
@@ -40,7 +40,7 @@ class AssetPipelineTests(unittest.TestCase):
                 pipeline.export_destination(root, nested),
                 root / "assets" / "models" / "environment" / "garden" / "tiles" / "tile_grass3.glb",
             )
-            bad_source = source.with_name("Toy Tank.blend")
+            bad_source = source.with_name("Laser Tower.blend")
             bad_source.touch()
             with self.assertRaisesRegex(ValueError, "snake_case"):
                 pipeline.export_destination(root, bad_source)
