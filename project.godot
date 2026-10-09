@@ -24,9 +24,12 @@ buses/default_bus_layout="res://assets/audio/audio_bus_layout.tres"
 AudioSettings="*res://scripts/audio_settings.gd"
 AudioManager="*res://scripts/audio_manager.gd"
 LevelProgress="*res://scripts/level_progress.gd"
+UiScale="*res://scripts/ui_scale.gd"
 
 [display]
 
+window/size/window_width_override=1600
+window/size/window_height_override=900
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 

@@ -1,8 +1,10 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
-[ext_resource type="PackedScene" path="res://assets/models/environment/garden/tiles/tile_grass4.glb" id="1_grass"]
+[ext_resource type="PackedScene" path="res://assets/models/environment/garden/tiles/tile_grass3.glb" id="1_grass"]
+[ext_resource type="Script" path="res://scripts/grass_tile_visual.gd" id="2_visual"]
 
 [node name="TileGrass" type="Node3D"]
+script = ExtResource("2_visual")
 
 [node name="GrassVisual" parent="." instance=ExtResource("1_grass")]
 position = Vector3(0, -0.25, 0)

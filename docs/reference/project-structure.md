@@ -6,6 +6,7 @@
 | `scenes/` | Menus, tower demo, playable placement scene, enemies, effects, and tile scenes. |
 | `scripts/` | Gameplay rules, loading, waves, UI behavior, progress, and audio. |
 | `data/towers/`, `data/units/` | One JSON definition per tower or enemy type. |
+| `data/dressing/` | Environment dressing chance, count, and scale settings. |
 | `data/schemas/` | JSON schemas for those definitions. |
 | `levels/data/`, `levels/waves/` | Tile maps and matching wave schedules for the two gardens. |
 | `art/blender/` | Editable Blender source assets. |

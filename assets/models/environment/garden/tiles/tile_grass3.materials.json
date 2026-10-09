@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "asset": "tile_grass4",
+  "asset": "tile_grass3",
   "materials": [
     {
       "name": "GrassSides",

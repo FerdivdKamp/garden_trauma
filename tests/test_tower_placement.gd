@@ -32,6 +32,8 @@ func _run() -> void:
 	_check(preview_vertices.size() > 3 and is_zero_approx(Vector2(preview_vertices[0].x, preview_vertices[0].z).length()), "Preview detection range is filled")
 	demo.place_tower(Vector3(-8, 0, 8))
 	_check(demo.placed_towers.get_child_count() == 1, "Click places a tower")
+	var tower_cell: Vector2i = demo.grid.world_to_grid(Vector3(-8, 0, 8))
+	_check(demo.grid.get_node("Dressing").get_node_or_null("Cell_%d_%d" % [tower_cell.x, tower_cell.y]) == null, "Tower cell has no dressing")
 	_check(demo.placed_towers.get_child(0).position == demo.grid.grid_to_world(demo.grid.world_to_grid(Vector3(-8, 0, 8))), "Tower snaps to its tile center")
 	_check(not demo.can_place_at(Vector3(-7, 0, 8)), "Towers cannot overlap")
 	demo.place_tower(Vector3(-7, 0, 8))

@@ -236,7 +236,7 @@ python tools/asset_pipeline.py init
 python tools/asset_pipeline.py init --blender
 python tools/asset_pipeline.py init --godot
 python tools/asset_pipeline.py export art/blender/towers/toy_tank.blend
-python tools/asset_pipeline.py validate art/blender/environment/garden/tiles/tile_grass4.blend
+python tools/asset_pipeline.py validate art/blender/environment/garden/tiles/tile_grass3.blend
 python tools/asset_pipeline.py gui
 ```
 
@@ -249,8 +249,8 @@ writing a new file successfully.
 Save each `.blend` in one of the four `art/blender/` category folders or a
 subfolder beneath one, using a lowercase snake_case filename. Subfolders are
 mirrored under `assets/models/`; for example,
-`art/blender/environment/garden/tiles/tile_grass4.blend` exports to
-`assets/models/environment/garden/tiles/tile_grass4.glb`. To limit the exported
+`art/blender/environment/garden/tiles/tile_grass3.blend` exports to
+`assets/models/environment/garden/tiles/tile_grass3.glb`. To limit the exported
 objects, put them in a Blender collection named `Export`. If there is no such collection, the
 helper exports visible geometry, armatures, and empties from the active scene.
 Cameras and lights are excluded. Check the result in Godot after export for
@@ -268,7 +268,7 @@ Neither command changes the `.blend` file.
 
 V3 also inspects the connected material graph during validation and export.
 For each GLB, export writes a matching sidecar such as
-`assets/models/environment/garden/tiles/tile_grass4.materials.json`.
+`assets/models/environment/garden/tiles/tile_grass3.materials.json`.
 The JSON lists materials by name and classifies them as `directly_exportable`,
 `translatable`, or `unsupported`. A direct material is a Principled BSDF linked
 to Material Output with constant Base Color, Metallic, Roughness, and Alpha.
@@ -281,7 +281,7 @@ their Blender appearance may not survive. `validate` reports classifications
 without writing a sidecar; V3 does not create Godot shaders or materials.
 
 V4 uses `res://tools/godot_material_post_import.gd` as the GLB's Import Script.
-The `tile_grass4.glb.import` file already points to it. For another GLB, set
+The `tile_grass3.glb.import` file already points to it. For another GLB, set
 **Import → Import Script → Path** to that script and reimport. The script reads
 the matching `.materials.json`, creates a `ShaderMaterial` on each supported
 surface, and uses the shared

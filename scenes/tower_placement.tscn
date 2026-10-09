@@ -1,10 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://cje6i1vlrnifq"]
+[gd_scene format=3 uid="uid://cje6i1vlrnifq"]
 
 [ext_resource type="Script" uid="uid://c8m2vb7a2xmjv" path="res://scripts/tower_placement.gd" id="1_placement"]
 [ext_resource type="PackedScene" path="res://scenes/placement_path.tscn" id="2_path"]
 [ext_resource type="Script" uid="uid://lj17pqkd0jk8" path="res://scripts/placement_shot_effects.gd" id="3_effects"]
 [ext_resource type="Script" uid="uid://byrr5srpyptff" path="res://scripts/level_grid.gd" id="4_grid"]
-[ext_resource type="Script" path="res://scripts/wave_controller.gd" id="5_waves"]
+[ext_resource type="Script" uid="uid://d160nplr1mnud" path="res://scripts/wave_controller.gd" id="5_waves"]
 [ext_resource type="Theme" path="res://ui/game_theme.tres" id="6_theme"]
 
 [node name="TowerPlacement" type="Node3D" unique_id=1227784002]
@@ -17,7 +17,7 @@ script = ExtResource("4_grid")
 
 [node name="PlacedTowers" type="Node3D" parent="." unique_id=1428990228]
 
-[node name="Waves" type="Node" parent="."]
+[node name="Waves" type="Node" parent="." unique_id=710363728]
 script = ExtResource("5_waves")
 
 [node name="ShotEffects" type="Node3D" parent="." unique_id=2054604004]
@@ -30,41 +30,40 @@ transform = Transform3D(0.81915206, 0.46984634, -0.32898995, 0, 0.57357645, 0.81
 light_energy = 1.5
 
 [node name="Camera" type="Camera3D" parent="." unique_id=2074895266]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 27, 23)
+transform = Transform3D(1, 0, 0, 0, 0.37566805, 0.9267543, 0, -0.9267543, 0.37566805, 0, 18.76356, 13.398769)
 current = true
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=2012571442]
 
 [node name="Palette" type="PanelContainer" parent="UI" unique_id=1065751946]
-theme = ExtResource("6_theme")
 offset_left = 12.0
 offset_top = 12.0
 offset_right = 365.0
 offset_bottom = 300.0
+theme = ExtResource("6_theme")
 
 [node name="EnemyPanel" type="PanelContainer" parent="UI" unique_id=916771041]
-theme = ExtResource("6_theme")
-anchors_preset = 11
+anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-anchor_bottom = 1.0
 offset_left = -325.0
 offset_top = 12.0
 offset_right = -12.0
-offset_bottom = -12.0
-
-[node name="PauseOverlay" type="Control" parent="UI"]
-visible = false
+offset_bottom = 560.0
 theme = ExtResource("6_theme")
+
+[node name="PauseOverlay" type="Control" parent="UI" unique_id=1354478532]
 process_mode = 3
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("6_theme")
 
-[node name="Shade" type="ColorRect" parent="UI/PauseOverlay"]
+[node name="Shade" type="ColorRect" parent="UI/PauseOverlay" unique_id=780324435]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -73,7 +72,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.65)
 
-[node name="Center" type="CenterContainer" parent="UI/PauseOverlay"]
+[node name="Center" type="CenterContainer" parent="UI/PauseOverlay" unique_id=1897094719]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -82,42 +81,42 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Panel" type="PanelContainer" parent="UI/PauseOverlay/Center"]
+[node name="Panel" type="PanelContainer" parent="UI/PauseOverlay/Center" unique_id=1485200893]
 layout_mode = 2
 
-[node name="Actions" type="VBoxContainer" parent="UI/PauseOverlay/Center/Panel"]
+[node name="Actions" type="VBoxContainer" parent="UI/PauseOverlay/Center/Panel" unique_id=594726065]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="UI/PauseOverlay/Center/Panel/Actions"]
+[node name="Title" type="Label" parent="UI/PauseOverlay/Center/Panel/Actions" unique_id=654969285]
 layout_mode = 2
 text = "Paused"
 horizontal_alignment = 1
 
-[node name="Resume" type="Button" parent="UI/PauseOverlay/Center/Panel/Actions"]
+[node name="Resume" type="Button" parent="UI/PauseOverlay/Center/Panel/Actions" unique_id=1824262374]
 custom_minimum_size = Vector2(220, 42)
 layout_mode = 2
 text = "Resume"
 
-[node name="Restart" type="Button" parent="UI/PauseOverlay/Center/Panel/Actions"]
+[node name="Restart" type="Button" parent="UI/PauseOverlay/Center/Panel/Actions" unique_id=268497111]
 layout_mode = 2
 text = "Restart level"
 
-[node name="MainMenu" type="Button" parent="UI/PauseOverlay/Center/Panel/Actions"]
+[node name="MainMenu" type="Button" parent="UI/PauseOverlay/Center/Panel/Actions" unique_id=1312692330]
 layout_mode = 2
 text = "Main menu"
 
-[node name="ResultOverlay" type="Control" parent="UI"]
+[node name="ResultOverlay" type="Control" parent="UI" unique_id=574480293]
 visible = false
-theme = ExtResource("6_theme")
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("6_theme")
 
-[node name="Shade" type="ColorRect" parent="UI/ResultOverlay"]
+[node name="Shade" type="ColorRect" parent="UI/ResultOverlay" unique_id=736593596]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -126,7 +125,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.65)
 
-[node name="Center" type="CenterContainer" parent="UI/ResultOverlay"]
+[node name="Center" type="CenterContainer" parent="UI/ResultOverlay" unique_id=1106315752]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -135,27 +134,27 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Panel" type="PanelContainer" parent="UI/ResultOverlay/Center"]
+[node name="Panel" type="PanelContainer" parent="UI/ResultOverlay/Center" unique_id=831683047]
 layout_mode = 2
 
-[node name="Actions" type="VBoxContainer" parent="UI/ResultOverlay/Center/Panel"]
+[node name="Actions" type="VBoxContainer" parent="UI/ResultOverlay/Center/Panel" unique_id=39759784]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="UI/ResultOverlay/Center/Panel/Actions"]
+[node name="Title" type="Label" parent="UI/ResultOverlay/Center/Panel/Actions" unique_id=599456717]
 layout_mode = 2
 text = "Level complete"
 horizontal_alignment = 1
 
-[node name="Restart" type="Button" parent="UI/ResultOverlay/Center/Panel/Actions"]
+[node name="Restart" type="Button" parent="UI/ResultOverlay/Center/Panel/Actions" unique_id=1591672425]
 custom_minimum_size = Vector2(220, 42)
 layout_mode = 2
 text = "Retry"
 
-[node name="NextLevel" type="Button" parent="UI/ResultOverlay/Center/Panel/Actions"]
+[node name="NextLevel" type="Button" parent="UI/ResultOverlay/Center/Panel/Actions" unique_id=2101028852]
 layout_mode = 2
 text = "Level selection"
 
-[node name="MainMenu" type="Button" parent="UI/ResultOverlay/Center/Panel/Actions"]
+[node name="MainMenu" type="Button" parent="UI/ResultOverlay/Center/Panel/Actions" unique_id=1864387103]
 layout_mode = 2
 text = "Main menu"

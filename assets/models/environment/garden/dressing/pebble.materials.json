@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "asset": "pebble",
+  "materials": [
+    {
+      "name": "rock1",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.20250004529953003,
+          0.16042736172676086,
+          0.12452267855405807,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.8999999761581421,
+        "alpha": 1.0
+      }
+    }
+  ]
+}

@@ -44,8 +44,8 @@ Initial recommendation:
 - **Tile origin:** centered on the tile footprint
 - **Gameplay position:** tile coordinate `(x, z)`
 
-The production grass visual uses `tile_grass4.glb`, whose side wall is 0.25 m
-high. `tile_grass.tscn` offsets that visual downward by 0.25 m so the side top
+The production grass visuals use three variants with 0.25 m side walls.
+`tile_grass.tscn` offsets each visual downward by 0.25 m so the side top
 meets the grid's Y = 0 plane. The path and blocked placeholders are still
 0.20 m thick. Gameplay placement remains on the flat grid plane; the uneven
 grass top is visual dressing.

@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "asset": "pebble1",
+  "materials": [
+    {
+      "name": "rock1",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.17012092471122742,
+          0.13845092058181763,
+          0.130719393491745,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.8999999761581421,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "rock2.002",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.19687940180301666,
+          0.17449885606765747,
+          0.0963408350944519,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.8999999761581421,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "rock3",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.25088244676589966,
+          0.20508140325546265,
+          0.14792455732822418,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    }
+  ]
+}

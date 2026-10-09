@@ -1,4 +1,4 @@
-# AGENT.md
+# agents.md
 
 ## Purpose
 

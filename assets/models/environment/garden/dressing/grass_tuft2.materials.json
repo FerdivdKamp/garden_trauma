@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "asset": "grass_tuft2",
+  "materials": [
+    {
+      "name": "Material.001",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.02705703303217888,
+          0.2320326566696167,
+          0.006572863087058067,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    }
+  ]
+}

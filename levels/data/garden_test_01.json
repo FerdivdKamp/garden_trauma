@@ -1,5 +1,6 @@
 {
   "name": "garden_test_01",
+  "level_seed": 42017,
   "width": 20,
   "height": 20,
   "tiles": [
