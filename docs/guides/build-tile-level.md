@@ -10,7 +10,7 @@
 
 Each tile is 2 m square, with its top at world Y = 0. The grid is centered on the world origin. On a 20 by 20 map, `[0, 0]` has its center at world `(-19, 0, -19)`. The placement scene builds the enemy path from `route`, and towers snap to grass tile centers.
 
-Grass and sand path visuals each use four GLB variants. Each tile derives a stable visual seed from `level_seed` and its grid coordinates; that seed chooses a mesh and a rotation in 90-degree steps. Changing `level_seed` rerolls the visuals without changing terrain or pathing. To pin a tile's visual seed for later level editing, add an optional map entry such as `"visual_seeds": {"5,5": 18421}`. The key is `x,z`, and the override takes precedence over the level seed.
+Grass visuals use three GLB variants; sand path visuals use four. Each tile derives a stable visual seed from `level_seed` and its grid coordinates; that seed chooses a mesh and a rotation in 90-degree steps. Changing `level_seed` rerolls the visuals without changing terrain or pathing. To pin a tile's visual seed for later level editing, add an optional map entry such as `"visual_seeds": {"5,5": 18421}`. The key is `x,z`, and the override takes precedence over the level seed.
 
 The playable placement scene reads the selected level from `LevelProgress` at startup and sets its `LevelGrid` and wave file automatically. Changing the `LevelGrid.level_file` property in `scenes/tower_placement.tscn` alone will not select a different playable level. In `scenes/tower_demo.tscn`, the grid file is independent and can be changed in the Inspector to preview another map.
 

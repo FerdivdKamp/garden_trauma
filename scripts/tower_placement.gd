@@ -221,6 +221,10 @@ func place_tower(point: Vector3) -> void:
 	var definition := tower_definitions[TOWER_IDS[selected_type]] as TowerDefinition
 	currency -= definition.cost
 	var tower := TOWER_SCENE.instantiate()
+	# A placed tower uses the whole cell; remove its decorative meshes.
+	var dressing := grid.get_node_or_null("Dressing") as LevelDressing
+	if dressing != null:
+		dressing.clear_cell(grid.world_to_grid(point))
 	tower.set_tower_type(selected_type)
 	tower.position = grid.grid_to_world(grid.world_to_grid(point))
 	placed_towers.add_child(tower)

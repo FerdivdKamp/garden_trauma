@@ -33,12 +33,12 @@ class AssetPipelineTests(unittest.TestCase):
                 pipeline.export_destination(root, source),
                 root / "assets" / "models" / "towers" / "toy_tank.glb",
             )
-            nested = root / "art" / "blender" / "environment" / "garden" / "tiles" / "tile_grass4.blend"
+            nested = root / "art" / "blender" / "environment" / "garden" / "tiles" / "tile_grass3.blend"
             nested.parent.mkdir(parents=True)
             nested.touch()
             self.assertEqual(
                 pipeline.export_destination(root, nested),
-                root / "assets" / "models" / "environment" / "garden" / "tiles" / "tile_grass4.glb",
+                root / "assets" / "models" / "environment" / "garden" / "tiles" / "tile_grass3.glb",
             )
             bad_source = source.with_name("Toy Tank.blend")
             bad_source.touch()

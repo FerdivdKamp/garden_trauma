@@ -5,7 +5,6 @@ const VARIANTS := [
 	preload("res://assets/models/environment/garden/tiles/tile_grass.glb"),
 	preload("res://assets/models/environment/garden/tiles/tile_grass2.glb"),
 	preload("res://assets/models/environment/garden/tiles/tile_grass3.glb"),
-	preload("res://assets/models/environment/garden/tiles/tile_grass4.glb"),
 ]
 
 var visual_seed := 0

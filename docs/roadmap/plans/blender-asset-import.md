@@ -287,8 +287,8 @@ Example:
 Suggested CLI:
 
 ```bash
-python tools/asset_pipeline.py validate art/blender/environment/garden/tiles/tile_grass4.blend
-python tools/asset_pipeline.py export art/blender/environment/garden/tiles/tile_grass4.blend
+python tools/asset_pipeline.py validate art/blender/environment/garden/tiles/tile_grass3.blend
+python tools/asset_pipeline.py export art/blender/environment/garden/tiles/tile_grass3.blend
 ```
 
 Pass `--blender-exe` after the source path when Blender is not on `PATH`.
@@ -390,7 +390,7 @@ Example:
 ```json
 {
   "schema_version": 1,
-  "asset": "tile_grass4",
+  "asset": "tile_grass3",
   "materials": [
     {
       "name": "GrassTop",

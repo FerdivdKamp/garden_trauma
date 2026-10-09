@@ -1,10 +1,10 @@
 extends SceneTree
 
-const MODEL: PackedScene = preload("res://assets/models/environment/garden/tiles/tile_grass4.glb")
+const MODEL: PackedScene = preload("res://assets/models/environment/garden/tiles/tile_grass3.glb")
 const PATH_MODEL: PackedScene = preload("res://assets/models/environment/garden/tiles/tile_path.glb")
 const PREVIEW: PackedScene = preload("res://examples/grass_material_preview.tscn")
 const SHADER: Shader = preload("res://shaders/procedural_noise_color_ramp.gdshader")
-const MANIFEST_PATH := "res://assets/models/environment/garden/tiles/tile_grass4.materials.json"
+const MANIFEST_PATH := "res://assets/models/environment/garden/tiles/tile_grass3.materials.json"
 
 var failures: int = 0
 
@@ -36,6 +36,10 @@ func _initialize() -> void:
 				var translated: ShaderMaterial = override
 				_expect(translated.shader == SHADER, "GrassTop uses the shared shader")
 				_expect(translated.get_shader_parameter("use_world_space") == true, "Grass uses world-space noise")
+				_expect(translated.get_shader_parameter("grass_world_variation") == true, "Grass uses shared world-space color variation")
+				_expect(translated.get_shader_parameter("grass_color_noise") is Texture2D, "Grass has a shared color noise texture")
+				_expect(is_equal_approx(float(translated.get_shader_parameter("grass_color_strength")), 2.0), "Grass color field uses the chosen contrast")
+				_expect(is_equal_approx(float(translated.get_shader_parameter("grass_normal_flatten")), 0.7), "Grass reduces faceted lighting")
 				_expect(is_equal_approx(float(translated.get_shader_parameter("noise_scale")), float(grass_top["noise"]["scale"])), "Noise scale matches Blender")
 				_expect(is_equal_approx(float(translated.get_shader_parameter("material_roughness")), float(grass_top["principled"]["roughness"])), "Roughness matches Blender")
 				var first_color: Color = translated.get_shader_parameter("color_a")
@@ -44,7 +48,7 @@ func _initialize() -> void:
 		elif original.resource_name == "GrassSides":
 			_expect(override == null, "GrassSides keeps its GLB material")
 	_expect(translated_count == 1, "One GrassTop surface was translated")
-	for variant_name: String in ["tile_grass", "tile_grass2", "tile_grass3"]:
+	for variant_name: String in ["tile_grass", "tile_grass2"]:
 		var variant_path := "res://assets/models/environment/garden/tiles/%s.glb" % variant_name
 		var variant_scene := (load(variant_path) as PackedScene).instantiate()
 		var variant_mesh := _find_mesh(variant_scene)
@@ -58,6 +62,7 @@ func _initialize() -> void:
 					translated = variant_override is ShaderMaterial
 					if variant_override is ShaderMaterial:
 						_expect(variant_override.get_shader_parameter("use_world_space") == true, "%s uses world-space noise" % variant_name)
+						_expect(variant_override.get_shader_parameter("grass_world_variation") == true, "%s uses grass world-space variation" % variant_name)
 			_expect(translated, "%s translates its grass top material" % variant_name)
 		variant_scene.free()
 	var path_scene: Node = PATH_MODEL.instantiate()

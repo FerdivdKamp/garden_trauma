@@ -26,8 +26,35 @@ func _run() -> void:
 	var path_seed := path_tile.visual_seed
 	_check(original_seed == grid.visual_seed_for(Vector2i(5, 5)), "Grass seed derives from level seed and coordinates")
 	_check(path_seed == grid.visual_seed_for(Vector2i(5, 7)), "Path seed derives from level seed and coordinates")
-	_check(original_variant >= 0 and original_variant < 4 and original_turns >= 0 and original_turns < 4, "Grass uses one of four variants and quarter turns")
+	_check(original_variant >= 0 and original_variant < 3 and original_turns >= 0 and original_turns < 4, "Grass uses one of three variants and quarter turns")
+	var dressing := grid.get_node("Dressing") as LevelDressing
+	var original_dressing := _dressing_snapshot(dressing)
+	_check(not original_dressing.is_empty(), "Grass tiles receive dressing")
+	_check(dressing.get_node_or_null("Cell_5_7") == null, "Path tiles receive no grass dressing")
+	var dressing_config: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(grid.dressing_file))
+	var seen_dressing_types := {}
+	for holder: Node in dressing.get_children():
+		for instance: Node in holder.get_children():
+			var decoration := instance as Node3D
+			for entry: Dictionary in dressing_config.types:
+				if not decoration.name.begins_with(str(entry.id) + "_"):
+					continue
+				seen_dressing_types[entry.id] = true
+				var limit: float = LevelGrid.TILE_SIZE * 0.5 - float(entry.get("edge_margin", 0.2))
+				_check(absf(decoration.position.x) <= limit and absf(decoration.position.z) <= limit, "%s pivot stays within its grass cell margin" % entry.id)
+				break
+	_check(seen_dressing_types.size() == 6, "All six Garden dressing assets appear in the example level")
 	_check(grid.load_level(grid.level_file), "Level reloads")
+	dressing = grid.get_node("Dressing") as LevelDressing
+	_check(_dressing_snapshot(dressing) == original_dressing, "Level reload reproduces dressing positions")
+	var occupied_cell := dressing.get_child(0) as Node3D
+	var tuft_mesh := _find_mesh(occupied_cell)
+	var tuft_material := tuft_mesh.mesh.surface_get_material(0) as BaseMaterial3D if tuft_mesh != null else null
+	_check(tuft_material != null and tuft_material.cull_mode == BaseMaterial3D.CULL_DISABLED, "Grass tuft renders both sides")
+	var occupied_name := occupied_cell.name
+	var coordinates := occupied_name.trim_prefix("Cell_").split("_")
+	dressing.clear_cell(Vector2i(int(coordinates[0]), int(coordinates[1])))
+	_check(dressing.get_node_or_null(NodePath(occupied_name)) == null, "Tower placement can clear dressing from its cell")
 	grass_tile = grid.get_node("Tile_5_5") as GrassTileVisual
 	path_tile = grid.get_node("Tile_5_7") as PathTileVisual
 	_check(grass_tile.visual_seed == original_seed and grass_tile.variant_index == original_variant and grass_tile.quarter_turns == original_turns, "Level reload reproduces grass visuals")
@@ -42,7 +69,7 @@ func _run() -> void:
 		seen_rotations[sample.quarter_turns] = true
 		root.remove_child(sample)
 		sample.queue_free()
-	_check(seen_variants.size() == 4 and seen_rotations.size() == 4, "Different seeds can select every grass variant and rotation")
+	_check(seen_variants.size() == 3 and seen_rotations.size() == 4, "Different seeds can select every grass variant and rotation")
 	seen_variants.clear()
 	seen_rotations.clear()
 	for seed in 32:
@@ -106,3 +133,11 @@ func _find_mesh(node: Node) -> MeshInstance3D:
 		if mesh != null:
 			return mesh
 	return null
+
+
+func _dressing_snapshot(dressing: LevelDressing) -> Array[String]:
+	var snapshot: Array[String] = []
+	for holder: Node in dressing.get_children():
+		for tuft: Node in holder.get_children():
+			snapshot.append("%s/%s:%s" % [holder.name, tuft.name, (tuft as Node3D).transform])
+	return snapshot

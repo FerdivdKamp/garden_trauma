@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="PackedScene" path="res://assets/models/environment/garden/tiles/tile_grass4.glb" id="1_tile"]
+[ext_resource type="PackedScene" path="res://assets/models/environment/garden/tiles/tile_grass3.glb" id="1_tile"]
 
 [node name="GrassMaterialPreview" type="Node3D"]
 

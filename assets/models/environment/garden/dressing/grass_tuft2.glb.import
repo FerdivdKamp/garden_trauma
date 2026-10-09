@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://b3s05tt5vfvt4"
-path="res://.godot/imported/tile_grass4.glb-7beb728938e999892abf02c382fd6a69.scn"
+uid="uid://c5yukt2h875ul"
+path="res://.godot/imported/grass_tuft2.glb-312351350da57abf60eeca981df38aee.scn"
 
 [deps]
 
-source_file="res://assets/models/environment/garden/tiles/tile_grass4.glb"
-dest_files=["res://.godot/imported/tile_grass4.glb-7beb728938e999892abf02c382fd6a69.scn"]
+source_file="res://assets/models/environment/garden/dressing/grass_tuft2.glb"
+dest_files=["res://.godot/imported/grass_tuft2.glb-312351350da57abf60eeca981df38aee.scn"]
 
 [params]
 
@@ -35,7 +35,7 @@ animation/fps=30
 animation/trimming=false
 animation/remove_immutable_tracks=true
 animation/import_rest_as_RESET=false
-import_script/path="res://tools/godot_material_post_import.gd"
+import_script/path=""
 materials/extract=0
 materials/extract_format=0
 materials/extract_path=""

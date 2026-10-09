@@ -11,6 +11,7 @@ const TILE_SCENES := {
 }
 
 @export_file("*.json") var level_file := "res://levels/data/garden_test_01.json"
+@export_file("*.json") var dressing_file := "res://data/dressing/garden.json"
 @export var show_grid := false:
 	set(value):
 		show_grid = value
@@ -200,6 +201,10 @@ func _rebuild_visuals() -> void:
 			tile.name = "Tile_%d_%d" % [x, z]
 			tile.position = grid_to_world(cell)
 			add_child(tile)
+	var dressing := LevelDressing.new()
+	dressing.name = "Dressing"
+	add_child(dressing)
+	dressing.build(self, dressing_file)
 	for pair in [[spawn, "SPAWN", Color("ef704e")], [objective, "GOAL", Color("6ab5ee")]]:
 		var marker := Label3D.new()
 		marker.name = pair[1]
