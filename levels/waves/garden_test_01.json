@@ -1,7 +1,7 @@
 {
   "waves": [
-    {"enemy_id": "red_sphere", "count": 5, "spawn_interval": 1.5, "break_seconds": 5.0},
+    {"enemy_id": "windup_robot", "count": 5, "spawn_interval": 1.5, "break_seconds": 5.0},
     {"enemy_id": "blue_sphere", "count": 4, "spawn_interval": 1.8, "break_seconds": 6.0},
-    {"enemy_id": "red_sphere", "count": 7, "spawn_interval": 1.2, "break_seconds": 0.0}
+    {"enemy_id": "windup_robot", "count": 7, "spawn_interval": 1.2, "break_seconds": 0.0}
   ]
 }

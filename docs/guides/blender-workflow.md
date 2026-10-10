@@ -34,6 +34,20 @@ python tools/asset_pipeline.py export art/blender/towers/laser_tower.blend --ble
 
 The scales are applied in the current source. Blender still reports one generic material name; renaming it would make later edits easier to inspect.
 
+## Wind-up robot enemy
+
+`art/blender/units/robot.blend` is the editable source for the first enemy. Export it with:
+
+```powershell
+python tools/asset_pipeline.py export art/blender/units/robot.blend --blender-exe "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe"
+```
+
+`scenes/placement_enemy.tscn` instances the resulting `assets/models/units/robot.glb`. Its Blender empties import as Godot `Node3D` pivots. `scripts/placement_enemy.gd` rotates the arms, legs, head, antenna, and wind-up key while the robot moves. This is a temporary motion pass; replace it with Blender animations when those are ready. Keep the pivot names if the Godot script still uses them.
+
+The eyes point along the model's local `-X` axis. The enemy scene rotates only the imported Robot node 90 degrees around Y so its eyes align with `PathFollow3D`'s local `-Z` forward direction, and scales that node to four times the imported size. The arms and legs swing around their local `Z` axes, which run sideways through their pivots. Keep the scene rotation when re-exporting the current Blender source; if a future source faces local `-Z`, remove the scene rotation.
+
+The second enemy still uses the blue sphere placeholder. The robot and sphere share the same `Visual` parent so the existing visual scale control works for both.
+
 ## Garden grass mesh variants
 
 The Garden uses `tile_grass.blend`, `tile_grass2.blend`, and `tile_grass3.blend`. Exact copies of their original, rougher sources are in `art/blender/environment/garden/tiles/backups/`. The current sources have baked geometry: matching subdivision density, reduced height variation, and flat border normals. This lets the three variants meet without a square lighting seam while preserving small interior differences.

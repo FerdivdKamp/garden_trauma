@@ -1,25 +1,29 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene format=3 uid="uid://2yafaoh46s5p"]
 
-[ext_resource type="Script" path="res://scripts/placement_enemy.gd" id="1_enemy"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/enemies/enemy_destroyed_01.ogg" id="2_destroyed"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/enemies/enemy_objective_reached_01.ogg" id="3_objective"]
+[ext_resource type="Script" uid="uid://ci3her77rtn8u" path="res://scripts/placement_enemy.gd" id="1_enemy"]
+[ext_resource type="AudioStream" uid="uid://tktlv2jruf3i" path="res://assets/audio/sfx/enemies/enemy_destroyed_01.ogg" id="2_destroyed"]
+[ext_resource type="AudioStream" uid="uid://dmbud33pyvht3" path="res://assets/audio/sfx/enemies/enemy_objective_reached_01.ogg" id="3_objective"]
+[ext_resource type="PackedScene" uid="uid://cvgjjy87fwwve" path="res://assets/models/units/robot.glb" id="4_robot"]
 
 [sub_resource type="SphereMesh" id="SphereMesh_enemy"]
-radius = 0.5
-height = 1.0
 
-[node name="Enemy" type="PathFollow3D"]
-script = ExtResource("1_enemy")
+[node name="Enemy" type="PathFollow3D" unique_id=1555021071]
 loop = false
+script = ExtResource("1_enemy")
 
-[node name="Visual" type="MeshInstance3D" parent="."]
-position = Vector3(0, 0.55, 0)
+[node name="Visual" type="Node3D" parent="." unique_id=2135415545]
+
+[node name="Sphere" type="MeshInstance3D" parent="Visual" unique_id=954992837]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
 mesh = SubResource("SphereMesh_enemy")
 
-[node name="DestroyedAudio" type="AudioStreamPlayer3D" parent="."]
+[node name="Robot" parent="Visual" unique_id=390864510 instance=ExtResource("4_robot")]
+transform = Transform3D(-1.3113416e-07, 0, -3, 0, 3, 0, 3, 0, -1.3113416e-07, 0, 0, 0)
+
+[node name="DestroyedAudio" type="AudioStreamPlayer3D" parent="." unique_id=813464701]
 stream = ExtResource("2_destroyed")
 bus = &"SFX"
 
-[node name="ObjectiveAudio" type="AudioStreamPlayer3D" parent="."]
+[node name="ObjectiveAudio" type="AudioStreamPlayer3D" parent="." unique_id=2037434524]
 stream = ExtResource("3_objective")
 bus = &"SFX"

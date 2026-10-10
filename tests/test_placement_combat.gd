@@ -19,8 +19,18 @@ func _run() -> void:
 	await process_frame
 	var path := demo.path as Path3D
 	var red := path.get_node("Enemy1") as PlacementEnemy
-	_check(red != null and red.enemy_type == 0, "Scene starts with a red enemy")
-	_check(is_equal_approx(red.health, 50.0), "Red enemy starts at full health")
+	_check(red != null and red.enemy_type == 0, "Scene starts with a wind-up robot")
+	_check(red.robot.visible and not red.sphere.visible, "Robot uses the imported GLB")
+	_check(red.robot.scale.is_equal_approx(Vector3.ONE * 4.0), "Robot model is four times the imported size")
+	red.progress = 1.0
+	var path_forward := -red.global_transform.basis.z
+	var eye_forward := red.robot.global_transform.basis * Vector3.LEFT
+	_check(eye_forward.normalized().dot(path_forward.normalized()) > 0.99, "Robot eyes face along the path")
+	var key_before: float = red.key.rotation.x
+	red._process(0.25)
+	_check(red.key.rotation.x > key_before and not is_zero_approx(red.antenna.rotation.z), "Robot key winds and antenna wobbles while moving")
+	_check(red.leg_left.rotation.z > 0.0 and red.leg_right.rotation.z < 0.0 and red.arm_left.rotation.z < 0.0 and red.arm_right.rotation.z > 0.0, "Arms and legs swing around the side hinge in opposing pairs")
+	_check(is_equal_approx(red.health, 50.0), "Robot starts at full health")
 	red.movement_speed = 4.0
 	red.progress = 0.0
 	red._process(0.5)
@@ -33,7 +43,8 @@ func _run() -> void:
 	demo.enemy_selector.select(1)
 	var blue := demo.spawn_enemy() as PlacementEnemy
 	_check(blue.enemy_type == 1 and blue.health == 75.0, "Selector spawns blue variant")
-	_check(blue.visual_scale > red.visual_scale, "Blue visual is larger")
+	_check(blue.sphere.visible and not blue.robot.visible, "Second enemy keeps its sphere visual")
+	_check(blue.visual_scale > red.visual_scale, "Blue sphere uses its own scale setting")
 	demo._set_enemy_value(5.0, "blue_speed")
 	demo._set_enemy_value(1.6, "blue_scale")
 	_check(is_equal_approx(blue.movement_speed, 5.0) and is_equal_approx(blue.visual.scale.x, 1.6), "Speed and visual scale update existing enemy")

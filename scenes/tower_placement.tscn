@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://lj17pqkd0jk8" path="res://scripts/placement_shot_effects.gd" id="3_effects"]
 [ext_resource type="Script" uid="uid://byrr5srpyptff" path="res://scripts/level_grid.gd" id="4_grid"]
 [ext_resource type="Script" uid="uid://d160nplr1mnud" path="res://scripts/wave_controller.gd" id="5_waves"]
-[ext_resource type="Theme" path="res://ui/game_theme.tres" id="6_theme"]
+[ext_resource type="Theme" uid="uid://dam468t37xtqy" path="res://ui/game_theme.tres" id="6_theme"]
 
 [node name="TowerPlacement" type="Node3D" unique_id=1227784002]
 script = ExtResource("1_placement")
@@ -30,26 +30,33 @@ transform = Transform3D(0.81915206, 0.46984634, -0.32898995, 0, 0.57357645, 0.81
 light_energy = 1.5
 
 [node name="Camera" type="Camera3D" parent="." unique_id=2074895266]
-transform = Transform3D(1, 0, 0, 0, 0.37566805, 0.9267543, 0, -0.9267543, 0.37566805, 0, 18.76356, 13.398769)
+transform = Transform3D(1, 0, 0, 0, 0.39635667, 0.91809666, 0, -0.91809666, 0.39635667, 1.0664215, 13.534887, 10.421692)
 current = true
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=2012571442]
 
 [node name="Palette" type="PanelContainer" parent="UI" unique_id=1065751946]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
 offset_left = 12.0
-offset_top = 12.0
+offset_top = -300.0
 offset_right = 365.0
-offset_bottom = 300.0
+offset_bottom = -12.0
+grow_vertical = 0
 theme = ExtResource("6_theme")
 
 [node name="EnemyPanel" type="PanelContainer" parent="UI" unique_id=916771041]
-anchors_preset = 1
+anchors_preset = 3
 anchor_left = 1.0
+anchor_top = 1.0
 anchor_right = 1.0
+anchor_bottom = 1.0
 offset_left = -325.0
-offset_top = 12.0
+offset_top = -560.0
 offset_right = -12.0
-offset_bottom = 560.0
+offset_bottom = -12.0
+grow_vertical = 0
 theme = ExtResource("6_theme")
 
 [node name="PauseOverlay" type="Control" parent="UI" unique_id=1354478532]

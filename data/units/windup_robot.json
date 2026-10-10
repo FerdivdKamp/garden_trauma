@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/unit.schema.json",
-  "id": "red_sphere",
-  "name": "Red Sphere",
+  "id": "windup_robot",
+  "name": "Wind-up Robot",
   "health": 50,
   "speed": 3.0,
   "reward": 10,

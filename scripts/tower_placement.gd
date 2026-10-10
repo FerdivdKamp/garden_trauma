@@ -26,9 +26,9 @@ const TOWER_RADIUS := TowerVisual.FOOTPRINT_RADIUS
 @export_range(1, 100, 1) var starting_objective_health := 10
 @export_range(0, 10000, 1) var starting_currency := 240
 
-@export_range(0.0, 30.0, 0.1) var red_speed := 3.0
+@export_range(0.0, 30.0, 0.1) var robot_speed := 3.0
 @export_range(0.0, 30.0, 0.1) var blue_speed := 2.0
-@export_range(0.1, 3.0, 0.05) var red_scale := 1.0
+@export_range(0.1, 3.0, 0.05) var robot_scale := 1.0
 @export_range(0.1, 3.0, 0.05) var blue_scale := 1.3
 
 var selected_type := -1
@@ -75,12 +75,14 @@ func _ready() -> void:
 	# Load once; scene nodes use typed definitions instead of JSON dictionaries.
 	tower_definitions = DefinitionLoader.load_towers(DefinitionLoader.TOWER_OVERRIDE_DIR)
 	unit_definitions = DefinitionLoader.load_units()
-	assert(tower_definitions.has("laser_tower") and tower_definitions.has("double_tank") and tower_definitions.has("lightning_tower") and unit_definitions.has("red_sphere") and unit_definitions.has("blue_sphere"))
-	red_speed = (unit_definitions["red_sphere"] as UnitDefinition).speed
+	assert(tower_definitions.has("laser_tower") and tower_definitions.has("double_tank") and tower_definitions.has("lightning_tower") and unit_definitions.has("windup_robot") and unit_definitions.has("blue_sphere"))
+	robot_speed = (unit_definitions["windup_robot"] as UnitDefinition).speed
 	blue_speed = (unit_definitions["blue_sphere"] as UnitDefinition).speed
 	objective_health = starting_objective_health
 	currency = starting_currency
-	camera.look_at(Vector3.ZERO, Vector3.UP)
+	
+	# camera aim commented out to use scene settings
+	#camera.look_at(Vector3.ZERO, Vector3.UP)
 	_setup_route()
 	_build_ui()
 	waves.spawn_requested.connect(_on_wave_spawn_requested)
@@ -242,12 +244,12 @@ func spawn_enemy(type: int = -1, from_wave: bool = false) -> PlacementEnemy:
 	if type < 0:
 		type = enemy_selector.selected if enemy_selector != null else 0
 	var enemy := ENEMY_SCENE.instantiate() as PlacementEnemy
-	var unit := unit_definitions["red_sphere" if type == 0 else "blue_sphere"] as UnitDefinition
+	var unit := unit_definitions["windup_robot" if type == 0 else "blue_sphere"] as UnitDefinition
 	enemy_count += 1
 	enemy.name = "Enemy%d" % enemy_count
 	enemy.auto_cleanup = from_wave
 	enemy.set_meta("wave_enemy", from_wave)
-	enemy.configure(type, unit, red_speed if type == 0 else blue_speed, red_scale if type == 0 else blue_scale)
+	enemy.configure(type, unit, robot_speed if type == 0 else blue_speed, robot_scale if type == 0 else blue_scale)
 	path.add_child(enemy)
 	enemy.health_changed.connect(_update_enemy_health)
 	enemy.defeated.connect(_on_enemy_defeated)
@@ -270,8 +272,8 @@ func reset_enemies() -> void:
 
 
 func _on_wave_spawn_requested(enemy_id: String) -> void:
-	var type := 0 if enemy_id == "red_sphere" else 1
-	if enemy_id != "red_sphere" and enemy_id != "blue_sphere":
+	var type := 0 if enemy_id == "windup_robot" else 1
+	if enemy_id != "windup_robot" and enemy_id != "blue_sphere":
 		push_error("Unknown wave enemy: " + enemy_id)
 		waves.enemy_resolved()
 		return
@@ -314,7 +316,7 @@ func _set_enemy_value(value: float, key: String) -> void:
 		var enemy := child as PlacementEnemy
 		if enemy == null:
 			continue
-		if (enemy.enemy_type == 0 and key.begins_with("red")) or (enemy.enemy_type == 1 and key.begins_with("blue")):
+		if (enemy.enemy_type == 0 and key.begins_with("robot")) or (enemy.enemy_type == 1 and key.begins_with("blue")):
 			if key.ends_with("speed"):
 				enemy.movement_speed = value
 			else:
@@ -328,7 +330,7 @@ func _update_enemy_health() -> void:
 	for child in path.get_children():
 		var enemy := child as PlacementEnemy
 		if enemy != null:
-			lines.append("%s (%s): %.0f / %.0f HP" % [enemy.name, "Red" if enemy.enemy_type == 0 else "Blue", enemy.health, enemy.max_health])
+			lines.append("%s (%s): %.0f / %.0f HP" % [enemy.name, enemy.definition.name, enemy.health, enemy.max_health])
 	enemy_health_label.text = "\n".join(lines)
 
 
@@ -497,7 +499,7 @@ func _build_enemy_ui(column: VBoxContainer) -> void:
 	title.text = "DEBUG: PATH ENEMIES"
 	column.add_child(title)
 	enemy_selector = OptionButton.new()
-	enemy_selector.add_item("Red sphere")
+	enemy_selector.add_item("Wind-up Robot")
 	enemy_selector.add_item("Blue sphere")
 	column.add_child(enemy_selector)
 	var spawn_button := Button.new()
@@ -508,9 +510,9 @@ func _build_enemy_ui(column: VBoxContainer) -> void:
 	reset_button.text = "Reset enemies"
 	reset_button.pressed.connect(reset_enemies)
 	column.add_child(reset_button)
-	_add_enemy_spin(column, "red_speed", "Red speed", 0.0, 30.0, 0.1)
+	_add_enemy_spin(column, "robot_speed", "Robot speed", 0.0, 30.0, 0.1)
 	_add_enemy_spin(column, "blue_speed", "Blue speed", 0.0, 30.0, 0.1)
-	_add_enemy_spin(column, "red_scale", "Red visual scale", 0.1, 3.0, 0.05)
+	_add_enemy_spin(column, "robot_scale", "Robot visual scale", 0.1, 3.0, 0.05)
 	_add_enemy_spin(column, "blue_scale", "Blue visual scale", 0.1, 3.0, 0.05)
 	enemy_health_label = Label.new()
 	column.add_child(enemy_health_label)
