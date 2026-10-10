@@ -12,7 +12,7 @@ func _initialize() -> void:
 	var tower := towers.get("laser_tower") as TowerDefinition
 	var double_tower := towers.get("double_tank") as TowerDefinition
 	var lightning_tower := towers.get("lightning_tower") as TowerDefinition
-	var red := units.get("red_sphere") as UnitDefinition
+	var red := units.get("windup_robot") as UnitDefinition
 	_check(tower != null and double_tower != null and lightning_tower != null and red != null, "Loader returns typed resources")
 	if lightning_tower != null:
 		_check(lightning_tower.damage_type == "electric" and lightning_tower.tags.has("electric"), "Lightning tower loads electric damage")

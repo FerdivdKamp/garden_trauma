@@ -2,9 +2,9 @@
 
 ## Play a level
 
-From the main menu, choose **Start**, then Garden 1. The normal game starts with 240 coins and 10 garden health. Select a tower in the sidebar, move its preview over a grass tile, and click to place it. Sand, rock, occupied tiles, and unaffordable purchases reject placement. Press **Esc** or right-click to clear the selection.
+From the main menu, choose **Start**, then Garden 1. The normal game starts with 240 coins and 10 garden health. Select a tower in the bottom-left panel, move its preview over a grass tile, and click to place it. Sand, rock, occupied tiles, and unaffordable purchases reject placement. Press **Esc** or right-click to clear the selection.
 
-Press **Start wave 1** when ready. Defeated enemies pay their unit reward; each enemy that reaches the objective removes one health. After a wave and its break, start the next wave. The sidebar shows coins, health, wave, and remaining enemies. Pause, Restart, Retry, and Main menu controls are available during the loop. Winning Garden 1 unlocks Garden 2; both have their own map and wave schedule.
+Press **Start wave 1** when ready. Defeated enemies pay their unit reward; each enemy that reaches the objective removes one health. After a wave and its break, start the next wave. The bottom-right panel shows coins, health, wave, and remaining enemies. Pause, Restart, Retry, and Main menu controls are available during the loop. Winning Garden 1 unlocks Garden 2; both have their own map and wave schedule.
 
 Click a placed tower to inspect and buy its next upgrade. Each tower has three sequential upgrades defined in its JSON file. An upgrade replaces the listed attack values and leaves unspecified values as they were.
 

@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "asset": "robot",
+  "materials": [
+    {
+      "name": "Material.002",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.08711262047290802,
+          0.49818986654281616,
+          0.07627956569194794,
+          1.0
+        ],
+        "metallic": 0.5229358077049255,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "Material.003",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.019265493378043175,
+          0.08164817094802856,
+          0.0039023717399686575,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "Material.004",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.010433021001517773,
+          0.08848516643047333,
+          0.003523607738316059,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "Material.005",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.25391456484794617,
+          0.25735706090927124,
+          0.08980938792228699,
+          1.0
+        ],
+        "metallic": 0.7981651425361633,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "glowing_red",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.8000074625015259,
+          0.06519550085067749,
+          0.04671341925859451,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    }
+  ]
+}
