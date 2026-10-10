@@ -23,6 +23,7 @@ nav:
       - Lightning effect: guides/lightning-effect.md
   - Reference:
       - Project structure: reference/project-structure.md
+      - Garden rendering: reference/garden-rendering.md
       - Audio sources: reference/audio-sources.md
   - Roadmap:
       - Current status: roadmap/index.md

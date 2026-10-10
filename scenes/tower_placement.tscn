@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://byrr5srpyptff" path="res://scripts/level_grid.gd" id="4_grid"]
 [ext_resource type="Script" uid="uid://d160nplr1mnud" path="res://scripts/wave_controller.gd" id="5_waves"]
 [ext_resource type="Theme" uid="uid://dam468t37xtqy" path="res://ui/game_theme.tres" id="6_theme"]
+[ext_resource type="Environment" path="res://scenes/garden_environment.tres" id="7_environment"]
 
 [node name="TowerPlacement" type="Node3D" unique_id=1227784002]
 script = ExtResource("1_placement")
@@ -25,12 +26,21 @@ script = ExtResource("3_effects")
 
 [node name="Preview" type="Node3D" parent="." unique_id=1866902016]
 
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = ExtResource("7_environment")
+
 [node name="Sun" type="DirectionalLight3D" parent="." unique_id=1309781056]
-transform = Transform3D(0.81915206, 0.46984634, -0.32898995, 0, 0.57357645, 0.81915206, 0.57357645, -0.6710101, 0.46984634, 0, 0, 0)
-light_energy = 1.5
+rotation_degrees = Vector3(-55, -35, 0)
+light_color = Color(1, 0.94, 0.83, 1)
+light_energy = 1.3
+shadow_enabled = true
+shadow_blur = 1.5
 
 [node name="Camera" type="Camera3D" parent="." unique_id=2074895266]
-transform = Transform3D(1, 0, 0, 0, 0.39635667, 0.91809666, 0, -0.91809666, 0.39635667, 1.0664215, 13.534887, 10.421692)
+position = Vector3(0, 28.56, 20)
+rotation_degrees = Vector3(-55, 0, 0)
+projection = 1
+size = 43.0
 current = true
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=2012571442]

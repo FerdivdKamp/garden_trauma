@@ -81,8 +81,6 @@ func _ready() -> void:
 	objective_health = starting_objective_health
 	currency = starting_currency
 	
-	# camera aim commented out to use scene settings
-	#camera.look_at(Vector3.ZERO, Vector3.UP)
 	_setup_route()
 	_build_ui()
 	waves.spawn_requested.connect(_on_wave_spawn_requested)
