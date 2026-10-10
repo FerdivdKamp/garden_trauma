@@ -4,7 +4,7 @@
 __pycache__/
 *.pyc
 /site/
-
+*.zip
 
 # Ignore all Blender files, except the actual source files
 *.blend*
