@@ -209,6 +209,8 @@ func can_place_at(point: Vector3) -> bool:
 func _setup_route() -> void:
 	# PathFollow3D still drives the existing enemies. Its curve now comes from
 	# the level's ordered tile route, so there is one source of path truth.
+	# The Path3D Surface is hidden in this scene: the imported tiles draw the
+	# sand and borders, while the curve alone handles enemy movement.
 	var curve := Curve3D.new()
 	for cell in grid.route:
 		curve.add_point(grid.grid_to_world(cell))

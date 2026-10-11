@@ -21,8 +21,6 @@ func _run() -> void:
 	var original_turns := grass_tile.quarter_turns
 	var original_seed := grass_tile.visual_seed
 	var path_tile := grid.get_node("Tile_5_7") as PathTileVisual
-	var path_variant := path_tile.variant_index
-	var path_turns := path_tile.quarter_turns
 	var path_seed := path_tile.visual_seed
 	_check(original_seed == grid.visual_seed_for(Vector2i(5, 5)), "Grass seed derives from level seed and coordinates")
 	_check(path_seed == grid.visual_seed_for(Vector2i(5, 7)), "Path seed derives from level seed and coordinates")
@@ -58,7 +56,7 @@ func _run() -> void:
 	grass_tile = grid.get_node("Tile_5_5") as GrassTileVisual
 	path_tile = grid.get_node("Tile_5_7") as PathTileVisual
 	_check(grass_tile.visual_seed == original_seed and grass_tile.variant_index == original_variant and grass_tile.quarter_turns == original_turns, "Level reload reproduces grass visuals")
-	_check(path_tile.visual_seed == path_seed and path_tile.variant_index == path_variant and path_tile.quarter_turns == path_turns, "Level reload reproduces path visuals")
+	_check(path_tile.visual_seed == path_seed and path_tile.get_node("PathVisual") != null, "Level reload keeps the single lowered path visual")
 	var seen_variants := {}
 	var seen_rotations := {}
 	for seed in 32:
@@ -70,17 +68,19 @@ func _run() -> void:
 		root.remove_child(sample)
 		sample.queue_free()
 	_check(seen_variants.size() == 3 and seen_rotations.size() == 4, "Different seeds can select every grass variant and rotation")
-	seen_variants.clear()
-	seen_rotations.clear()
-	for seed in 32:
-		var sample := PathTile.instantiate() as PathTileVisual
-		sample.visual_seed = seed
-		root.add_child(sample)
-		seen_variants[sample.variant_index] = true
-		seen_rotations[sample.quarter_turns] = true
-		root.remove_child(sample)
-		sample.queue_free()
-	_check(seen_variants.size() == 4 and seen_rotations.size() == 4, "Different seeds can select every path variant and rotation")
+	_check(path_tile.get_node_or_null("Borders/Straight_1") != null and path_tile.get_node_or_null("Borders/Straight_3") != null, "Narrow path gets a border on both grass-facing sides")
+	var south_border := path_tile.get_node("Borders/Straight_1") as Node3D
+	_check(south_border.position.is_equal_approx(Vector3(0, -0.25, 0)), "Straight border overlays the path tile at its authored origin")
+	var bend := grid.get_node("Tile_7_7") as PathTileVisual
+	_check(bend.get_node_or_null("Borders/Outer_2") != null, "Bend joins east and south grass sides with an outer corner")
+	var outer_border := bend.get_node("Borders/Outer_2") as Node3D
+	_check(outer_border.position.is_equal_approx(Vector3(0, -0.25, 0)), "Outer border overlays the path tile at its authored origin")
+	var sample := PathTile.instantiate() as PathTileVisual
+	sample.grass_diagonals = PathTileVisual.SE
+	root.add_child(sample)
+	_check(sample.get_node_or_null("Borders/Inner_0") != null, "Diagonal grass gets an inner corner when both adjacent sides are path")
+	root.remove_child(sample)
+	sample.queue_free()
 	grid.visual_seeds["5,5"] = 73
 	_check(grid.visual_seed_for(Vector2i(5, 5)) == 73 and grid.is_buildable(Vector2i(5, 5)), "Tile seed override changes only visual state")
 	grid.visual_seeds["5,7"] = 74

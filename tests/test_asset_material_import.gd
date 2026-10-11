@@ -65,6 +65,26 @@ func _initialize() -> void:
 						_expect(variant_override.get_shader_parameter("grass_world_variation") == true, "%s uses grass world-space variation" % variant_name)
 			_expect(translated, "%s translates its grass top material" % variant_name)
 		variant_scene.free()
+	for border_name: String in ["border_straight_1", "corner_outer_1", "corner_inner_1"]:
+		var border_path := "res://assets/models/environment/garden/tiles/%s.glb" % border_name
+		var border_scene := (load(border_path) as PackedScene).instantiate()
+		var border_mesh := _find_mesh(border_scene)
+		_expect(border_mesh != null, "%s has an imported mesh" % border_name)
+		if border_mesh != null:
+			var border_top: ShaderMaterial = null
+			for surface: int in border_mesh.mesh.get_surface_count():
+				var material := border_mesh.mesh.surface_get_material(surface)
+				if material != null and material.resource_name == "GrassTop":
+					border_top = border_mesh.get_surface_override_material(surface) as ShaderMaterial
+			_expect(border_top != null, "%s translates GrassTop" % border_name)
+			if border_top != null:
+				_expect(border_top.shader == SHADER, "%s uses the shared grass shader" % border_name)
+				_expect(border_top.get_shader_parameter("use_world_space") == true, "%s uses world coordinates" % border_name)
+				_expect(border_top.get_shader_parameter("grass_world_variation") == true, "%s uses the grass color field" % border_name)
+				_expect(border_top.get_shader_parameter("grass_color_noise") is Texture2D, "%s has the grass color texture" % border_name)
+				_expect(is_equal_approx(float(border_top.get_shader_parameter("grass_color_strength")), 2.0), "%s matches grass color strength" % border_name)
+				_expect(is_equal_approx(float(border_top.get_shader_parameter("grass_normal_flatten")), 0.7), "%s matches grass normal blending" % border_name)
+		border_scene.free()
 	var path_scene: Node = PATH_MODEL.instantiate()
 	var path_mesh: MeshInstance3D = _find_mesh(path_scene)
 	_expect(path_mesh != null, "Imported path has a MeshInstance3D")

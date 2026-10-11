@@ -12,7 +12,7 @@ For supported procedural materials, the export manifest records shader settings.
 
 Sand path tile tops use world-space procedural noise. Grass tile tops use a shared color field from `assets/textures/environment/garden/grass_color_noise.png`, sampled in world space so the pattern continues across neighboring tiles, including rotated variants. The grass shader also blends top normals toward vertical to soften the lighting facets from the mesh bumps. `tools/godot_material_post_import.gd` sets the grass color strength and normal blend for all three grass GLBs; reimport those GLBs after changing these settings.
 
-This is a visual tiling change: the three grass meshes still occupy 2 m cells, but the imported `GrassTop` material samples a continuous 64 m color field using world X/Z. Rotating or changing a tile variant therefore does not restart the color pattern at its edge. The post-import script applies this mode only to `tile_grass*.glb`. It uses continuous world-space procedural noise for `tile_path*.glb`; other supported Blender materials use their mesh-local generated coordinates. The dressing GLBs sit above the grass and use their exported materials, so their placement and colors do not alter the ground shader. See [Level dressing](level-dressing.md) for the six Garden decorations and their density controls.
+This is a visual tiling change: the three grass meshes still occupy 2 m cells, but the imported `GrassTop` material samples a continuous 64 m color field using world X/Z. Rotating or changing a tile variant therefore does not restart the color pattern at its edge. The post-import script applies this mode to `tile_grass*.glb` and the three border GLBs. It uses continuous world-space procedural noise for `tile_path*.glb`; other supported Blender materials use their mesh-local generated coordinates. The dressing GLBs sit above the grass and use their exported materials, so their placement and colors do not alter the ground shader. See [Level dressing](level-dressing.md) for the six Garden decorations and their density controls.
 
 Regenerate the deterministic grass color field with `Godot --headless --path . --script res://tools/generate_grass_noise.gd`, then open the project to import the PNG. Its 64 m span covers the 40 m Garden without repeating the pattern. The image changes broad color only; the tile mesh and scattered tufts provide small-scale detail. To compare changes from the level camera, run `Godot --path . --script res://tools/render_grass_fix.gd`. It saves `.godot/grass_material_world_noise.png`.
 
@@ -29,6 +29,18 @@ python tools/asset_pipeline.py export art/blender/environment/garden/tiles/garde
 ```
 
 The exported meshes have `UVMap` for ordinary texture use. The current Godot grass material instead samples world position, so the border GLBs also need the normal post-import script to receive the shared grass color field. Each export object has a `FixedJoins` group for selecting every edge vertex that must meet another tile, plus a `VariationMask` group that fades from zero at those joins to full influence inside. Blender's proportional editing does not obey vertex-group locks: hide the full `FixedJoins` selection before editing, or use `VariationMask` with a vertex-group-aware modifier for guaranteed fixed joins. Restore hidden vertices before export.
+
+After changing the post-import script, explicitly reimport the border GLBs in Godot. The editor can keep a cached import made with older shader settings even when the `.glb` and manifest have not changed. `tests/test_asset_material_import.gd` checks the imported border materials for the shared world-space grass field.
+
+The Garden grid now reads surrounding grass cells when it creates each path tile. The lowered `tile_path.blend` is exported as `tile_path.glb`, and `PathTileVisual` always uses that one sand mesh for now. The border pieces are visual children of path tiles; the route and buildable cells still come from the level JSON. One path tile owns each piece, so changing a level's tile symbols and reloading rebuilds the borders.
+
+| Grass relative to a path cell | Border piece | Base direction |
+| --- | --- | --- |
+| One cardinal side | `border_straight_1` | West |
+| Two adjacent cardinal sides | `corner_outer_1` | West + north |
+| Diagonal only, with both adjacent sides path | `corner_inner_1` | Southeast |
+
+The script rotates these base directions in quarter turns and puts each piece at the path tile's authored center. On a one-cell-wide path, two opposing straight pieces are mirrored across the sand. Map edges and blocked cells do not count as grass. `PlacementPath` still supplies the enemy route, but its old flat beige `Surface` is hidden in `tower_placement.tscn`; otherwise it sits above the imported geometry and makes the entire path look square. Inspect the result at play zoom after changing mesh heights or making wider variations in Blender.
 
 ## Tower pivot template
 

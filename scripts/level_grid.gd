@@ -197,7 +197,15 @@ func _rebuild_visuals() -> void:
 			if terrain == "grass":
 				(tile as GrassTileVisual).visual_seed = visual_seed_for(cell)
 			elif terrain == "path_sand":
-				(tile as PathTileVisual).visual_seed = visual_seed_for(cell)
+				var path_tile := tile as PathTileVisual
+				path_tile.visual_seed = visual_seed_for(cell)
+				# Border visuals read neighboring terrain; movement still reads this cell's map symbol.
+				for neighbor: Array in [[Vector2i(0, -1), PathTileVisual.N], [Vector2i(1, 0), PathTileVisual.E], [Vector2i(0, 1), PathTileVisual.S], [Vector2i(-1, 0), PathTileVisual.W]]:
+					if terrain_at(cell + neighbor[0]) == "grass":
+						path_tile.grass_sides |= neighbor[1]
+				for neighbor: Array in [[Vector2i(1, -1), PathTileVisual.NE], [Vector2i(1, 1), PathTileVisual.SE], [Vector2i(-1, 1), PathTileVisual.SW], [Vector2i(-1, -1), PathTileVisual.NW]]:
+					if terrain_at(cell + neighbor[0]) == "grass":
+						path_tile.grass_diagonals |= neighbor[1]
 			tile.name = "Tile_%d_%d" % [x, z]
 			tile.position = grid_to_world(cell)
 			add_child(tile)

@@ -16,6 +16,9 @@ script = ExtResource("4_grid")
 
 [node name="PlacementPath" parent="." unique_id=1922296270 instance=ExtResource("2_path")]
 
+[node name="Surface" parent="PlacementPath" index="0"]
+visible = false
+
 [node name="PlacedTowers" type="Node3D" parent="." unique_id=1428990228]
 
 [node name="Waves" type="Node" parent="." unique_id=710363728]
