@@ -17,13 +17,15 @@ func _run() -> void:
 
 	var path := demo.get_node("PlacementPath")
 	_check(path.curve.point_count == demo.grid.route.size(), "Enemy path follows the level route")
-	_check(not demo.can_place_at(Vector3(0, 0, -6)), "Path blocks tower placement")
+	_check(not path.get_node("Surface").visible, "Route guide does not hide the tile path and organic borders")
+	_check(not demo.can_place_at(demo.grid.grid_to_world(Vector2i(5, 7))), "Path blocks tower placement")
 	_check(demo.can_place_at(Vector3(-8, 0, 8)), "Open ground allows placement")
 	_check(not demo.can_place_at(Vector3(20, 0, 12)), "Outside grid blocks placement")
 	_check(not demo.can_place_at(demo.grid.grid_to_world(Vector2i(5, 4))), "Rock tile blocks placement")
 
 	demo._select_tower(1)
 	_check(demo.preview != null and demo.preview.is_preview, "Selecting a tile creates a preview")
+	_check(demo.tower_buttons[0].icon != null and demo.tower_buttons[0].text.is_empty(), "Tower tile uses a thumbnail instead of text")
 	var preview_base := demo.preview.get_node("Base") as MeshInstance3D
 	_check(preview_base.material_override.albedo_color.a < 1.0, "Preview is translucent")
 	_check(demo.preview.get_node("RangeVisual").visible, "Selected preview shows its ranges")
@@ -44,6 +46,9 @@ func _run() -> void:
 	_check(second_pivot.get_child_count() == 3, "Placed double tower uses shared visual")
 	_check(demo.placed_towers.get_child(0).get_node("Attack").definition.id == "double_tank", "Double barrel uses its own definition")
 	var first_tower := demo.placed_towers.get_child(0) as Node3D
+	demo._select_placed_tower(first_tower)
+	_check(demo.upgrade_button.tooltip_text.contains("Damage: 20 → 25"), "Upgrade tooltip compares current and new stats")
+	demo._select_placed_tower(null)
 	var hover_screen: Vector2 = demo.camera.unproject_position(first_tower.global_position + Vector3(0.0, 0.6, 0.0))
 	demo._update_hovered_tower(hover_screen)
 	_check(first_tower.get_node("RangeVisual").visible, "Hovering a placed tower shows its ranges")

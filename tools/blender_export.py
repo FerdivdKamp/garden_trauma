@@ -245,6 +245,17 @@ def main() -> None:
     # Blender; selection operators require Object mode before GLB export.
     if bpy.context.object is not None and bpy.context.object.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
+    if collection_name:
+        # An explicit collection may belong to another scene in the file.
+        # Export from a scene containing all of its objects so reference
+        # scenes cannot leak selected meshes into the GLB.
+        target_scene = next((scene for scene in bpy.data.scenes
+                             if all(obj.name in scene.objects for obj in objects)), None)
+        if target_scene is None:
+            raise ValueError(f"Collection {collection_name} is not linked to one scene")
+        bpy.context.window.scene = target_scene
+    # A .blend can retain selected objects in other scenes. Restrict the glTF
+    # exporter to this scene so those reference meshes stay out of the GLB.
     bpy.ops.object.select_all(action="DESELECT")
     for obj in objects:
         if collection_name:
@@ -255,6 +266,7 @@ def main() -> None:
     bpy.context.view_layer.objects.active = objects[0]
     bpy.ops.export_scene.gltf(
         filepath=arguments[1], export_format="GLB", use_selection=True,
+        use_active_scene=True,
         export_cameras=False, export_lights=False, export_apply=True,
     )
     with open(arguments[2], "w", encoding="utf-8") as manifest_file:

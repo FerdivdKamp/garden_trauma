@@ -20,8 +20,11 @@ func _post_import(scene: Node) -> Object:
 		if entry is Dictionary and entry.has("name"):
 			entries[entry["name"]] = entry
 	var source_name := get_source_file().get_file()
-	var world_space_tile := source_name.begins_with("tile_grass") or source_name.begins_with("tile_path")
-	var grass_tile := source_name.begins_with("tile_grass")
+	# Border variants share the grass tiles' world-space color field even when
+	# exported from a separate Blender collection and GLB.
+	var grass_border := source_name.begins_with("border_straight_") or source_name.begins_with("corner_outer_") or source_name.begins_with("corner_inner_")
+	var grass_tile := source_name.begins_with("tile_grass") or grass_border
+	var world_space_tile := grass_tile or source_name.begins_with("tile_path")
 	_apply_materials(scene, entries, world_space_tile, grass_tile)
 	return scene
 

@@ -5,6 +5,8 @@ extends Node
 const LEVELS := [
 	{"id": "garden_test_01", "title": "Garden 1", "map": "res://levels/data/garden_test_01.json", "waves": "res://levels/waves/garden_test_01.json"},
 	{"id": "garden_test_02", "title": "Garden 2", "map": "res://levels/data/garden_test_02.json", "waves": "res://levels/waves/garden_test_02.json"},
+	{"id": "garden_test_03", "title": "Garden 3", "map": "res://levels/data/garden_test_03.json", "waves": "res://levels/waves/garden_test_03.json"},
+
 ]
 const DEFAULT_LEVEL_ID := "garden_test_01"
 const BATTLE_SCENE := "res://scenes/tower_placement.tscn"

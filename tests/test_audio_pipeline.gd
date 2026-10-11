@@ -19,10 +19,12 @@ func _run() -> void:
 	var old_music_volume: float = settings.music_volume
 	var old_sfx_enabled: bool = settings.sfx_enabled
 	var old_sfx_volume: float = settings.sfx_volume
+	var old_hints_enabled: bool = settings.hints_enabled
 	settings.music_enabled = false
 	settings.music_volume = 35.0
 	settings.sfx_enabled = false
 	settings.sfx_volume = 60.0
+	settings.hints_enabled = false
 	settings.apply()
 	_check(AudioServer.is_bus_mute(music_bus) and AudioServer.is_bus_mute(sfx_bus), "Settings mute both buses")
 	_check(is_equal_approx(AudioServer.get_bus_volume_db(music_bus), linear_to_db(0.35)), "Music volume controls its bus")
@@ -35,11 +37,13 @@ func _run() -> void:
 	settings.sfx_volume = 100.0
 	settings.load_settings(test_settings_path)
 	_check(not settings.music_enabled and is_equal_approx(settings.music_volume, 35.0) and not settings.sfx_enabled and is_equal_approx(settings.sfx_volume, 60.0), "Audio settings survive save and reload")
+	_check(not settings.hints_enabled, "Hint preference survives save and reload")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(test_settings_path))
 	settings.music_enabled = old_music_enabled
 	settings.music_volume = old_music_volume
 	settings.sfx_enabled = old_sfx_enabled
 	settings.sfx_volume = old_sfx_volume
+	settings.hints_enabled = old_hints_enabled
 	settings.apply()
 
 	var menu := (load("res://scenes/main_menu.tscn") as PackedScene).instantiate() as Control
@@ -47,6 +51,7 @@ func _run() -> void:
 	current_scene = menu
 	_check(menu.get_node("Center/Menu/Start") is Button, "Start button exists")
 	_check(menu.get_node("Center/OptionsPanel/Settings/MusicEnabled") is CheckBox, "Options controls exist")
+	_check(menu.get_node("Center/OptionsPanel/Settings/HintsEnabled") is CheckBox, "Hints option exists")
 	menu.get_node("Center/Menu/Options").pressed.emit()
 	_check(menu.get_node("Center/OptionsPanel").visible, "Options opens")
 	menu.get_node("Center/OptionsPanel/Settings/Back").pressed.emit()

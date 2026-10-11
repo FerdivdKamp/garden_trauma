@@ -6,6 +6,7 @@ var music_enabled := true
 var music_volume := 80.0
 var sfx_enabled := true
 var sfx_volume := 80.0
+var hints_enabled := true
 
 
 func _ready() -> void:
@@ -19,6 +20,7 @@ func load_settings(path: String = SETTINGS_PATH) -> void:
 		music_volume = clampf(float(config.get_value("audio", "music_volume", music_volume)), 0.0, 100.0)
 		sfx_enabled = bool(config.get_value("audio", "sfx_enabled", sfx_enabled))
 		sfx_volume = clampf(float(config.get_value("audio", "sfx_volume", sfx_volume)), 0.0, 100.0)
+		hints_enabled = bool(config.get_value("gameplay", "hints_enabled", hints_enabled))
 	apply()
 
 
@@ -34,6 +36,7 @@ func save(path: String = SETTINGS_PATH) -> void:
 	config.set_value("audio", "music_volume", music_volume)
 	config.set_value("audio", "sfx_enabled", sfx_enabled)
 	config.set_value("audio", "sfx_volume", sfx_volume)
+	config.set_value("gameplay", "hints_enabled", hints_enabled)
 	var error := config.save(path)
 	if error != OK:
 		push_error("Could not save audio settings: %s" % error_string(error))

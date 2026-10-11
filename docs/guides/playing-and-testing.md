@@ -4,15 +4,15 @@
 
 From the main menu, choose **Start**, then Garden 1. The normal game starts with 240 coins and 10 garden health. Select a tower in the bottom-left panel, move its preview over a grass tile, and click to place it. Sand, rock, occupied tiles, and unaffordable purchases reject placement. Press **Esc** or right-click to clear the selection.
 
-Press **Start wave 1** when ready. Defeated enemies pay their unit reward; each enemy that reaches the objective removes one health. After a wave and its break, start the next wave. The bottom-right panel shows coins, health, wave, and remaining enemies. Pause, Restart, Retry, and Main menu controls are available during the loop. Winning Garden 1 unlocks Garden 2; both have their own map and wave schedule.
+Press **Start wave 1** when ready. Defeated enemies pay their unit reward; each enemy that reaches the objective removes one health. After a wave and its break, start the next wave. The compact top-right panel shows credits, life, wave, Start wave, and Pause. The optional hint panel shows instructions and remaining enemies; turn it on or off in the main menu's Options. Restart and Main menu are in Pause. Winning Garden 1 unlocks Garden 2; both have their own map and wave schedule.
 
-Click a placed tower to inspect and buy its next upgrade. Each tower has three sequential upgrades defined in its JSON file. An upgrade replaces the listed attack values and leaves unspecified values as they were.
+The bottom-left tiles show small views of the actual tower models. Hover a tile to see its name and price. Click a placed tower to inspect and buy its next upgrade. Hover Upgrade to see its cost and the current-to-new stat values, even if you lack credits. Each tower has three sequential upgrades defined in its JSON file. An upgrade replaces the listed attack values and leaves unspecified values as they were.
 
 The tower demo in `scenes/tower_demo.tscn` lets you compare tower types, change range, turn speed, damage, fire rate, and enemy health, then reset the barrel away from the target to watch aiming. Its save button writes a tower definition override for that demo.
 
 ## Saves and debugging
 
-Level completion is stored in `user://progress.cfg`, audio preferences in `user://settings.cfg`, and demo tower overrides in `user://tower_definitions/<id>.json`. `user://` is Godot's per-user data folder; these are separate from the version-controlled defaults in `data/`.
+Level completion is stored in `user://progress.cfg`, audio and hint preferences in `user://settings.cfg`, and demo tower overrides in `user://tower_definitions/<id>.json`. `user://` is Godot's per-user data folder; these are separate from the version-controlled defaults in `data/`.
 
 For the older enemy playground, enable `debug_mode` on the `TowerPlacement` scene root in the Inspector. This exposes manual enemy spawn and adjustment controls. In debug mode, **G** toggles grid lines, **C** coordinates, **R** the route, and **I** prints the tile under the cursor. These keys are not active in normal play.
 
