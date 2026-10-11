@@ -18,6 +18,18 @@ Regenerate the deterministic grass color field with `Godot --headless --path . -
 
 The current path and grass tiles use GLB-backed scenes under `scenes/tiles/`. The blocked rock tile remains a placeholder. The older [pipeline plan](../roadmap/plans/asset-pipeline.md) and [import design](../roadmap/plans/blender-asset-import.md) describe the intended conventions and possible extensions; their proposed phases are not all implemented.
 
+## Garden border prototypes
+
+`art/blender/environment/garden/tiles/garden_borders.blend` keeps the three organic border pieces in one editable file. Its `Border Export` scene has one object at the tile origin in each collection: `border_straight_1`, `corner_outer_1`, and `corner_inner_1`. The other scenes are layout references. Export one piece at a time with `--collection` and a matching `--output-name`:
+
+```powershell
+python tools/asset_pipeline.py export art/blender/environment/garden/tiles/garden_borders.blend --blender-exe "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" --collection border_straight_1 --output-name border_straight_1
+python tools/asset_pipeline.py export art/blender/environment/garden/tiles/garden_borders.blend --blender-exe "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" --collection corner_outer_1 --output-name corner_outer_1
+python tools/asset_pipeline.py export art/blender/environment/garden/tiles/garden_borders.blend --blender-exe "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" --collection corner_inner_1 --output-name corner_inner_1
+```
+
+The exported meshes have `UVMap` for ordinary texture use. The current Godot grass material instead samples world position, so the border GLBs also need the normal post-import script to receive the shared grass color field. Each export object has a `FixedJoins` group for selecting every edge vertex that must meet another tile, plus a `VariationMask` group that fades from zero at those joins to full influence inside. Blender's proportional editing does not obey vertex-group locks: hide the full `FixedJoins` selection before editing, or use `VariationMask` with a vertex-group-aware modifier for guaranteed fixed joins. Restore hidden vertices before export.
+
 ## Tower pivot template
 
 `art/blender/towers/laser_tower.blend` contains four laser tower collections. Export each collection to its own GLB:

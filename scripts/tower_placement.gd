@@ -38,6 +38,7 @@ var selected_tower: Node3D
 var upgrade_panel: PanelContainer
 var upgrade_details: Label
 var upgrade_button: Button
+var help_panel: PanelContainer
 var has_ground_point := false
 var ground_point := Vector3.ZERO
 var status: Label
@@ -355,16 +356,26 @@ func _select_tower(tower_type: int) -> void:
 	status.text = "Move over the ground to place"
 
 
-func _build_upgrade_ui(column: VBoxContainer) -> void:
+func _build_upgrade_ui() -> void:
 	upgrade_panel = PanelContainer.new()
 	upgrade_panel.visible = false
-	column.add_child(upgrade_panel)
+	# The selected tower's actions appear above the tile row without expanding it.
+	$UI.add_child(upgrade_panel)
+	$UI.move_child(upgrade_panel, pause_overlay.get_index())
+	upgrade_panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	upgrade_panel.offset_left = 12
+	upgrade_panel.offset_top = -300
+	upgrade_panel.offset_right = 276
+	upgrade_panel.offset_bottom = -120
+	upgrade_panel.custom_minimum_size = Vector2(264, 0)
 	var contents := VBoxContainer.new()
 	upgrade_panel.add_child(contents)
 	upgrade_details = Label.new()
 	upgrade_details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	upgrade_details.add_theme_font_size_override("font_size", 15)
 	contents.add_child(upgrade_details)
 	upgrade_button = Button.new()
+	upgrade_button.text = "Upgrade"
 	upgrade_button.pressed.connect(_buy_selected_upgrade)
 	contents.add_child(upgrade_button)
 	var close_button := Button.new()
@@ -398,18 +409,28 @@ func _refresh_upgrade_ui() -> void:
 	var attack := selected_tower.get_node("Attack") as PlacementTowerAttack
 	var definition := attack.definition
 	var upgrade := attack.next_upgrade()
-	var stats := "Damage %.0f   Cooldown %.2fs   Range %.1f   Speed %.1f" % [definition.damage, definition.cooldown, definition.attack_range, definition.projectile_speed]
+	var stats := "Damage %.0f  •  Cooldown %.2fs  •  Range %.1f" % [definition.damage, definition.cooldown, definition.attack_range]
 	if upgrade.is_empty():
-		upgrade_details.text = "%s  |  Level 3/3\n%s\nFully upgraded" % [definition.name, stats]
+		upgrade_details.text = "%s  |  Level 3/3\n%s" % [definition.name, stats]
 		upgrade_button.disabled = true
 		upgrade_button.text = "Max level"
+		upgrade_button.tooltip_text = "This tower is fully upgraded."
 		return
 	var changes: PackedStringArray = []
 	for key in upgrade.attack:
-		changes.append("%s: %s" % [key.capitalize(), str(upgrade.attack[key])])
-	upgrade_details.text = "%s  |  Level %d/3\n%s\nNext: %s (%d coins)\nReplaces %s" % [definition.name, attack.upgrade_level, stats, upgrade.name, upgrade.cost, ", ".join(changes)]
-	upgrade_button.text = "Buy %s - %d coins" % [upgrade.name, upgrade.cost]
+		var property_name: String = "attack_range" if key == "range" else key
+		var old_value: float = definition.get(property_name)
+		var new_value: float = float(upgrade.attack[key])
+		changes.append("%s: %s → %s" % [key.capitalize(), _stat_text(old_value), _stat_text(new_value)])
+	upgrade_details.text = "%s  |  Level %d/3\n%s" % [definition.name, attack.upgrade_level, stats]
+	upgrade_button.text = "Upgrade  •  %d coins" % int(upgrade.cost)
+	upgrade_button.tooltip_text = "%s — %d coins\n%s" % [upgrade.name, int(upgrade.cost), "\n".join(changes)]
+	upgrade_panel.tooltip_text = upgrade_button.tooltip_text
 	upgrade_button.disabled = currency < int(upgrade.cost)
+
+
+func _stat_text(value: float) -> String:
+	return str(int(value)) if is_equal_approx(value, roundf(value)) else str(value)
 
 
 func _buy_selected_upgrade() -> void:
@@ -424,72 +445,96 @@ func _buy_selected_upgrade() -> void:
 
 func _build_ui() -> void:
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 10)
+	column.add_theme_constant_override("separation", 0)
 	palette.add_child(column)
-	var title := Label.new()
-	title.text = "TOWER PLACEMENT"
-	column.add_child(title)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
+	row.add_theme_constant_override("separation", 5)
 	column.add_child(row)
 	for index in TOWER_IDS.size():
 		var tile := Button.new()
 		var definition := tower_definitions[TOWER_IDS[index]] as TowerDefinition
-		tile.text = "%s\n%d coins" % [["LASER", "DOUBLE BARREL", "LIGHTNING"][index], definition.cost]
-		tile.custom_minimum_size = Vector2(105, 100)
+		tile.custom_minimum_size = Vector2(72, 66)
+		tile.tooltip_text = "%s — %d coins" % [definition.name, definition.cost]
+		tile.icon = _make_tower_thumbnail(index)
+		tile.expand_icon = true
 		tile.toggle_mode = true
 		tile.pressed.connect(_select_tower.bind(index))
 		row.add_child(tile)
 		tower_buttons.append(tile)
 	status = Label.new()
-	status.text = "Select a tower tile. Esc cancels selection."
-	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	column.add_child(status)
+	status.visible = false
+	$UI.add_child(status)
+	_build_upgrade_ui()
+	var hud := VBoxContainer.new()
+	hud.add_theme_constant_override("separation", 4)
+	enemy_panel.add_child(hud)
+	_build_battle_ui(hud)
+	help_panel = PanelContainer.new()
+	help_panel.visible = AudioSettings.hints_enabled
+	$UI.add_child(help_panel)
+	$UI.move_child(help_panel, pause_overlay.get_index())
+	help_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	help_panel.position = Vector2(12, 12)
+	var help_column := VBoxContainer.new()
+	help_panel.add_child(help_column)
 	var help := Label.new()
-	help.text = "Select a tower, then click grass to place it.\nClick a placed tower to upgrade it.\nRight-click or Esc: cancel selection."
+	help.text = "Select a tower tile, then click grass to build.\nClick a placed tower to upgrade. Right-click or Esc cancels.\nEnemies reaching GOAL reduce garden life."
+	help.add_theme_font_size_override("font_size", 15)
+	help_column.add_child(help)
+	help_column.add_child(enemies_label)
 	if debug_mode:
-		help.text += "\nDebug: G grid  C coords  R route  I inspect"
-	column.add_child(help)
-	_build_upgrade_ui(column)
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	enemy_panel.add_child(scroll)
-	var sidebar := VBoxContainer.new()
-	sidebar.add_theme_constant_override("separation", 9)
-	scroll.add_child(sidebar)
-	_build_battle_ui(sidebar)
-	if debug_mode:
-		_build_enemy_ui(sidebar)
+		_build_enemy_ui(hud)
+
+
+func _make_tower_thumbnail(index: int) -> Texture2D:
+	# Each icon renders the same scene as the placed tower, so artwork stays in sync.
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(96, 96)
+	viewport.transparent_bg = true
+	viewport.own_world_3d = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	$UI.add_child(viewport)
+	var tower := TOWER_SCENE.instantiate()
+	tower.set_tower_type(index)
+	viewport.add_child(tower)
+	var light := DirectionalLight3D.new()
+	light.rotation_degrees = Vector3(-45, -35, 0)
+	viewport.add_child(light)
+	var icon_camera := Camera3D.new()
+	icon_camera.position = Vector3(2.5, 3.3, 4.5)
+	icon_camera.fov = 40.0
+	viewport.add_child(icon_camera)
+	icon_camera.look_at(Vector3(0, 0.9, 0))
+	icon_camera.current = true
+	# The model is static in this icon; render one frame to avoid three extra
+	# 3D views running throughout the battle.
+	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+	return viewport.get_texture()
 
 
 func _build_battle_ui(column: VBoxContainer) -> void:
-	var title := Label.new()
-	title.text = "GARDEN DEFENSE"
-	column.add_child(title)
+	var stats := HBoxContainer.new()
+	stats.add_theme_constant_override("separation", 12)
+	column.add_child(stats)
 	currency_label = Label.new()
-	column.add_child(currency_label)
+	stats.add_child(currency_label)
 	objective_label = Label.new()
-	column.add_child(objective_label)
-	var hint := Label.new()
-	hint.text = "Garden health: enemies that reach GOAL reduce it.\nBuild towers, then press Start wave."
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	column.add_child(hint)
+	stats.add_child(objective_label)
 	wave_label = Label.new()
-	column.add_child(wave_label)
+	stats.add_child(wave_label)
 	enemies_label = Label.new()
-	column.add_child(enemies_label)
+	enemies_label.add_theme_font_size_override("font_size", 15)
 	next_wave_button = Button.new()
 	next_wave_button.text = "Start wave 1"
 	next_wave_button.pressed.connect(waves.start_next_wave)
-	column.add_child(next_wave_button)
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 5)
+	column.add_child(actions)
+	actions.add_child(next_wave_button)
 	pause_button = Button.new()
 	pause_button.text = "Pause"
 	pause_button.pressed.connect(_pause_battle)
-	column.add_child(pause_button)
-	var restart_button := Button.new()
-	restart_button.text = "Restart level"
-	restart_button.pressed.connect(_restart_level)
-	column.add_child(restart_button)
+	actions.add_child(pause_button)
 
 
 func _build_enemy_ui(column: VBoxContainer) -> void:
@@ -535,9 +580,9 @@ func _add_enemy_spin(column: VBoxContainer, key: String, caption: String, minimu
 func _refresh_hud() -> void:
 	if currency_label == null:
 		return
-	currency_label.text = "Coins: %d" % currency
-	objective_label.text = "Garden health: %d / %d" % [objective_health, starting_objective_health]
-	wave_label.text = "Wave: %d / %d" % [waves.current_wave + 1, waves.waves.size()]
+	currency_label.text = "◈ %d" % currency
+	objective_label.text = "♥ %d/%d" % [objective_health, starting_objective_health]
+	wave_label.text = "Wave %d/%d" % [waves.current_wave + 1, waves.waves.size()]
 	enemies_label.text = "Enemies remaining: %d" % [waves.active_enemies + waves.remaining_to_spawn]
 	next_wave_button.disabled = waves.state != WaveController.State.READY or battle_result != ""
 	match waves.state:

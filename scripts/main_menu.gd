@@ -8,6 +8,7 @@ const LEVEL_SELECT := "res://scenes/level_select.tscn"
 @onready var music_volume: HSlider = $Center/OptionsPanel/Settings/MusicVolume
 @onready var sfx_enabled: CheckBox = $Center/OptionsPanel/Settings/SfxEnabled
 @onready var sfx_volume: HSlider = $Center/OptionsPanel/Settings/SfxVolume
+@onready var hints_enabled: CheckBox = $Center/OptionsPanel/Settings/HintsEnabled
 
 
 func _ready() -> void:
@@ -20,10 +21,12 @@ func _ready() -> void:
 	music_volume.value = AudioSettings.music_volume
 	sfx_enabled.button_pressed = AudioSettings.sfx_enabled
 	sfx_volume.value = AudioSettings.sfx_volume
+	hints_enabled.button_pressed = AudioSettings.hints_enabled
 	music_enabled.toggled.connect(_set_music_enabled)
 	music_volume.value_changed.connect(_set_music_volume)
 	sfx_enabled.toggled.connect(_set_sfx_enabled)
 	sfx_volume.value_changed.connect(_set_sfx_volume)
+	hints_enabled.toggled.connect(_set_hints_enabled)
 
 
 func _start() -> void:
@@ -57,4 +60,9 @@ func _set_sfx_enabled(enabled: bool) -> void:
 
 func _set_sfx_volume(value: float) -> void:
 	AudioSettings.sfx_volume = value
+	AudioSettings.save()
+
+
+func _set_hints_enabled(enabled: bool) -> void:
+	AudioSettings.hints_enabled = enabled
 	AudioSettings.save()

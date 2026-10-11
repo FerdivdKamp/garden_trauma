@@ -13,6 +13,16 @@ grow_vertical = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_menu")
 
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.085, 0.19, 0.095, 1)
+
 [node name="Center" type="CenterContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
@@ -58,7 +68,7 @@ theme_override_constants/separation = 12
 [node name="Heading" type="Label" parent="Center/OptionsPanel/Settings"]
 layout_mode = 2
 theme_type_variation = &"SectionHeading"
-text = "Audio Options"
+text = "Options"
 
 [node name="MusicHeading" type="Label" parent="Center/OptionsPanel/Settings"]
 layout_mode = 2
@@ -94,6 +104,10 @@ text = "Volume"
 layout_mode = 2
 max_value = 100.0
 step = 1.0
+
+[node name="HintsEnabled" type="CheckBox" parent="Center/OptionsPanel/Settings"]
+layout_mode = 2
+text = "Show in-game hints"
 
 [node name="Back" type="Button" parent="Center/OptionsPanel/Settings"]
 layout_mode = 2

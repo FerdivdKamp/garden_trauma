@@ -95,7 +95,7 @@ Implementation tasks: see `godot-rendering-v1.md`.
 ### V2 — Raised grass and recessed path
 
 - [ ] Keep existing logical 2 × 2 tiles but expose a small height change in visuals.
-- [ ] Auto-select edge/corner transitions from tile neighbors.
+- [ ] Auto-place narrow grass/path edge treatments from tile neighbors, without dedicated transition tiles.
 - [ ] Prevent visible seams, z-fighting, tower floating, and dressing clipping.
 
 Implementation tasks: see `tile-height-transitions-v2.md`.
