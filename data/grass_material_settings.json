@@ -1,0 +1,21 @@
+{
+	"ambient": {
+		"color": "#ffffff",
+		"energy": 0.69,
+		"source": "color"
+	},
+	"grass": {
+		"contrast": 1.25,
+		"dark": "#1b5f03",
+		"light": "#abbd25",
+		"metallic": 0.0,
+		"middle": "#5b9d14",
+		"roughness": 0.91,
+		"specular": 0.0
+	},
+	"sun": {
+		"color": "#e9e77e",
+		"energy": 1.11
+	},
+	"tonemap": "filmic"
+}

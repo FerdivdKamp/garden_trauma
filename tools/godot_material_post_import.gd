@@ -3,8 +3,12 @@ extends EditorScenePostImport
 
 const PROCEDURAL_SHADER: Shader = preload("res://shaders/procedural_noise_color_ramp.gdshader")
 const GRASS_COLOR_NOISE: Texture2D = preload("res://assets/textures/environment/garden/grass_color_noise.png")
-const GRASS_COLOR_STRENGTH := 2.0
+const GRASS_PALETTE = preload("res://scripts/grass_palette.gd")
 const GRASS_NORMAL_FLATTEN := 0.7
+const GRASS_DETAIL_SCALE := 7.0
+const GRASS_DETAIL_STRENGTH := 0.18
+const GRASS_ROUGHNESS := 0.9
+const GRASS_ROUGHNESS_VARIATION := 0.06
 
 
 func _post_import(scene: Node) -> Object:
@@ -89,9 +93,19 @@ func _make_material(entry: Dictionary, bounds: AABB, world_space_tile: bool, gra
 	result.set_shader_parameter("use_world_space", world_space_tile)
 	result.set_shader_parameter("world_noise_tile_size", 2.0)
 	if grass_tile:
+		# The Garden palette is a Godot-side art decision shared by all grass
+		# tiles and border pieces. Reimporting their GLBs keeps it consistent.
+		result.set_shader_parameter("color_a", GRASS_PALETTE.CURRENT_DARK)
+		result.set_shader_parameter("grass_color_middle", GRASS_PALETTE.CURRENT_MIDDLE)
+		result.set_shader_parameter("grass_three_color", true)
+		result.set_shader_parameter("color_b", GRASS_PALETTE.CURRENT_LIGHT)
+		result.set_shader_parameter("material_roughness", GRASS_ROUGHNESS)
 		# A shared world-space image supplies smooth color across tile borders.
 		result.set_shader_parameter("grass_world_variation", true)
 		result.set_shader_parameter("grass_color_noise", GRASS_COLOR_NOISE)
-		result.set_shader_parameter("grass_color_strength", GRASS_COLOR_STRENGTH)
+		result.set_shader_parameter("grass_color_strength", GRASS_PALETTE.CURRENT_CONTRAST)
+		result.set_shader_parameter("grass_detail_scale", GRASS_DETAIL_SCALE)
+		result.set_shader_parameter("grass_detail_strength", GRASS_DETAIL_STRENGTH)
+		result.set_shader_parameter("grass_roughness_variation", GRASS_ROUGHNESS_VARIATION)
 		result.set_shader_parameter("grass_normal_flatten", GRASS_NORMAL_FLATTEN)
 	return result

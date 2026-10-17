@@ -2,7 +2,7 @@
 
 1. Copy `levels/data/garden_test_01.json` to a new file in `levels/data/`. Give it a new `name`.
 2. Set `width`, `height`, and an integer `level_seed` between 0 and 2147483647. The `tiles` array needs exactly `height` strings, each exactly `width` characters long. The first string is row `z = 0`; the first character is `x = 0`.
-3. Draw the terrain with `.` for buildable grass, `=` for walkable sand, and `#` for blocked rock. Use `S` for the spawn sand tile and `O` for the objective sand tile.
+3. Draw the terrain with `.` for grass, `=` for walkable sand, and `#` for blocked rock. Grass supports towers except in the outermost row and column, which stay clear of the fence. Use `S` for the spawn sand tile and `O` for the objective sand tile.
 4. Set `spawn` and `objective` to their `[x, z]` positions. List every cell enemies cross in `route`, in order. Start at spawn, end at objective, and move one cell horizontally or vertically at a time. Every route cell must be sand (`=`, `S`, or `O`).
 5. Create a matching wave file under `levels/waves/`, using the same level ID as the map filename. Copy an existing wave file to see its format; enemy IDs must exist in `data/units/`.
 6. Add an entry to `LEVELS` in `scripts/level_progress.gd` with a stable ID, display title, map path, and wave path. The order controls unlocks: completing one entry unlocks the next.

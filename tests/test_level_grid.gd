@@ -16,6 +16,7 @@ func _run() -> void:
 	await process_frame
 	_check(grid.error_message.is_empty(), "Example level loads")
 	_check(grid.width == 20 and grid.height == 20 and grid.get_node("Tile_19_19") != null, "20x20 tiles render")
+	_check(grid.get_node("Border").get_child_count() == 40, "Two-cell fence sections cover the 20x20 border")
 	var grass_tile := grid.get_node("Tile_5_5") as GrassTileVisual
 	var original_variant := grass_tile.variant_index
 	var original_turns := grass_tile.quarter_turns
@@ -41,7 +42,7 @@ func _run() -> void:
 				var limit: float = LevelGrid.TILE_SIZE * 0.5 - float(entry.get("edge_margin", 0.2))
 				_check(absf(decoration.position.x) <= limit and absf(decoration.position.z) <= limit, "%s pivot stays within its grass cell margin" % entry.id)
 				break
-	_check(seen_dressing_types.size() == 6, "All six Garden dressing assets appear in the example level")
+	_check(seen_dressing_types.size() == 8, "All eight Garden dressing assets appear in the example level")
 	_check(grid.load_level(grid.level_file), "Level reloads")
 	dressing = grid.get_node("Dressing") as LevelDressing
 	_check(_dressing_snapshot(dressing) == original_dressing, "Level reload reproduces dressing positions")
@@ -97,6 +98,7 @@ func _run() -> void:
 	_check(grid.grid_to_world(Vector2i(1, 0)) == Vector3(-17, 0, -19), "Grid step is 2 meters")
 	_check(grid.world_to_grid(Vector3(-19, 0, -19)) == Vector2i.ZERO, "World converts back to grid")
 	_check(grid.is_buildable(Vector2i(5, 5)) and not grid.is_walkable(Vector2i(5, 5)), "Grass is buildable")
+	_check(grid.terrain_at(Vector2i(0, 0)) == "grass" and not grid.is_buildable(Vector2i(0, 0)), "Fence-edge grass stays clear of towers")
 	_check(not grid.is_buildable(Vector2i(5, 7)) and grid.is_walkable(Vector2i(5, 7)), "Sand is path only")
 	_check(not grid.is_buildable(Vector2i(5, 4)) and not grid.is_walkable(Vector2i(5, 4)), "Rock is blocked")
 	_check(grid.get_node("SPAWN") != null and grid.get_node("GOAL") != null, "Markers are visible")

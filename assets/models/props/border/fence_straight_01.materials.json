@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "asset": "fence",
+  "materials": [
+    {
+      "name": "WarmFenceWood",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.47999998927116394,
+          0.25,
+          0.10499999672174454,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.8199999928474426,
+        "alpha": 1.0
+      }
+    }
+  ]
+}

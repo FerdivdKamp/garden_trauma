@@ -65,6 +65,28 @@
       "scale_max": 1.25,
       "height_offset": 0.08,
       "edge_margin": 0.5
+    },
+    {
+      "id": "flower_purple",
+      "scene": "res://assets/models/environment/garden/dressing/flower_purple.glb",
+      "chance": 0.12,
+      "min_per_tile": 1,
+      "max_per_tile": 1,
+      "scale_min": 0.1,
+      "scale_max": 0.14,
+      "height_offset": 0.1,
+      "edge_margin": 0.55
+    },
+    {
+      "id": "flower_white",
+      "scene": "res://assets/models/environment/garden/dressing/flower_white.glb",
+      "chance": 0.12,
+      "min_per_tile": 1,
+      "max_per_tile": 1,
+      "scale_min": 0.1,
+      "scale_max": 0.14,
+      "height_offset": 0.1,
+      "edge_margin": 0.55
     }
   ]
 }

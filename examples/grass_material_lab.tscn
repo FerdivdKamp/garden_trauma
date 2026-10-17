@@ -1,0 +1,25 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://examples/grass_material_lab.gd" id="1_script"]
+[ext_resource type="Environment" path="res://scenes/garden_environment.tres" id="2_environment"]
+
+[node name="GrassMaterialLab" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Tiles" type="Node3D" parent="."]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = ExtResource("2_environment")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-55, -35, 0)
+shadow_enabled = true
+shadow_blur = 1.5
+
+[node name="Camera" type="Camera3D" parent="."]
+position = Vector3(2, 18, 14)
+projection = 1
+size = 22.0
+current = true
+
+[node name="Controls" type="CanvasLayer" parent="."]
