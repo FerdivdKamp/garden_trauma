@@ -63,6 +63,7 @@ func _run() -> void:
 	_check(garden.preview == null and garden.lane_preview == null, "Placement clears the lane preview")
 	var tower: Node3D = garden.placed_towers.get_child(0)
 	var attack := tower.get_node("Attack") as Attack
+	attack.rng.seed = 4567
 	_check(attack.lane_length == 7 and attack.lane_direction == Vector2i.RIGHT, "Placed lane is fixed")
 	_check(tower.get_muzzle_position().x > tower.global_position.x, "Muzzle faces east")
 	var original_yaw: float = tower.get_yaw_pivot().rotation.y
@@ -77,14 +78,48 @@ func _run() -> void:
 	first.progress = garden.grid.route.find(Vector2i(8, 4)) * LevelGrid.TILE_SIZE
 	attack._process(0.01)
 	_check(garden.shot_effects.get_child_count() == before_shots + 3, "A lane enemy triggers three balls")
-	var left := garden.shot_effects.get_child(before_shots) as Projectile
-	var middle := garden.shot_effects.get_child(before_shots + 1) as Projectile
-	var right := garden.shot_effects.get_child(before_shots + 2) as Projectile
-	_check(left.ball_color != middle.ball_color and middle.ball_color != right.ball_color and left.ball_color != right.ball_color, "One volley has distinct colors")
-	_check((left.visual.material_override as StandardMaterial3D).albedo_color == left.ball_color, "Configured color reaches the visible sphere")
-	_check(left.direction.z < middle.direction.z and middle.direction.z < right.direction.z and is_zero_approx(left.direction.y), "Volley uses slight horizontal angles")
-	_check(left.speed < middle.speed and middle.speed < right.speed, "Volley uses different speeds")
-	_check(left.bounce_height != right.bounce_height and left.bounce_frequency != right.bounce_frequency, "Volley uses different bounces")
+	var first_ball := garden.shot_effects.get_child(before_shots) as Projectile
+	var second_ball := garden.shot_effects.get_child(before_shots + 1) as Projectile
+	var third_ball := garden.shot_effects.get_child(before_shots + 2) as Projectile
+	_check(first_ball.ball_color != second_ball.ball_color and second_ball.ball_color != third_ball.ball_color and first_ball.ball_color != third_ball.ball_color, "One volley has distinct colors")
+	_check((first_ball.visual.material_override as StandardMaterial3D).albedo_color == first_ball.ball_color, "Configured color reaches the visible sphere")
+	_check(not is_equal_approx(first_ball.direction.z, second_ball.direction.z) and is_zero_approx(first_ball.direction.y), "Balls choose independent horizontal angles")
+	_check(not is_equal_approx(first_ball.speed, second_ball.speed), "Balls choose independent speeds")
+	_check(not is_equal_approx(first_ball.bounce_height, third_ball.bounce_height) and not is_equal_approx(first_ball.bounce_frequency, third_ball.bounce_frequency), "Balls choose independent bounces")
+	before_shots = garden.shot_effects.get_child_count()
+	attack.shot_clock = attack.definition.cooldown
+	attack._process(0.01)
+	_check(garden.shot_effects.get_child_count() == before_shots + 3, "A second volley still fires three balls")
+	var next_first := garden.shot_effects.get_child(before_shots) as Projectile
+	var next_second := garden.shot_effects.get_child(before_shots + 1) as Projectile
+	var next_third := garden.shot_effects.get_child(before_shots + 2) as Projectile
+	_check(not is_equal_approx(next_second.direction.z, second_ball.direction.z), "Consecutive volleys use different paths")
+	_check(next_first.ball_color != next_second.ball_color and next_second.ball_color != next_third.ball_color, "Next volley also has distinct colors")
+	_check(not is_equal_approx(next_second.bounce_phase, second_ball.bounce_phase), "Consecutive volleys vary bounce timing")
+	for ball in [first_ball, second_ball, third_ball, next_first, next_second, next_third]:
+		var endpoint: Vector3 = ball.global_position + ball.direction * ball.remaining_distance
+		_check(absf(endpoint.z - attack.lane_end.z) < 0.8, "Random path ends inside the lane")
+	var fastest_left := false
+	var fastest_right := false
+	for volley in 12:
+		before_shots = garden.shot_effects.get_child_count()
+		attack.shot_clock = attack.definition.cooldown
+		attack._process(0.01)
+		var fastest: Projectile
+		var leftmost: Projectile
+		var rightmost: Projectile
+		for index in 3:
+			var ball := garden.shot_effects.get_child(before_shots + index) as Projectile
+			var endpoint: Vector3 = ball.global_position + ball.direction * ball.remaining_distance
+			if fastest == null or ball.speed > fastest.speed:
+				fastest = ball
+			if leftmost == null or endpoint.z < (leftmost.global_position + leftmost.direction * leftmost.remaining_distance).z:
+				leftmost = ball
+			if rightmost == null or endpoint.z > (rightmost.global_position + rightmost.direction * rightmost.remaining_distance).z:
+				rightmost = ball
+		fastest_left = fastest_left or fastest == leftmost
+		fastest_right = fastest_right or fastest == rightmost
+	_check(fastest_left and fastest_right, "Fastest ball can take either side across volleys")
 	first.progress = 0.0
 	before_shots = garden.shot_effects.get_child_count()
 	attack.shot_clock = attack.definition.cooldown
@@ -107,7 +142,7 @@ func _run() -> void:
 	if shot != null:
 		var start: Vector3 = shot.global_position
 		shot._physics_process(0.1)
-		_check(shot.global_position.x > start.x and is_equal_approx(shot.global_position.z, start.z), "Center ball moves straight")
+		_check(shot.global_position.x > start.x and absf(shot.global_position.z - start.z) < 0.2, "Center ball moves forward inside the lane")
 		_check(shot.visual.position.y > 0, "Visible ball bounces above logical path")
 		var second: Enemy = garden.spawn_enemy(0)
 		second.movement_speed = 0.0

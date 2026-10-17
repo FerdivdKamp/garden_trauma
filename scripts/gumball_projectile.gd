@@ -27,16 +27,16 @@ func _ready() -> void:
 	visual.material_override = material
 
 
-func configure(start: Vector3, endpoint: Vector3, definition: TowerDefinition, enemy_container: Node3D, color: Color, spread: float) -> void:
+func configure(start: Vector3, endpoint: Vector3, definition: TowerDefinition, enemy_container: Node3D, color: Color, variation: Dictionary) -> void:
 	global_position = start
 	direction = (endpoint - start).normalized()
 	remaining_distance = start.distance_to(endpoint)
-	speed = definition.projectile_speed * (1.0 + spread * 0.08)
+	speed = definition.projectile_speed * float(variation.speed)
 	damage = definition.damage
 	damage_type = definition.damage_type
-	bounce_height = definition.bounce_height * (1.0 + spread * 0.18)
-	bounce_frequency = definition.bounce_frequency * (1.0 - spread * 0.12)
-	bounce_phase = absf(spread) * 0.3
+	bounce_height = definition.bounce_height * float(variation.height)
+	bounce_frequency = definition.bounce_frequency * float(variation.frequency)
+	bounce_phase = float(variation.phase)
 	ball_color = color
 	(visual.material_override as StandardMaterial3D).albedo_color = color
 	max_lifetime = remaining_distance / speed + 1.0
