@@ -5,8 +5,8 @@ const TOWER_DIR := "res://data/towers"
 const TOWER_OVERRIDE_DIR := "user://tower_definitions"
 const UNIT_DIR := "res://data/units"
 const ID_PATTERN := "^[a-z][a-z0-9_]*$"
-const KNOWN_TAGS := ["ground", "air", "mechanical", "projectile", "physical", "electric"]
-const DAMAGE_TYPES := ["physical", "electric"]
+const KNOWN_TAGS := ["ground", "air", "mechanical", "projectile", "physical", "electric", "water", "homing"]
+const DAMAGE_TYPES := ["physical", "electric", "water"]
 
 # Schemas give editor autocomplete; these checks protect the game at runtime.
 # Keep their constraints in sync when adding a configuration field.
@@ -25,6 +25,8 @@ static func load_tower(path: String) -> TowerDefinition:
 	result.detection_range = data.get("detection_range", 9.0)
 	result.turn_speed = data.get("turn_speed", 90.0)
 	result.projectile_speed = data.attack.projectile_speed
+	result.homing_turn_speed = data.attack.get("homing_turn_speed", 120.0)
+	result.projectile_lifetime = data.attack.get("projectile_lifetime", 8.0)
 	result.damage_type = data.get("damage_type", "physical")
 	result.bonus_vs_tags = data.get("bonus_vs_tags", {}).duplicate()
 	result.targets = PackedStringArray(data.targeting.targets)
@@ -70,7 +72,9 @@ static func save_tower_override(definition: TowerDefinition, directory := TOWER_
 	var data := {
 		"id": definition.id, "name": definition.name, "cost": definition.cost,
 		"attack": {"damage": definition.damage, "cooldown": definition.cooldown,
-			"range": definition.attack_range, "projectile_speed": definition.projectile_speed},
+			"range": definition.attack_range, "projectile_speed": definition.projectile_speed,
+			"homing_turn_speed": definition.homing_turn_speed,
+			"projectile_lifetime": definition.projectile_lifetime},
 		"targeting": {"targets": Array(definition.targets), "priority": definition.priority},
 		"damage_type": definition.damage_type, "bonus_vs_tags": definition.bonus_vs_tags,
 		"tags": Array(definition.tags), "detection_range": definition.detection_range,
@@ -150,6 +154,9 @@ static func _valid_tower(data: Dictionary) -> bool:
 		return false
 	if not _number(attack.get("range"), 0.0, false, true) or not _number(attack.get("projectile_speed"), 0.0, false, true):
 		return false
+	for key in ["homing_turn_speed", "projectile_lifetime"]:
+		if attack.has(key) and not _number(attack[key], 0.0, false, true):
+			return false
 	if not _string_array(targeting.get("targets"), ["ground", "air"]) or targeting.get("priority") not in ["first", "nearest", "last"]:
 		return false
 	if data.has("damage_type") and data.damage_type not in DAMAGE_TYPES:

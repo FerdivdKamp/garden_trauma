@@ -78,6 +78,10 @@ func _process(delta: float) -> void:
 		# Capture world positions now. Shell visuals can finish after the target has moved.
 		var hit_position := target.visual.global_position
 		var muzzle_position: Vector3 = tower.get_muzzle_position(next_barrel)
+		if tower.tower_type == 3:
+			# The cooldown starts now; the tween launches after the bellows compress.
+			tower.pump_and_launch(_launch_water_rocket.bind(weakref(target), definition.copy()))
+			return
 		if effects != null:
 			if tower.tower_type == 0:
 				effects.fire_laser(muzzle_position, hit_position)
@@ -92,6 +96,18 @@ func _process(delta: float) -> void:
 			if definition.bonus_vs_tags.has(tag):
 				multiplier *= float(definition.bonus_vs_tags[tag])
 		target.take_damage(definition.damage * multiplier)
+
+
+func _launch_water_rocket(target_ref: WeakRef, shot_definition: TowerDefinition) -> void:
+	var tower := get_parent() as TowerVisual
+	if effects == null or not is_instance_valid(tower):
+		return
+	var forward := -tower.get_yaw_pivot().global_basis.z
+	effects.fire_water_rocket(
+		tower.get_muzzle_position(), target_ref.get_ref(), shot_definition,
+		(Vector3.UP + forward * 0.35).normalized()
+	)
+	tower.play_fire_sound()
 
 
 func _can_target(enemy: PlacementEnemy) -> bool:

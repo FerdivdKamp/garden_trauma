@@ -74,7 +74,7 @@ func _run() -> void:
 	_check(enemy.get_node("DestroyedAudio") is AudioStreamPlayer3D and enemy.get_node("ObjectiveAudio").bus == "SFX", "Enemy cues use positional SFX")
 	var tower_scene := load("res://scenes/tower_visual.tscn") as PackedScene
 	var streams: Array[AudioStream] = []
-	for tower_type in 3:
+	for tower_type in 4:
 		var tower := tower_scene.instantiate()
 		tower.set_tower_type(tower_type)
 		garden.add_child(tower)
@@ -82,6 +82,7 @@ func _run() -> void:
 		_check(fire_audio != null and fire_audio.bus == "SFX", "Tower %d uses positional SFX" % (tower_type + 1))
 		streams.append(fire_audio.stream)
 	_check(streams[0] != streams[1] and streams[1] != streams[2] and streams[0] != streams[2], "Towers use three distinct streams")
+	_check(streams[3] != null, "Water rocket uses the existing positional fire audio hook")
 	if failures == 0:
 		print("Audio pipeline tests passed")
 	quit(1 if failures > 0 else 0)

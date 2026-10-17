@@ -17,7 +17,9 @@
         "damage": { "type": "number", "minimum": 0 },
         "cooldown": { "type": "number", "exclusiveMinimum": 0 },
         "range": { "type": "number", "exclusiveMinimum": 0 },
-        "projectile_speed": { "type": "number", "exclusiveMinimum": 0 }
+        "projectile_speed": { "type": "number", "exclusiveMinimum": 0 },
+        "homing_turn_speed": { "type": "number", "exclusiveMinimum": 0 },
+        "projectile_lifetime": { "type": "number", "exclusiveMinimum": 0 }
       }
     },
     "targeting": {
@@ -29,15 +31,15 @@
         "priority": { "enum": ["first", "nearest", "last"] }
       }
     },
-    "damage_type": { "enum": ["physical", "electric"] },
+    "damage_type": { "enum": ["physical", "electric", "water"] },
     "detection_range": { "type": "number", "exclusiveMinimum": 0 },
     "turn_speed": { "type": "number", "minimum": 0 },
     "bonus_vs_tags": {
       "type": "object",
-      "propertyNames": { "enum": ["ground", "air", "mechanical", "projectile", "physical", "electric"] },
+      "propertyNames": { "enum": ["ground", "air", "mechanical", "projectile", "physical", "electric", "water", "homing"] },
       "additionalProperties": { "type": "number", "minimum": 0 }
     },
-    "tags": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["ground", "air", "mechanical", "projectile", "physical", "electric"] } },
+    "tags": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["ground", "air", "mechanical", "projectile", "physical", "electric", "water", "homing"] } },
     "upgrades": {
       "type": "array", "minItems": 3, "maxItems": 3,
       "items": {

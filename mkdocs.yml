@@ -21,6 +21,7 @@ nav:
       - Blender asset workflow: guides/blender-workflow.md
       - Tower shot effects: guides/shot-effects-and-particles.md
       - Lightning effect: guides/lightning-effect.md
+      - Water rocket tower: guides/water-rocket-tower.md
   - Reference:
       - Project structure: reference/project-structure.md
       - Garden rendering: reference/garden-rendering.md

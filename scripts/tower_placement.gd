@@ -9,7 +9,7 @@ const TowerVisual = preload("res://scripts/tower_visual.gd")
 const TileGrid = preload("res://scripts/level_grid.gd")
 const GrassPaletteScript = preload("res://scripts/grass_palette.gd")
 const GrassMaterialConfigScript = preload("res://scripts/grass_material_config.gd")
-const TOWER_IDS := ["laser_tower", "double_tank", "lightning_tower"]
+const TOWER_IDS := ["laser_tower", "double_tank", "lightning_tower", "water_rocket"]
 const TOWER_RADIUS := TowerVisual.FOOTPRINT_RADIUS
 
 @onready var camera: Camera3D = $Camera
@@ -80,7 +80,7 @@ func _ready() -> void:
 	# Load once; scene nodes use typed definitions instead of JSON dictionaries.
 	tower_definitions = DefinitionLoader.load_towers(DefinitionLoader.TOWER_OVERRIDE_DIR)
 	unit_definitions = DefinitionLoader.load_units()
-	assert(tower_definitions.has("laser_tower") and tower_definitions.has("double_tank") and tower_definitions.has("lightning_tower") and unit_definitions.has("windup_robot") and unit_definitions.has("blue_sphere"))
+	assert(tower_definitions.has("laser_tower") and tower_definitions.has("double_tank") and tower_definitions.has("lightning_tower") and tower_definitions.has("water_rocket") and unit_definitions.has("windup_robot") and unit_definitions.has("blue_sphere"))
 	robot_speed = (unit_definitions["windup_robot"] as UnitDefinition).speed
 	blue_speed = (unit_definitions["blue_sphere"] as UnitDefinition).speed
 	objective_health = starting_objective_health

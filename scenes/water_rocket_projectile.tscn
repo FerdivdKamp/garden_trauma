@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/water_rocket_projectile.gd" id="1_projectile"]
+[ext_resource type="PackedScene" path="res://scenes/water_rocket_mesh.tscn" id="2_rocket"]
+
+[node name="WaterRocketProjectile" type="Node3D"]
+script = ExtResource("1_projectile")
+
+[node name="RocketVisual" type="Node3D" parent="."]
+
+[node name="RocketMesh" parent="RocketVisual" instance=ExtResource("2_rocket")]
+
+[node name="WaterTrail" type="GPUParticles3D" parent="."]
+position = Vector3(0, -0.06, 0)

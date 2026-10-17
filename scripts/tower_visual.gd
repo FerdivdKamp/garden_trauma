@@ -3,6 +3,8 @@ extends Node3D
 # Shared by the original tower playground and the placement playground.
 const FOOTPRINT_RADIUS := 0.95
 const RangeVisual = preload("res://scripts/tower_range_visual.gd")
+const WATER_ROCKET_SCENE: PackedScene = preload("res://scenes/water_rocket_visual.tscn")
+const WaterRocketVisual = preload("res://scripts/water_rocket_visual.gd")
 const LASER_MODELS: Array[PackedScene] = [
 	preload("res://assets/models/towers/laser_tower.glb"),
 	preload("res://assets/models/towers/laser_tower_mk2.glb"),
@@ -13,6 +15,7 @@ const FIRE_SOUNDS: Array[AudioStream] = [
 	preload("res://assets/audio/sfx/towers/tower_01_fire.ogg"),
 	preload("res://assets/audio/sfx/towers/tower_02_fire.ogg"),
 	preload("res://assets/audio/sfx/towers/tower_03_fire.ogg"),
+	preload("res://assets/audio/sfx/towers/tower_02_fire.ogg"),
 ]
 
 @onready var turret_pivot: Node3D = $TurretPivot
@@ -21,6 +24,7 @@ var laser_yaw: Node3D
 var laser_pitch: Node3D
 var laser_muzzle: Node3D
 var laser_upgrade_level := 0
+var water_model: WaterRocketVisual
 @onready var range_visual: RangeVisual = $RangeVisual
 @onready var fire_audio: AudioStreamPlayer3D = $FireAudio
 
@@ -30,9 +34,10 @@ var is_preview := false
 
 func _ready() -> void:
 	_bind_laser_pivots()
-	if tower_type != 0:
+	if tower_type != 0 and tower_type != 3:
 		_build_base()
 	_build_turret()
+	_ensure_water_model()
 	laser_model.visible = tower_type == 0
 	fire_audio.stream = FIRE_SOUNDS[tower_type]
 
@@ -44,9 +49,12 @@ func set_tower_type(value: int) -> void:
 		var base := get_node_or_null("Base")
 		if tower_type == 0 and base != null:
 			base.queue_free()
-		elif tower_type != 0 and base == null:
+		elif tower_type != 0 and tower_type != 3 and base == null:
 			_build_base()
+		elif tower_type == 3 and base != null:
+			base.queue_free()
 		_build_turret()
+		_ensure_water_model()
 		fire_audio.stream = FIRE_SOUNDS[tower_type]
 
 
@@ -81,6 +89,22 @@ func _bind_laser_pivots() -> void:
 
 func play_fire_sound() -> void:
 	fire_audio.play()
+
+
+func pump_and_launch(launch: Callable) -> void:
+	water_model.pump_and_launch(launch)
+
+
+func _ensure_water_model() -> void:
+	if tower_type != 3:
+		if water_model != null:
+			water_model.hide()
+		return
+	if water_model == null:
+		water_model = WATER_ROCKET_SCENE.instantiate() as WaterRocketVisual
+		add_child(water_model)
+	water_model.show()
+	_update_materials(true)
 
 
 func set_preview(value: bool) -> void:
@@ -118,6 +142,9 @@ func _build_turret() -> void:
 		turret_pivot.remove_child(child)
 		child.queue_free()
 	if tower_type == 0:
+		_update_materials(true)
+		return
+	if tower_type == 3:
 		_update_materials(true)
 		return
 	if tower_type == 2:
@@ -173,6 +200,8 @@ func _build_lightning_head() -> void:
 func get_muzzle_position(barrel_index: int = 0) -> Vector3:
 	if tower_type == 0:
 		return laser_muzzle.global_position
+	if tower_type == 3:
+		return water_model.muzzle.global_position
 	if tower_type == 2:
 		return (turret_pivot.get_node("Orb/LightningOrigin") as Marker3D).global_position
 	var barrel_name := "Barrel" if tower_type == 0 else ("LeftBarrel" if barrel_index == 0 else "RightBarrel")
@@ -181,7 +210,11 @@ func get_muzzle_position(barrel_index: int = 0) -> Vector3:
 
 
 func get_yaw_pivot() -> Node3D:
-	return laser_yaw if tower_type == 0 else turret_pivot
+	if tower_type == 0:
+		return laser_yaw
+	if tower_type == 3:
+		return water_model.yaw_pivot
+	return turret_pivot
 
 
 func aim_pitch_at(target_position: Vector3, turn_speed: float, delta: float) -> bool:
@@ -234,3 +267,13 @@ func _update_materials(valid: bool) -> void:
 			mesh_part.material_overlay = warning
 		else:
 			mesh_part.material_overlay = null
+	if water_model != null:
+		for mesh_part in water_model.find_children("*", "MeshInstance3D", true, false):
+			mesh_part.transparency = 0.5 if is_preview else 0.0
+			if is_preview and not valid:
+				var warning := StandardMaterial3D.new()
+				warning.albedo_color = Color(1.0, 0.15, 0.15, 0.7)
+				warning.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				mesh_part.material_overlay = warning
+			else:
+				mesh_part.material_overlay = null
