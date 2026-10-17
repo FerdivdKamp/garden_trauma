@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "asset": "flower_purple",
+  "materials": [
+    {
+      "name": "Material.001",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.5374151468276978,
+          0.49507397413253784,
+          0.04378819093108177,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "Material.002",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.800000011920929,
+          0.800000011920929,
+          0.800000011920929,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "Material.003",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.15281060338020325,
+          0.08973802626132965,
+          0.5995375514030457,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    }
+  ]
+}

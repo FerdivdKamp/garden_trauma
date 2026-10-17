@@ -12,7 +12,7 @@ For supported procedural materials, the export manifest records shader settings.
 
 Sand path tile tops use world-space procedural noise. Grass tile tops use a shared color field from `assets/textures/environment/garden/grass_color_noise.png`, sampled in world space so the pattern continues across neighboring tiles, including rotated variants. The grass shader also blends top normals toward vertical to soften the lighting facets from the mesh bumps. `tools/godot_material_post_import.gd` sets the grass color strength and normal blend for all three grass GLBs; reimport those GLBs after changing these settings.
 
-This is a visual tiling change: the three grass meshes still occupy 2 m cells, but the imported `GrassTop` material samples a continuous 64 m color field using world X/Z. Rotating or changing a tile variant therefore does not restart the color pattern at its edge. The post-import script applies this mode to `tile_grass*.glb` and the three border GLBs. It uses continuous world-space procedural noise for `tile_path*.glb`; other supported Blender materials use their mesh-local generated coordinates. The dressing GLBs sit above the grass and use their exported materials, so their placement and colors do not alter the ground shader. See [Level dressing](level-dressing.md) for the six Garden decorations and their density controls.
+This is a visual tiling change: the three grass meshes still occupy 2 m cells, but the imported `GrassTop` material samples a continuous 64 m color field using world X/Z. Rotating or changing a tile variant therefore does not restart the color pattern at its edge. The post-import script applies this mode to `tile_grass*.glb` and the three border GLBs. It uses continuous world-space procedural noise for `tile_path*.glb`; other supported Blender materials use their mesh-local generated coordinates. The dressing GLBs sit above the grass and use their exported materials, so their placement and colors do not alter the ground shader. See [Level dressing](level-dressing.md) for the Garden decorations and their density controls.
 
 Regenerate the deterministic grass color field with `Godot --headless --path . --script res://tools/generate_grass_noise.gd`, then open the project to import the PNG. Its 64 m span covers the 40 m Garden without repeating the pattern. The image changes broad color only; the tile mesh and scattered tufts provide small-scale detail. To compare changes from the level camera, run `Godot --path . --script res://tools/render_grass_fix.gd`. It saves `.godot/grass_material_world_noise.png`.
 
@@ -41,6 +41,42 @@ The Garden grid now reads surrounding grass cells when it creates each path tile
 | Diagonal only, with both adjacent sides path | `corner_inner_1` | Southeast |
 
 The script rotates these base directions in quarter turns and puts each piece at the path tile's authored center. On a one-cell-wide path, two opposing straight pieces are mirrored across the sand. Map edges and blocked cells do not count as grass. `PlacementPath` still supplies the enemy route, but its old flat beige `Surface` is hidden in `tower_placement.tscn`; otherwise it sits above the imported geometry and makes the entire path look square. Inspect the result at play zoom after changing mesh heights or making wider variations in Blender.
+
+## Wooden level fence
+
+`art/blender/props/border/fence.blend` is the editable fence source. The original
+`fence_post` and `horizontal_beams` objects keep the artist's array modifiers.
+The `fence_straight_01` collection uses their base meshes for a repeatable 2 m
+section: one post at the start and two rails reaching the next post. The warm
+wood material is assigned to this export collection. `fence1.blend` remains
+the separate backup provided with the source.
+
+After editing the source meshes or bevels, regenerate the export collection and
+export it:
+
+```powershell
+& "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" --background art/blender/props/border/fence.blend --python tools/prepare_fence_module.py
+python tools/asset_pipeline.py export art/blender/props/border/fence.blend --blender-exe "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" --collection fence_straight_01 --output-name fence_straight_01
+```
+
+`scripts/level_border.gd` repeats the GLB around the outside edge of whatever
+dimensions `LevelGrid` loads. The source section points along Blender +Y,
+which imports as Godot local -Z. Its origin is at the first post at ground
+level, and its rails span exactly one 2 m cell. The fence is visual only; the
+level JSON still owns buildable cells and the enemy route. Run
+`Godot --headless --path . --script res://tests/test_level_border.gd` to check
+the imported size and placement count, then inspect Garden 1 from the normal
+camera. Corner and end variants can be added when the border receives an entry
+gate or a different outline.
+
+`LevelGrid` exposes **Fence Horizontal Scale** and **Fence Height Scale** in the
+Inspector. The current values are 2 and 4. Godot scales each 2 m source section
+to 4 m along the border, doubles its thickness, and makes it four times taller.
+Garden 1 therefore uses ten sections per side. If a side has an odd number of
+cells, its last rail is shortened to one cell without changing post thickness.
+The Blender source remains at its original size. See the
+[4× height, 2× horizontal render](../reference/fence_height4_horizontal2_render.png)
+for the current gameplay-camera result.
 
 ## Tower pivot template
 

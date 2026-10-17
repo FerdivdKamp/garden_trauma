@@ -296,8 +296,15 @@ detail, roughness, lacunarity and distortion, plus Principled roughness and
 metallic. It currently accepts opaque colors and up to eight noise octaves.
 Other ramp shapes and
 transparent materials keep their GLB fallback and produce a warning during
-import. The noise pattern is intentionally approximate; inspect the tile in
-Godot and adjust the Blender source when its artistic intent changes.
+import. The noise pattern is intentionally approximate. For Garden grass tops
+and border pieces, `godot_material_post_import.gd` deliberately overrides the
+Blender ramp colors and roughness with a shared Garden base material. It also
+sets world-space broad color and fine grain. `LevelGrid` chooses a palette from
+`scripts/grass_palette.gd` at runtime, so palette changes need no GLB reimport.
+Changes to the imported base material require reimporting the six grass and
+border GLBs; changing only the import script does not refresh already cached
+imported scenes. For other materials, adjust the Blender source when its
+artistic intent changes.
 Open `res://examples/grass_material_preview.tscn` and run that scene to view
 the imported tile under a light.
 

@@ -7,6 +7,8 @@ const PlacementTowerAttack = preload("res://scripts/placement_tower_attack.gd")
 const ShotEffects = preload("res://scripts/placement_shot_effects.gd")
 const TowerVisual = preload("res://scripts/tower_visual.gd")
 const TileGrid = preload("res://scripts/level_grid.gd")
+const GrassPaletteScript = preload("res://scripts/grass_palette.gd")
+const GrassMaterialConfigScript = preload("res://scripts/grass_material_config.gd")
 const TOWER_IDS := ["laser_tower", "double_tank", "lightning_tower"]
 const TOWER_RADIUS := TowerVisual.FOOTPRINT_RADIUS
 
@@ -73,6 +75,8 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
+	if grid.grass_palette == GrassPaletteScript.SAVED_GARDEN:
+		GrassMaterialConfigScript.apply_lighting($Sun, $WorldEnvironment, GrassMaterialConfigScript.load_settings())
 	# Load once; scene nodes use typed definitions instead of JSON dictionaries.
 	tower_definitions = DefinitionLoader.load_towers(DefinitionLoader.TOWER_OVERRIDE_DIR)
 	unit_definitions = DefinitionLoader.load_units()
@@ -480,7 +484,7 @@ func _build_ui() -> void:
 	var help_column := VBoxContainer.new()
 	help_panel.add_child(help_column)
 	var help := Label.new()
-	help.text = "Select a tower tile, then click grass to build.\nClick a placed tower to upgrade. Right-click or Esc cancels.\nEnemies reaching GOAL reduce garden life."
+	help.text = "Select a tower tile, then click grass to build.\nClick a placed tower to upgrade. Right-click or Esc cancels.\nEnemies reaching FINISH reduce garden life."
 	help.add_theme_font_size_override("font_size", 15)
 	help_column.add_child(help)
 	help_column.add_child(enemies_label)

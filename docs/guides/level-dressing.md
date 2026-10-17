@@ -24,7 +24,7 @@ Dressing is grouped under `LevelGrid/Dressing/Cell_x_z` in the scene tree. It is
 
 ## Garden assets and adding more
 
-The Garden config includes `grass_tuft`, `grass_tuft1`, `grass_tuft2`, `pebble`, `pebble1`, and `pebble2`. Each corresponds to a `.blend` source under `art/blender/environment/garden/dressing/` and a matching `.glb` under `assets/models/environment/garden/dressing/`. `pebble1` is a small three-stone group, so it has a larger edge margin and appears less often than a single tuft. Each type has its own chance and independent random stream.
+The Garden config includes `grass_tuft`, `grass_tuft1`, `grass_tuft2`, `pebble`, `pebble1`, `pebble2`, `flower_purple`, and `flower_white`. Each corresponds to a `.blend` source under `art/blender/environment/garden/dressing/` and a matching `.glb` under `assets/models/environment/garden/dressing/`. `pebble1` is a small three-stone group, so it has a larger edge margin and appears less often than a single tuft. The flowers are scaled down from their larger Blender source dimensions and use a margin that accommodates their rotated petals. Each type has its own chance and independent random stream.
 
 1. Save a new `.blend` under `art/blender/environment/garden/dressing/`.
 2. Export it with `python tools/asset_pipeline.py export art/blender/environment/garden/dressing/<name>.blend`. See the [Blender workflow](blender-workflow.md) if Blender is not on `PATH`.

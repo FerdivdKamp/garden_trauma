@@ -3,6 +3,8 @@ extends Node3D
 
 const TILE_SIZE := 2.0
 const TILE_HEIGHT := 0.2
+const GRASS_PALETTE = preload("res://scripts/grass_palette.gd")
+const BORDER_ROCKS_SCRIPT = preload("res://scripts/level_border_rocks.gd")
 const TERRAIN := {".": "grass", "=": "path_sand", "#": "blocked", "S": "path_sand", "O": "path_sand"}
 const TILE_SCENES := {
 	"grass": preload("res://scenes/tiles/tile_grass.tscn"),
@@ -12,6 +14,13 @@ const TILE_SCENES := {
 
 @export_file("*.json") var level_file := "res://levels/data/garden_test_01.json"
 @export_file("*.json") var dressing_file := "res://data/dressing/garden.json"
+@export_range(1, 4, 1) var fence_horizontal_scale := 2
+@export_range(1.0, 6.0, 0.25) var fence_height_scale := 4.0
+@export_enum("Current", "Summer late afternoon", "Preview green", "Saved Garden") var grass_palette := GRASS_PALETTE.SAVED_GARDEN:
+	set(value):
+		grass_palette = value
+		if is_node_ready():
+			_apply_grass_palette()
 @export var show_grid := false:
 	set(value):
 		show_grid = value
@@ -178,6 +187,10 @@ func terrain_at(cell: Vector2i) -> String:
 
 
 func is_buildable(cell: Vector2i) -> bool:
+	# The fence sits on the grid boundary. A tower centered in an outer cell
+	# would overlap it, even though that cell now uses grass for its visual.
+	if cell.x == 0 or cell.y == 0 or cell.x == width - 1 or cell.y == height - 1:
+		return false
 	return terrain_at(cell) == "grass"
 
 
@@ -209,21 +222,38 @@ func _rebuild_visuals() -> void:
 			tile.name = "Tile_%d_%d" % [x, z]
 			tile.position = grid_to_world(cell)
 			add_child(tile)
+	var border := LevelBorder.new()
+	border.name = "Border"
+	add_child(border)
+	border.build(width, height, fence_horizontal_scale, fence_height_scale)
+	var border_rocks := BORDER_ROCKS_SCRIPT.new()
+	border_rocks.name = "BorderRocks"
+	add_child(border_rocks)
+	border_rocks.build(width, height)
 	var dressing := LevelDressing.new()
 	dressing.name = "Dressing"
 	add_child(dressing)
 	dressing.build(self, dressing_file)
-	for pair in [[spawn, "SPAWN", Color("ef704e")], [objective, "GOAL", Color("6ab5ee")]]:
+	for pair in [[spawn, "SPAWN", "START", Color("ffb18b")], [objective, "GOAL", "FINISH", Color("a9d9ff")]]:
 		var marker := Label3D.new()
 		marker.name = pair[1]
-		marker.text = pair[1]
-		marker.modulate = pair[2]
-		marker.font_size = 40
-		marker.pixel_size = 0.008
+		marker.text = pair[2]
+		marker.modulate = pair[3]
+		# A larger face and dark outline keep these world labels readable
+		# from the fixed gameplay camera against both sand and grass.
+		marker.font_size = 72
+		marker.pixel_size = 0.014
+		marker.outline_size = 12
+		marker.outline_modulate = Color("182921")
 		marker.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		marker.position = grid_to_world(pair[0]) + Vector3(0, 1.15, 0)
+		marker.position = grid_to_world(pair[0]) + Vector3(0, 1.35, 0)
 		add_child(marker)
 	_update_debug()
+	_apply_grass_palette()
+
+
+func _apply_grass_palette() -> void:
+	GRASS_PALETTE.apply_to(self, grass_palette)
 
 
 func _update_debug() -> void:

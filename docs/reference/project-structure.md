@@ -7,6 +7,7 @@
 | `scripts/` | Gameplay rules, loading, waves, UI behavior, progress, and audio. |
 | `data/towers/`, `data/units/` | One JSON definition per tower or enemy type. |
 | `data/dressing/` | Environment dressing chance, count, and scale settings. |
+| `data/grass_material_settings.json` | Saved grass and lighting values from the material lab. |
 | `data/schemas/` | JSON schemas for those definitions. |
 | `levels/data/`, `levels/waves/` | Tile maps and matching wave schedules for the two gardens. |
 | `art/blender/` | Editable Blender source assets. |

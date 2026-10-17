@@ -1,12 +1,20 @@
 # Garden Border Assets — Blender Modeling Guide
 
 **Project:** Garden Defense  
-**Status:** Planned  
+**Status:** In progress; straight fence sections are assembled around the current grid.  
 **Goal:** Replace the flat dark-green area outside the playable level with a reusable, attractive garden border, without reducing gameplay readability.
+
+The current prototype places the four baked stepping stones from
+`assets/models/props/border/rock_stylized.glb` just outside the left and right
+fence sides. `scripts/level_border_rocks.gd` reads the grid dimensions, leaves a
+clear gap from the fence, and adds four plain ground strips beneath the stones.
+This is a fixed layout for checking scale and color from the gameplay camera;
+the seeded border variation described below is still a future step.
+[View the current gameplay preview](../reference/garden_border_rocks_preview.png).
 
 ## Visual target
 
-The camera is orthographic with approximately a **55° viewing angle**. The playable tile grid stays clearly readable, while the area outside it becomes a toy-diorama garden. Use vivid fresh greens, warm wooden and terracotta materials, soft sunlight, rounded edges, and small playful details.
+The camera uses a distant **35° perspective field of view** at a **55° downward pitch**. The playable tile grid stays clearly readable, while the area outside it becomes a toy-diorama garden. Use vivid fresh greens, warm wooden and terracotta materials, soft sunlight, rounded edges, and small playful details.
 
 **Composition, from the center outward:**
 
@@ -105,7 +113,7 @@ The camera is orthographic with approximately a **55° viewing angle**. The play
 - [ ] Export and verify their dimensions, orientation, scale and materials in Godot.
 - [ ] Generate the fence around a 20 × 20 grid; ensure it does not block entry/exit paths.
 - [ ] Extend the non-playable ground beyond the fence so the camera no longer sees a flat empty background.
-- [ ] Test at the current orthographic 55° camera angle and at different aspect ratios.
+- [x] Test the perspective camera at 16:9 and 4:3 aspect ratios.
 
 **Definition of done:** The garden has a coherent visible boundary, the route remains readable, and no dark-green void is exposed within normal gameplay framing.
 
