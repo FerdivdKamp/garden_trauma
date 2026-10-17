@@ -21,7 +21,7 @@ func _run() -> void:
 	_check(not demo.can_place_at(demo.grid.grid_to_world(Vector2i(5, 7))), "Path blocks tower placement")
 	_check(demo.can_place_at(Vector3(-8, 0, 8)), "Open ground allows placement")
 	_check(not demo.can_place_at(Vector3(20, 0, 12)), "Outside grid blocks placement")
-	_check(not demo.can_place_at(demo.grid.grid_to_world(Vector2i(5, 4))), "Rock tile blocks placement")
+	_check(not demo.can_place_at(demo.grid.grid_to_world(Vector2i(7, 4))), "Path tile blocks placement")
 
 	demo._select_tower(1)
 	_check(demo.preview != null and demo.preview.is_preview, "Selecting a tile creates a preview")
@@ -67,7 +67,7 @@ func _run() -> void:
 	demo._select_tower(2)
 	demo.place_tower(Vector3(0, 0, 8))
 	var lightning_tower := demo.placed_towers.get_child(2) as Node3D
-	_check(demo.tower_buttons.size() == 4 and lightning_tower.tower_type == 2, "Lightning tower is selectable and placeable")
+	_check(demo.tower_buttons.size() == 5 and lightning_tower.tower_type == 2, "Lightning tower is selectable and placeable")
 	_check(lightning_tower.get_node("TurretPivot/Orb/LightningOrigin") != null, "Lightning orb has a strike origin")
 
 	if failures == 0:

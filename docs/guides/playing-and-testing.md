@@ -8,6 +8,8 @@ Press **Start wave 1** when ready. Defeated enemies pay their unit reward; each 
 
 The bottom-left tiles show small views of the actual tower models. Hover a tile to see its name and price. Click a placed tower to inspect and buy its next upgrade. Hover Upgrade to see its cost and the current-to-new stat values, even if you lack credits. Each tower has three sequential upgrades defined in its JSON file. An upgrade replaces the listed attack values and leaves unspecified values as they were.
 
+The Gumball Machine uses a straight adjacent path lane. Its placement preview highlights the covered tiles and shows a direction arrow. Press **R** while placing it to cycle valid lanes; see [Gumball Machine tower](gumball-tower.md) for its controls and testing checklist. In debug mode, **R** still toggles the route overlay when no Gumball Machine is selected.
+
 The tower demo in `scenes/tower_demo.tscn` lets you compare tower types, change range, turn speed, damage, fire rate, and enemy health, then reset the barrel away from the target to watch aiming. Its save button writes a tower definition override for that demo.
 
 ## Saves and debugging

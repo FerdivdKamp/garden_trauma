@@ -4,6 +4,7 @@ extends Node3D
 const FOOTPRINT_RADIUS := 0.95
 const RangeVisual = preload("res://scripts/tower_range_visual.gd")
 const WATER_ROCKET_SCENE: PackedScene = preload("res://scenes/water_rocket_visual.tscn")
+const GUMBALL_SCENE: PackedScene = preload("res://scenes/gumball_visual.tscn")
 const WaterRocketVisual = preload("res://scripts/water_rocket_visual.gd")
 const LASER_MODELS: Array[PackedScene] = [
 	preload("res://assets/models/towers/laser_tower.glb"),
@@ -16,6 +17,7 @@ const FIRE_SOUNDS: Array[AudioStream] = [
 	preload("res://assets/audio/sfx/towers/tower_02_fire.ogg"),
 	preload("res://assets/audio/sfx/towers/tower_03_fire.ogg"),
 	preload("res://assets/audio/sfx/towers/tower_02_fire.ogg"),
+	preload("res://assets/audio/sfx/towers/tower_01_fire.ogg"),
 ]
 
 @onready var turret_pivot: Node3D = $TurretPivot
@@ -25,6 +27,7 @@ var laser_pitch: Node3D
 var laser_muzzle: Node3D
 var laser_upgrade_level := 0
 var water_model: WaterRocketVisual
+var gumball_model: Node3D
 @onready var range_visual: RangeVisual = $RangeVisual
 @onready var fire_audio: AudioStreamPlayer3D = $FireAudio
 
@@ -34,10 +37,11 @@ var is_preview := false
 
 func _ready() -> void:
 	_bind_laser_pivots()
-	if tower_type != 0 and tower_type != 3:
+	if tower_type != 0 and tower_type != 3 and tower_type != 4:
 		_build_base()
 	_build_turret()
 	_ensure_water_model()
+	_ensure_gumball_model()
 	laser_model.visible = tower_type == 0
 	fire_audio.stream = FIRE_SOUNDS[tower_type]
 
@@ -49,12 +53,13 @@ func set_tower_type(value: int) -> void:
 		var base := get_node_or_null("Base")
 		if tower_type == 0 and base != null:
 			base.queue_free()
-		elif tower_type != 0 and tower_type != 3 and base == null:
+		elif tower_type != 0 and tower_type != 3 and tower_type != 4 and base == null:
 			_build_base()
-		elif tower_type == 3 and base != null:
+		elif tower_type in [3, 4] and base != null:
 			base.queue_free()
 		_build_turret()
 		_ensure_water_model()
+		_ensure_gumball_model()
 		fire_audio.stream = FIRE_SOUNDS[tower_type]
 
 
@@ -107,6 +112,23 @@ func _ensure_water_model() -> void:
 	_update_materials(true)
 
 
+func _ensure_gumball_model() -> void:
+	if tower_type != 4:
+		if gumball_model != null:
+			gumball_model.hide()
+		return
+	if gumball_model == null:
+		gumball_model = GUMBALL_SCENE.instantiate()
+		add_child(gumball_model)
+	gumball_model.show()
+	_update_materials(true)
+
+
+func set_lane_direction(direction: Vector2i) -> void:
+	if gumball_model != null and gumball_model.is_node_ready():
+		gumball_model.face(direction)
+
+
 func set_preview(value: bool) -> void:
 	is_preview = value
 	if is_node_ready():
@@ -123,7 +145,7 @@ func set_ranges(attack_radius: float, detection_radius: float) -> void:
 
 
 func set_ranges_visible(value: bool) -> void:
-	range_visual.visible = value
+	range_visual.visible = value and tower_type != 4
 
 
 func _build_base() -> void:
@@ -144,7 +166,7 @@ func _build_turret() -> void:
 	if tower_type == 0:
 		_update_materials(true)
 		return
-	if tower_type == 3:
+	if tower_type == 3 or tower_type == 4:
 		_update_materials(true)
 		return
 	if tower_type == 2:
@@ -202,6 +224,8 @@ func get_muzzle_position(barrel_index: int = 0) -> Vector3:
 		return laser_muzzle.global_position
 	if tower_type == 3:
 		return water_model.muzzle.global_position
+	if tower_type == 4:
+		return gumball_model.muzzle.global_position
 	if tower_type == 2:
 		return (turret_pivot.get_node("Orb/LightningOrigin") as Marker3D).global_position
 	var barrel_name := "Barrel" if tower_type == 0 else ("LeftBarrel" if barrel_index == 0 else "RightBarrel")
@@ -214,6 +238,8 @@ func get_yaw_pivot() -> Node3D:
 		return laser_yaw
 	if tower_type == 3:
 		return water_model.yaw_pivot
+	if tower_type == 4:
+		return gumball_model.direction_pivot
 	return turret_pivot
 
 
@@ -277,3 +303,5 @@ func _update_materials(valid: bool) -> void:
 				mesh_part.material_overlay = warning
 			else:
 				mesh_part.material_overlay = null
+	if gumball_model != null:
+		gumball_model.set_preview(valid, is_preview)

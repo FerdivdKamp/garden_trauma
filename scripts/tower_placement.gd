@@ -4,12 +4,16 @@ const TOWER_SCENE: PackedScene = preload("res://scenes/tower_visual.tscn")
 const ENEMY_SCENE: PackedScene = preload("res://scenes/placement_enemy.tscn")
 const PlacementEnemy = preload("res://scripts/placement_enemy.gd")
 const PlacementTowerAttack = preload("res://scripts/placement_tower_attack.gd")
+const GumballLaneAttack = preload("res://scripts/gumball_lane_attack.gd")
+const GumballLane = preload("res://scripts/gumball_lane.gd")
+const GumballLanePreview = preload("res://scripts/gumball_lane_preview.gd")
 const ShotEffects = preload("res://scripts/placement_shot_effects.gd")
 const TowerVisual = preload("res://scripts/tower_visual.gd")
 const TileGrid = preload("res://scripts/level_grid.gd")
 const GrassPaletteScript = preload("res://scripts/grass_palette.gd")
 const GrassMaterialConfigScript = preload("res://scripts/grass_material_config.gd")
-const TOWER_IDS := ["laser_tower", "double_tank", "lightning_tower", "water_rocket"]
+const TOWER_IDS := ["laser_tower", "double_tank", "lightning_tower", "water_rocket", "gumball"]
+const GUMBALL_INDEX := 4
 const TOWER_RADIUS := TowerVisual.FOOTPRINT_RADIUS
 
 @onready var camera: Camera3D = $Camera
@@ -35,6 +39,10 @@ const TOWER_RADIUS := TowerVisual.FOOTPRINT_RADIUS
 
 var selected_type := -1
 var preview: Node3D
+var lane_preview: Node3D
+var lane_options: Array[Dictionary] = []
+var lane_index := -1
+var lane_cell := Vector2i(-999, -999)
 var hovered_tower: Node3D
 var selected_tower: Node3D
 var upgrade_panel: PanelContainer
@@ -80,7 +88,7 @@ func _ready() -> void:
 	# Load once; scene nodes use typed definitions instead of JSON dictionaries.
 	tower_definitions = DefinitionLoader.load_towers(DefinitionLoader.TOWER_OVERRIDE_DIR)
 	unit_definitions = DefinitionLoader.load_units()
-	assert(tower_definitions.has("laser_tower") and tower_definitions.has("double_tank") and tower_definitions.has("lightning_tower") and tower_definitions.has("water_rocket") and unit_definitions.has("windup_robot") and unit_definitions.has("blue_sphere"))
+	assert(tower_definitions.has("laser_tower") and tower_definitions.has("double_tank") and tower_definitions.has("lightning_tower") and tower_definitions.has("water_rocket") and tower_definitions.has("gumball") and unit_definitions.has("windup_robot") and unit_definitions.has("blue_sphere"))
 	robot_speed = (unit_definitions["windup_robot"] as UnitDefinition).speed
 	blue_speed = (unit_definitions["blue_sphere"] as UnitDefinition).speed
 	objective_health = starting_objective_health
@@ -113,12 +121,22 @@ func _process(_delta: float) -> void:
 	if preview == null:
 		return
 	preview.visible = has_ground_point
+	if lane_preview != null:
+		lane_preview.visible = has_ground_point
 	if has_ground_point:
-		preview.position = grid.grid_to_world(grid.world_to_grid(ground_point))
+		var cell := grid.world_to_grid(ground_point)
+		preview.position = grid.grid_to_world(cell)
+		if selected_type == GUMBALL_INDEX and cell != lane_cell:
+			_update_lane(cell)
 		var valid := can_place_at(ground_point) and _can_afford_selected()
 		preview.set_placement_valid(valid)
 		if not _can_afford_selected():
 			status.text = "Not enough currency for this tower"
+		elif selected_type == GUMBALL_INDEX and lane_options.is_empty() and grid.is_buildable(cell):
+			status.text = "No adjacent straight path lane"
+		elif selected_type == GUMBALL_INDEX and valid:
+			var option: Dictionary = lane_options[lane_index]
+			status.text = "Gumball lane: %s - %d tiles (R to rotate)" % [option.name, option.cells.size()]
 		else:
 			status.text = "Click to place" if valid else "Blocked: path, rock, edge, or another tower"
 	else:
@@ -137,6 +155,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		grid.show_grid = not grid.show_grid
 	elif debug_mode and event is InputEventKey and event.pressed and event.keycode == KEY_C:
 		grid.show_coordinates = not grid.show_coordinates
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_R and selected_type == GUMBALL_INDEX and not event.echo:
+		_cycle_lane()
 	elif debug_mode and event is InputEventKey and event.pressed and event.keycode == KEY_R:
 		grid.show_route = not grid.show_route
 	elif debug_mode and event is InputEventKey and event.pressed and event.keycode == KEY_I:
@@ -204,6 +224,8 @@ func can_place_at(point: Vector3) -> bool:
 	var cell := grid.world_to_grid(point)
 	if not grid.is_buildable(cell):
 		return false
+	if selected_type == GUMBALL_INDEX and GumballLane.lanes(grid, cell).is_empty():
+		return false
 	for tower in placed_towers.get_children():
 		if grid.world_to_grid(tower.position) == cell:
 			return false
@@ -236,12 +258,24 @@ func place_tower(point: Vector3) -> void:
 	tower.position = grid.grid_to_world(grid.world_to_grid(point))
 	placed_towers.add_child(tower)
 	tower.set_ranges(definition.attack_range, definition.detection_range)
-	var attack := PlacementTowerAttack.new()
+	var attack: PlacementTowerAttack
+	if selected_type == GUMBALL_INDEX:
+		attack = GumballLaneAttack.new()
+		if lane_cell != grid.world_to_grid(point):
+			_update_lane(grid.world_to_grid(point))
+		var option: Dictionary = lane_options[lane_index]
+		tower.set_lane_direction(option.direction)
+		(attack as GumballLaneAttack).configure_lane(option.direction, option.cells, grid)
+	else:
+		attack = PlacementTowerAttack.new()
 	attack.name = "Attack"
 	attack.definition = definition.copy()
 	attack.enemies = path
 	attack.effects = shot_effects
 	tower.add_child(attack)
+	if selected_type == GUMBALL_INDEX:
+		# This lane choice belongs to this placement; clear its coverage overlay.
+		_select_tower(-1)
 	_refresh_hud()
 
 
@@ -347,6 +381,12 @@ func _select_tower(tower_type: int) -> void:
 	if preview != null:
 		preview.queue_free()
 		preview = null
+	if lane_preview != null:
+		lane_preview.queue_free()
+		lane_preview = null
+	lane_options.clear()
+	lane_index = -1
+	lane_cell = Vector2i(-999, -999)
 	for index in tower_buttons.size():
 		tower_buttons[index].button_pressed = index == tower_type
 	if tower_type < 0:
@@ -358,8 +398,37 @@ func _select_tower(tower_type: int) -> void:
 	preview_holder.add_child(preview)
 	var definition := tower_definitions[TOWER_IDS[tower_type]] as TowerDefinition
 	preview.set_ranges(definition.attack_range, definition.detection_range)
-	preview.set_ranges_visible(true)
+	preview.set_ranges_visible(tower_type != GUMBALL_INDEX)
+	if tower_type == GUMBALL_INDEX:
+		lane_preview = GumballLanePreview.new()
+		preview_holder.add_child(lane_preview)
 	status.text = "Move over the ground to place"
+
+
+func _update_lane(cell: Vector2i) -> void:
+	lane_cell = cell
+	if grid.is_buildable(cell):
+		lane_options = GumballLane.lanes(grid, cell)
+	else:
+		lane_options.clear()
+	lane_index = GumballLane.longest_index(lane_options)
+	_show_selected_lane()
+
+
+func _cycle_lane() -> void:
+	if lane_options.is_empty():
+		return
+	lane_index = (lane_index + 1) % lane_options.size()
+	_show_selected_lane()
+
+
+func _show_selected_lane() -> void:
+	if lane_preview == null:
+		return
+	var option: Dictionary = lane_options[lane_index] if lane_index >= 0 else {}
+	lane_preview.show_lane(grid, lane_cell, option)
+	if preview != null and not option.is_empty():
+		preview.set_lane_direction(option.direction)
 
 
 func _build_upgrade_ui() -> void:
@@ -396,6 +465,9 @@ func _select_placed_tower(tower: Node3D) -> void:
 		if preview != null:
 			preview.queue_free()
 			preview = null
+		if lane_preview != null:
+			lane_preview.queue_free()
+			lane_preview = null
 		for button in tower_buttons:
 			button.button_pressed = false
 	if selected_tower != null and selected_tower != hovered_tower:
@@ -415,7 +487,7 @@ func _refresh_upgrade_ui() -> void:
 	var attack := selected_tower.get_node("Attack") as PlacementTowerAttack
 	var definition := attack.definition
 	var upgrade := attack.next_upgrade()
-	var stats := "Damage %.0f  •  Cooldown %.2fs  •  Range %.1f" % [definition.damage, definition.cooldown, definition.attack_range]
+	var stats := "Damage %.0f  •  Cooldown %.2fs  •  Speed %.1f  •  Balls %d" % [definition.damage, definition.cooldown, definition.projectile_speed, definition.ball_count] if definition.id == "gumball" else "Damage %.0f  •  Cooldown %.2fs  •  Range %.1f" % [definition.damage, definition.cooldown, definition.attack_range]
 	if upgrade.is_empty():
 		upgrade_details.text = "%s  |  Level 3/3\n%s" % [definition.name, stats]
 		upgrade_button.disabled = true
@@ -468,8 +540,9 @@ func _build_ui() -> void:
 		row.add_child(tile)
 		tower_buttons.append(tile)
 	status = Label.new()
-	status.visible = false
-	$UI.add_child(status)
+	status.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(status)
 	_build_upgrade_ui()
 	var hud := VBoxContainer.new()
 	hud.add_theme_constant_override("separation", 4)
