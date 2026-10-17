@@ -6,6 +6,8 @@ Tower definitions are individual JSON files in `data/towers/`; enemies are in `d
 
 Tower `attack` values include damage, cooldown, range, and projectile speed. The placement scene uses damage, cooldown, range, detection range, turn speed, target tags, armor, and tag bonuses. Laser, tank, and lightning damage resolves immediately; a tank shell's travel is a visual effect. The water rocket deals damage on impact. Its optional `homing_turn_speed` (degrees per second) and `projectile_lifetime` (seconds) control its flight.
 
+Towers normally use `firing_mode: "targeted"` (the default) and require positive range and detection range. The Gumball Machine uses `firing_mode: "lane"`, `targeting.priority: "lane"`, and zero range and detection range because it fires along an adjacent path when an enemy enters it. Its `ball_count` controls the number of balls in a volley and can be replaced by an upgrade; optional `bounce_height` and `bounce_frequency` control their visual motion. See [Gumball Machine tower](gumball-tower.md) for the lane behavior.
+
 Each tower currently defines exactly three upgrades. Their order in the `upgrades` array is the purchase order. Each has an ID, name, cost, and an `attack` object containing explicit replacement values. Only fields named in that object change. The current UI lets the player buy the next upgrade of a placed tower when affordable.
 
 The tower demo can save a full definition to `user://tower_definitions/<id>.json`. At startup, that user file overrides the packaged definition with the same ID. To change version-controlled defaults, edit `data/towers/` instead. Existing saved overrides may hide changes to those defaults during local testing.

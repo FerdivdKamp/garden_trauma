@@ -5,7 +5,7 @@ const TOWER_DIR := "res://data/towers"
 const TOWER_OVERRIDE_DIR := "user://tower_definitions"
 const UNIT_DIR := "res://data/units"
 const ID_PATTERN := "^[a-z][a-z0-9_]*$"
-const KNOWN_TAGS := ["ground", "air", "mechanical", "projectile", "physical", "electric", "water", "homing"]
+const KNOWN_TAGS := ["ground", "air", "mechanical", "projectile", "physical", "electric", "water", "homing", "lane", "bouncing", "piercing"]
 const DAMAGE_TYPES := ["physical", "electric", "water"]
 
 # Schemas give editor autocomplete; these checks protect the game at runtime.
@@ -17,6 +17,7 @@ static func load_tower(path: String) -> TowerDefinition:
 		return null
 	var result := TowerDefinition.new()
 	result.id = data.id
+	result.firing_mode = data.get("firing_mode", "targeted")
 	result.name = data.name
 	result.cost = data.cost
 	result.damage = data.attack.damage
@@ -25,8 +26,11 @@ static func load_tower(path: String) -> TowerDefinition:
 	result.detection_range = data.get("detection_range", 9.0)
 	result.turn_speed = data.get("turn_speed", 90.0)
 	result.projectile_speed = data.attack.projectile_speed
+	result.ball_count = data.attack.get("ball_count", 1)
 	result.homing_turn_speed = data.attack.get("homing_turn_speed", 120.0)
 	result.projectile_lifetime = data.attack.get("projectile_lifetime", 8.0)
+	result.bounce_height = data.attack.get("bounce_height", 0.5)
+	result.bounce_frequency = data.attack.get("bounce_frequency", 2.5)
 	result.damage_type = data.get("damage_type", "physical")
 	result.bonus_vs_tags = data.get("bonus_vs_tags", {}).duplicate()
 	result.targets = PackedStringArray(data.targeting.targets)
@@ -71,10 +75,13 @@ static func load_towers(override_directory := "") -> Dictionary:
 static func save_tower_override(definition: TowerDefinition, directory := TOWER_OVERRIDE_DIR) -> bool:
 	var data := {
 		"id": definition.id, "name": definition.name, "cost": definition.cost,
+		"firing_mode": definition.firing_mode,
 		"attack": {"damage": definition.damage, "cooldown": definition.cooldown,
 			"range": definition.attack_range, "projectile_speed": definition.projectile_speed,
+			"ball_count": definition.ball_count,
 			"homing_turn_speed": definition.homing_turn_speed,
-			"projectile_lifetime": definition.projectile_lifetime},
+			"projectile_lifetime": definition.projectile_lifetime,
+			"bounce_height": definition.bounce_height, "bounce_frequency": definition.bounce_frequency},
 		"targeting": {"targets": Array(definition.targets), "priority": definition.priority},
 		"damage_type": definition.damage_type, "bonus_vs_tags": definition.bonus_vs_tags,
 		"tags": Array(definition.tags), "detection_range": definition.detection_range,
@@ -152,16 +159,33 @@ static func _valid_tower(data: Dictionary) -> bool:
 		return false
 	if not _number(attack.get("damage"), 0.0) or not _number(attack.get("cooldown"), 0.0, false, true):
 		return false
-	if not _number(attack.get("range"), 0.0, false, true) or not _number(attack.get("projectile_speed"), 0.0, false, true):
+	if not _number(attack.get("projectile_speed"), 0.0, false, true):
 		return false
+	var firing_mode: String = data.get("firing_mode", "targeted")
+	if firing_mode not in ["targeted", "lane"]:
+		return false
+	var lane_tower := firing_mode == "lane"
+	if lane_tower:
+		if attack.get("range") != 0 or data.get("detection_range", 0) != 0 or targeting.get("priority") != "lane":
+			return false
+	else:
+		if not _number(attack.get("range"), 0.0, false, true):
+			return false
 	for key in ["homing_turn_speed", "projectile_lifetime"]:
 		if attack.has(key) and not _number(attack[key], 0.0, false, true):
 			return false
-	if not _string_array(targeting.get("targets"), ["ground", "air"]) or targeting.get("priority") not in ["first", "nearest", "last"]:
+	for key in ["bounce_height", "bounce_frequency"]:
+		if attack.has(key) and not _number(attack[key], 0.0, false, key == "bounce_frequency"):
+			return false
+	if attack.has("ball_count") and (not _number(attack.ball_count, 1.0, true) or attack.ball_count > 6):
+		return false
+	if not _string_array(targeting.get("targets"), ["ground", "air"]) or targeting.get("priority") not in ["first", "nearest", "last", "lane"]:
+		return false
+	if not lane_tower and targeting.get("priority") == "lane":
 		return false
 	if data.has("damage_type") and data.damage_type not in DAMAGE_TYPES:
 		return false
-	if data.has("detection_range") and not _number(data.detection_range, 0.0, false, true):
+	if data.has("detection_range") and not _number(data.detection_range, 0.0, false, not lane_tower):
 		return false
 	if data.has("turn_speed") and not _number(data.turn_speed, 0.0):
 		return false
@@ -185,9 +209,12 @@ static func _valid_tower(data: Dictionary) -> bool:
 				if key not in ["id", "name", "cost", "attack"]:
 					return false
 			for key in upgrade.attack:
-				if key not in ["damage", "cooldown", "range", "projectile_speed"]:
+				if key not in ["damage", "cooldown", "range", "projectile_speed", "ball_count"]:
 					return false
-				if not _number(upgrade.attack[key], 0.0, false, key != "damage"):
+				if key == "ball_count":
+					if not _number(upgrade.attack[key], 1.0, true) or upgrade.attack[key] > 6:
+						return false
+				elif not _number(upgrade.attack[key], 0.0, false, key != "damage"):
 					return false
 	return true
 

@@ -1,0 +1,26 @@
+{
+  "$schema": "../schemas/tower.schema.json",
+  "id": "gumball",
+  "firing_mode": "lane",
+  "name": "Gumball Machine",
+  "cost": 130,
+  "detection_range": 0,
+  "turn_speed": 0,
+  "attack": {
+    "damage": 7,
+    "cooldown": 1.5,
+    "range": 0,
+    "projectile_speed": 7,
+    "ball_count": 3,
+    "bounce_height": 0.5,
+    "bounce_frequency": 2.5
+  },
+  "targeting": {"targets": ["ground"], "priority": "lane"},
+  "damage_type": "physical",
+  "tags": ["projectile", "lane", "bouncing", "piercing"],
+  "upgrades": [
+    {"id": "bigger_gumballs", "name": "Bigger Gumballs", "cost": 40, "attack": {"damage": 10}},
+    {"id": "quick_crank", "name": "Quick Crank", "cost": 65, "attack": {"cooldown": 1.0, "projectile_speed": 8, "ball_count": 4}},
+    {"id": "extra_sugar", "name": "Extra Sugar", "cost": 90, "attack": {"damage": 15, "projectile_speed": 9, "ball_count": 5}}
+  ]
+}

@@ -4,9 +4,30 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["id", "name", "cost", "attack", "targeting", "tags"],
+  "allOf": [
+    {
+      "if": {"properties": {"firing_mode": {"const": "lane"}}, "required": ["firing_mode"]},
+      "then": {
+        "required": ["detection_range"],
+        "properties": {
+          "detection_range": {"const": 0},
+          "attack": {"properties": {"range": {"const": 0}}},
+          "targeting": {"properties": {"priority": {"const": "lane"}}}
+        }
+      },
+      "else": {
+        "properties": {
+          "detection_range": {"exclusiveMinimum": 0},
+          "attack": {"properties": {"range": {"exclusiveMinimum": 0}}},
+          "targeting": {"properties": {"priority": {"enum": ["first", "nearest", "last"]}}}
+        }
+      }
+    }
+  ],
   "properties": {
     "$schema": { "type": "string" },
     "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "firing_mode": { "enum": ["targeted", "lane"] },
     "name": { "type": "string", "minLength": 1 },
     "cost": { "type": "integer", "minimum": 0 },
     "attack": {
@@ -16,10 +37,13 @@
       "properties": {
         "damage": { "type": "number", "minimum": 0 },
         "cooldown": { "type": "number", "exclusiveMinimum": 0 },
-        "range": { "type": "number", "exclusiveMinimum": 0 },
+        "range": { "type": "number", "minimum": 0 },
         "projectile_speed": { "type": "number", "exclusiveMinimum": 0 },
+        "ball_count": { "type": "integer", "minimum": 1, "maximum": 6 },
         "homing_turn_speed": { "type": "number", "exclusiveMinimum": 0 },
-        "projectile_lifetime": { "type": "number", "exclusiveMinimum": 0 }
+        "projectile_lifetime": { "type": "number", "exclusiveMinimum": 0 },
+        "bounce_height": { "type": "number", "minimum": 0 },
+        "bounce_frequency": { "type": "number", "exclusiveMinimum": 0 }
       }
     },
     "targeting": {
@@ -28,18 +52,18 @@
       "required": ["targets", "priority"],
       "properties": {
         "targets": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["ground", "air"] } },
-        "priority": { "enum": ["first", "nearest", "last"] }
+        "priority": { "enum": ["first", "nearest", "last", "lane"] }
       }
     },
     "damage_type": { "enum": ["physical", "electric", "water"] },
-    "detection_range": { "type": "number", "exclusiveMinimum": 0 },
+    "detection_range": { "type": "number", "minimum": 0 },
     "turn_speed": { "type": "number", "minimum": 0 },
     "bonus_vs_tags": {
       "type": "object",
-      "propertyNames": { "enum": ["ground", "air", "mechanical", "projectile", "physical", "electric", "water", "homing"] },
+      "propertyNames": { "enum": ["ground", "air", "mechanical", "projectile", "physical", "electric", "water", "homing", "lane", "bouncing", "piercing"] },
       "additionalProperties": { "type": "number", "minimum": 0 }
     },
-    "tags": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["ground", "air", "mechanical", "projectile", "physical", "electric", "water", "homing"] } },
+    "tags": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["ground", "air", "mechanical", "projectile", "physical", "electric", "water", "homing", "lane", "bouncing", "piercing"] } },
     "upgrades": {
       "type": "array", "minItems": 3, "maxItems": 3,
       "items": {
@@ -55,7 +79,8 @@
               "damage": { "type": "number", "minimum": 0 },
               "cooldown": { "type": "number", "exclusiveMinimum": 0 },
               "range": { "type": "number", "exclusiveMinimum": 0 },
-              "projectile_speed": { "type": "number", "exclusiveMinimum": 0 }
+              "projectile_speed": { "type": "number", "exclusiveMinimum": 0 },
+              "ball_count": { "type": "integer", "minimum": 1, "maximum": 6 }
             }
           }
         }
