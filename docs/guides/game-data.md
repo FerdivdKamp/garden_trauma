@@ -4,7 +4,7 @@ Tower definitions are individual JSON files in `data/towers/`; enemies are in `d
 
 `scripts/definition_loader.gd` validates definitions at runtime. Invalid files are skipped with an error; a duplicate ID is reported and the first file wins. To make a new type selectable, add its ID to the relevant scene's selection UI and load its typed definition. The level's waves also refer to enemy IDs from these files.
 
-Tower `attack` values include damage, cooldown, range, and projectile speed. The placement scene uses damage, cooldown, range, detection range, turn speed, target tags, armor, and tag bonuses. Combat currently resolves hits immediately; a shell's travel is a visual effect. `projectile_speed` controls that visual shell tween, not delayed damage.
+Tower `attack` values include damage, cooldown, range, and projectile speed. The placement scene uses damage, cooldown, range, detection range, turn speed, target tags, armor, and tag bonuses. Laser, tank, and lightning damage resolves immediately; a tank shell's travel is a visual effect. The water rocket deals damage on impact. Its optional `homing_turn_speed` (degrees per second) and `projectile_lifetime` (seconds) control its flight.
 
 Each tower currently defines exactly three upgrades. Their order in the `upgrades` array is the purchase order. Each has an ID, name, cost, and an `attack` object containing explicit replacement values. Only fields named in that object change. The current UI lets the player buy the next upgrade of a placed tower when affordable.
 

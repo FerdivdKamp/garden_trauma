@@ -8,12 +8,15 @@ var failures := 0
 func _initialize() -> void:
 	var towers := DefinitionLoader.load_towers()
 	var units := DefinitionLoader.load_units()
-	_check(towers.size() == 3 and units.size() == 2, "Each JSON file loads once")
+	_check(towers.size() == 4 and units.size() == 2, "Each JSON file loads once")
 	var tower := towers.get("laser_tower") as TowerDefinition
 	var double_tower := towers.get("double_tank") as TowerDefinition
 	var lightning_tower := towers.get("lightning_tower") as TowerDefinition
+	var water_rocket := towers.get("water_rocket") as TowerDefinition
 	var red := units.get("windup_robot") as UnitDefinition
-	_check(tower != null and double_tower != null and lightning_tower != null and red != null, "Loader returns typed resources")
+	_check(tower != null and double_tower != null and lightning_tower != null and water_rocket != null and red != null, "Loader returns typed resources")
+	if water_rocket != null:
+		_check(water_rocket.damage_type == "water" and water_rocket.homing_turn_speed == 120.0 and water_rocket.projectile_lifetime == 8.0, "Water rocket guidance loads from JSON")
 	if lightning_tower != null:
 		_check(lightning_tower.damage_type == "electric" and lightning_tower.tags.has("electric"), "Lightning tower loads electric damage")
 	if tower != null and red != null:

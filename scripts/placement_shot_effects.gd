@@ -1,6 +1,8 @@
 extends Node3D
 
 const LIGHTNING_SCENE: PackedScene = preload("res://scenes/lightning_effect.tscn")
+const WATER_ROCKET_SCENE: PackedScene = preload("res://scenes/water_rocket_projectile.tscn")
+const WaterRocketProjectile = preload("res://scripts/water_rocket_projectile.gd")
 const LightningEffect = preload("res://scripts/lightning_effect.gd")
 const LIGHTNING_POOL_SIZE := 16
 
@@ -14,6 +16,7 @@ var shell_template: MeshInstance3D
 var red_hit_template: GPUParticles3D
 var debris_template: GPUParticles3D
 var smoke_template: GPUParticles3D
+var water_spray_template: GPUParticles3D
 var lightning_pool: Array[LightningEffect] = []
 var next_lightning := 0
 
@@ -24,6 +27,7 @@ func _ready() -> void:
 	red_hit_template = _make_particle_template("RedHitTemplate", Color("ff4141"), 14, 0.35, 2.0, false)
 	debris_template = _make_particle_template("DebrisTemplate", Color("b4a18a"), 12, 0.5, 2.8, false)
 	smoke_template = _make_particle_template("SmokeTemplate", Color(0.72, 0.72, 0.68, 0.55), 8, 0.3, 0.8, true)
+	water_spray_template = _make_particle_template("WaterSprayTemplate", Color("55dfff"), 22, 0.28, 2.2, false)
 	for index in LIGHTNING_POOL_SIZE:
 		var bolt := LIGHTNING_SCENE.instantiate() as LightningEffect
 		bolt.name = "Lightning%d" % index
@@ -72,6 +76,15 @@ func fire_shell(start: Vector3, hit: Vector3, speed: float) -> void:
 	var flight := create_tween()
 	flight.tween_property(shell, "global_position", hit, travel_time)
 	flight.tween_callback(_shell_impact.bind(shell, hit))
+
+
+func fire_water_rocket(start: Vector3, target: Node, definition: TowerDefinition, direction: Vector3) -> WaterRocketProjectile:
+	var rocket := WATER_ROCKET_SCENE.instantiate() as WaterRocketProjectile
+	add_child(rocket)
+	rocket.global_position = start
+	rocket.configure(target, direction, definition)
+	_spawn_burst(water_spray_template, "WaterNozzleSpray", start)
+	return rocket
 
 
 func _shell_impact(shell: MeshInstance3D, hit: Vector3) -> void:

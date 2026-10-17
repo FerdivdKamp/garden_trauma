@@ -1,0 +1,24 @@
+{
+  "$schema": "../schemas/tower.schema.json",
+  "id": "water_rocket",
+  "name": "Water Rocket",
+  "cost": 60,
+  "detection_range": 10.0,
+  "turn_speed": 100.0,
+  "attack": {
+    "damage":50,
+    "cooldown": 3.5,
+    "range": 8.0,
+    "projectile_speed": 7.0,
+    "homing_turn_speed": 120.0,
+    "projectile_lifetime": 12.0
+  },
+  "targeting": {"targets": ["ground"], "priority": "nearest"},
+  "damage_type": "water",
+  "tags": ["projectile", "homing", "water"],
+  "upgrades": [
+    {"id": "larger_payload", "name": "Larger Payload", "cost": 50, "attack": {"range": 9.0}},
+    {"id": "quick_pump", "name": "Quick Pump", "cost": 75, "attack": {"cooldown": 2.0}},
+    {"id": "pressure_boost", "name": "Pressure Boost", "cost": 100, "attack": {"range": 10, "projectile_speed": 10.0}}
+  ]
+}

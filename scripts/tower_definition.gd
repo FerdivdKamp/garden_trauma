@@ -11,6 +11,8 @@ var attack_range: float
 var detection_range: float
 var turn_speed: float
 var projectile_speed: float
+var homing_turn_speed: float = 120.0
+var projectile_lifetime: float = 8.0
 var damage_type: String
 var bonus_vs_tags: Dictionary
 var targets: PackedStringArray
@@ -31,6 +33,8 @@ func copy() -> TowerDefinition:
 	result.detection_range = detection_range
 	result.turn_speed = turn_speed
 	result.projectile_speed = projectile_speed
+	result.homing_turn_speed = homing_turn_speed
+	result.projectile_lifetime = projectile_lifetime
 	result.damage_type = damage_type
 	result.bonus_vs_tags = bonus_vs_tags.duplicate(true)
 	result.targets = targets.duplicate()

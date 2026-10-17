@@ -1,0 +1,29 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/water_rocket_visual.gd" id="1_visual"]
+[ext_resource type="PackedScene" path="res://scenes/water_rocket_mesh.tscn" id="2_rocket"]
+
+[node name="WaterRocketTower" type="Node3D"]
+script = ExtResource("1_visual")
+
+[node name="Base" type="Node3D" parent="."]
+
+[node name="TurretPivot" type="Node3D" parent="."]
+
+[node name="PumpHousing" type="Node3D" parent="TurretPivot"]
+position = Vector3(0, 0.78, 0)
+
+[node name="AccordionPivot" type="Node3D" parent="TurretPivot"]
+position = Vector3(0, 1.08, 0)
+
+[node name="AccordionMesh" type="Node3D" parent="TurretPivot/AccordionPivot"]
+
+[node name="LauncherArm" type="Node3D" parent="TurretPivot"]
+
+[node name="Muzzle" type="Marker3D" parent="TurretPivot/LauncherArm"]
+position = Vector3(0.43, 1.12, -0.62)
+
+[node name="LoadedRocket" type="Node3D" parent="TurretPivot"]
+position = Vector3(0.43, 1.14, -0.62)
+
+[node name="RocketMesh" parent="TurretPivot/LoadedRocket" instance=ExtResource("2_rocket")]

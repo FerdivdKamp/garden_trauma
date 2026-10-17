@@ -1,0 +1,13 @@
+# Water Rocket Tower
+
+`data/towers/water_rocket.json` defines its cost, range, cooldown, damage, flight speed, turn speed, lifetime, and three upgrades. The placement scene adds it as the fourth tower tile. Its shots use the existing targeting and cooldown code in `placement_tower_attack.gd`; damage is applied only when the rocket reaches its target.
+
+The temporary tower model is `scenes/water_rocket_visual.tscn`, with primitive meshes constructed by `scripts/water_rocket_visual.gd`. The parked and flying rockets both instance `scenes/water_rocket_mesh.tscn`, whose geometry lives in `scripts/water_rocket_mesh.gd`. `TurretPivot` turns the pump, bellows, launcher, and loaded rocket together. `AccordionPivot/AccordionMesh` scales vertically from its lower edge. The firing Tween compresses it for 0.18 seconds, invokes a launch callback at the bottom, then expands and settles. The cooldown remains in the attack node.
+
+`scenes/water_rocket_projectile.tscn` owns the independent flying rocket. Each physics step turns its direction toward the target by a limited angle, then moves using `projectile_speed * delta`. The configured `homing_turn_speed` shapes the launch arc; after the first quarter second, the turn limit rises as the rocket nears its target so it can complete the final approach without circling. A missing or defeated target leaves it on its last heading until `projectile_lifetime` expires. A segment check catches hits even when a frame moves farther than the impact radius.
+
+The projectile's `WaterTrail` uses world-space `GPUParticles3D` with 0.6 second cyan droplets, downward gravity, and small size variation. `placement_shot_effects.gd` creates a separate 0.28 second `WaterNozzleSpray` burst at launch. Tune amount, lifetime, velocity, spread, gravity, and droplet size in those scripts; no texture files are needed.
+
+To replace the tower model, keep the same scene hierarchy and pivots: `Base` at ground level; `TurretPivot` at the tower origin with forward along local -Z; `PumpHousing` and `LauncherArm` below it; `AccordionPivot/AccordionMesh` with its local origin at the bellows' lower edge; `LauncherArm/Muzzle` at the rocket's launch point; and `LoadedRocket` for the parked visual. Attach the Blender GLB under those nodes or update the references in `tower_visual.gd` and `water_rocket_visual.gd`. Replace `water_rocket_mesh.tscn` separately with a rocket model pointing along local +Y; both loaded and flying rockets will use it. Flight and targeting never inspect the placeholder's mesh names or materials.
+
+Open `scenes/tower_placement.tscn`, select the fourth tile, place the tower near a route, and start a wave to test it. The water rocket test script checks the launch sequence, homing, damage, and upgrades.
