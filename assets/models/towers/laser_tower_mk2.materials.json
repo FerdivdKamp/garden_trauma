@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "asset": "laser_tower",
+  "asset": "laser_tower2",
   "materials": [
     {
-      "name": "BallJoint",
+      "name": "BallJoint.002",
       "classification": "directly_exportable",
       "type": "basic_principled",
       "principled": {
@@ -19,7 +19,7 @@
       }
     },
     {
-      "name": "BallJointArms",
+      "name": "BallJointArms.002",
       "classification": "directly_exportable",
       "type": "basic_principled",
       "principled": {
@@ -35,34 +35,34 @@
       }
     },
     {
-      "name": "Barrel",
+      "name": "Barrel.002",
       "classification": "directly_exportable",
       "type": "basic_principled",
       "principled": {
         "base_color": [
-          0.16504545509815216,
-          0.16504545509815216,
-          0.16504545509815216,
+          0.8796226382255554,
+          0.7912982106208801,
+          0.6104958653450012,
           1.0
         ],
         "metallic": 0.0,
-        "roughness": 0.5,
+        "roughness": 0.30000001192092896,
         "alpha": 1.0
       }
     },
     {
-      "name": "BarrelAccents",
+      "name": "BarrelAccents.002",
       "classification": "directly_exportable",
       "type": "basic_principled",
       "principled": {
         "base_color": [
-          0.2982516288757324,
-          0.022496897727251053,
-          0.024287967011332512,
+          0.8468736410140991,
+          0.035601332783699036,
+          0.05612850934267044,
           1.0
         ],
         "metallic": 0.0,
-        "roughness": 0.5,
+        "roughness": 0.4000000059604645,
         "alpha": 1.0
       }
     },
@@ -83,18 +83,18 @@
       }
     },
     {
-      "name": "GunBase",
+      "name": "GunBase.002",
       "classification": "directly_exportable",
       "type": "basic_principled",
       "principled": {
         "base_color": [
-          0.022186279296875,
-          0.0261383056640625,
-          0.090576171875,
+          0.017641959711909294,
+          0.08865560591220856,
+          0.327778160572052,
           1.0
         ],
         "metallic": 0.0,
-        "roughness": 0.5,
+        "roughness": 0.4000000059604645,
         "alpha": 1.0
       }
     },
@@ -115,18 +115,34 @@
       }
     },
     {
+      "name": "Material.004",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.8468736410140991,
+          0.035601332783699036,
+          0.05612850934267044,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.4000000059604645,
+        "alpha": 1.0
+      }
+    },
+    {
       "name": "UpgradeBands",
       "classification": "directly_exportable",
       "type": "basic_principled",
       "principled": {
         "base_color": [
-          0.8000074625015259,
-          0.06143258512020111,
-          0.0716845840215683,
+          0.8468736410140991,
+          0.035601332783699036,
+          0.05612850934267044,
           1.0
         ],
         "metallic": 0.0,
-        "roughness": 0.5,
+        "roughness": 0.4000000059604645,
         "alpha": 1.0
       }
     }

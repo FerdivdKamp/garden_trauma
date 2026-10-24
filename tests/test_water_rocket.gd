@@ -15,7 +15,7 @@ func _run() -> void:
 	root.add_child(garden)
 	garden.currency = 1000
 	garden._select_tower(3)
-	_check(garden.tower_buttons.size() == 5 and garden.preview.water_model != null, "Water rocket has a placeable preview")
+	_check(garden.tower_buttons.size() == 6 and garden.preview.water_model != null, "Water rocket has a placeable preview")
 	_check(garden.preview.water_model.muzzle is Marker3D, "Placeholder has a muzzle marker")
 	garden.place_tower(Vector3(-8, 0, 8))
 	var placed_cost: int = (garden.tower_definitions["water_rocket"] as TowerDefinition).cost

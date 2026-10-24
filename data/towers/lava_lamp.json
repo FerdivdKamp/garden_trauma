@@ -1,0 +1,25 @@
+{
+  "$schema": "../schemas/tower.schema.json",
+  "id": "lava_lamp",
+  "firing_mode": "tile",
+  "name": "Lava Lamp",
+  "cost": 180,
+  "detection_range": 10.0,
+  "turn_speed": 0.0,
+  "attack": {
+    "damage": 5.0,
+    "cooldown": 8.0,
+    "range": 10.0,
+    "projectile_speed": 12.0,
+    "lava_damage_per_second": 4.0,
+    "puddle_radius": 0.9
+  },
+  "targeting": {"targets": ["ground"], "priority": "nearest_tile"},
+  "damage_type": "physical",
+  "tags": ["projectile", "physical"],
+  "upgrades": [
+    {"id": "hotter_lava", "name": "Hotter Lava", "cost": 65, "attack": {"lava_damage_per_second": 6.0}},
+    {"id": "wider_pool", "name": "Wider Pool", "cost": 90, "attack": {"puddle_radius": 1.15}},
+    {"id": "faster_bubbles", "name": "Faster Bubbles", "cost": 120, "attack": {"cooldown": 6.0, "lava_damage_per_second": 8.0}}
+  ]
+}

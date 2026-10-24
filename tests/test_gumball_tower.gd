@@ -153,11 +153,20 @@ func _run() -> void:
 		var sweep_end: Vector3 = garden.grid.grid_to_world(Vector2i(11, 4))
 		shot._check_hits(sweep_start, sweep_end)
 		_check(first.health < first_health and second.health < second_health, "One ball damages multiple enemies")
+		_check(_latest_sound(garden.shot_effects).stream == Projectile.HIT_SOUND, "Enemy collision plays the gumball hit cue")
 		var health_after_hit: float = first.health
 		shot._check_hits(sweep_start, sweep_end)
 		_check(first.health == health_after_hit, "One ball hits each enemy only once")
 		shot._physics_process(shot.remaining_distance / shot.speed + 0.01)
 		_check(shot.is_queued_for_deletion(), "Ball despawns at the lane endpoint")
+	var sound_ball := (load("res://scenes/gumball_projectile.tscn") as PackedScene).instantiate() as Projectile
+	garden.shot_effects.add_child(sound_ball)
+	sound_ball.remaining_distance = 10.0
+	sound_ball.speed = 0.0
+	sound_ball.bounce_frequency = 2.0
+	sound_ball.bounce_phase = 0.0
+	sound_ball._physics_process(0.51)
+	_check(Projectile.BOUNCE_SOUNDS.has(_latest_sound(garden.shot_effects).stream), "Ground contact plays one of the isolated bounce cues")
 	if failures == 0:
 		print("Gumball tower tests passed")
 	quit(1 if failures > 0 else 0)
@@ -167,3 +176,11 @@ func _check(condition: bool, message: String) -> void:
 	if not condition:
 		push_error(message)
 		failures += 1
+
+
+func _latest_sound(container: Node) -> AudioStreamPlayer3D:
+	for index in range(container.get_child_count() - 1, -1, -1):
+		var player := container.get_child(index) as AudioStreamPlayer3D
+		if player != null:
+			return player
+	return null

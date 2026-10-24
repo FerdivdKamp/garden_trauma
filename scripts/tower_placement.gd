@@ -7,6 +7,7 @@ const HEART_ICON: Texture2D = preload("res://assets/ui/health_heart.svg")
 const PlacementEnemy = preload("res://scripts/placement_enemy.gd")
 const PlacementTowerAttack = preload("res://scripts/placement_tower_attack.gd")
 const GumballLaneAttack = preload("res://scripts/gumball_lane_attack.gd")
+const LavaTileAttack = preload("res://scripts/lava_tile_attack.gd")
 const GumballLane = preload("res://scripts/gumball_lane.gd")
 const GumballLanePreview = preload("res://scripts/gumball_lane_preview.gd")
 const ShotEffects = preload("res://scripts/placement_shot_effects.gd")
@@ -14,8 +15,9 @@ const TowerVisual = preload("res://scripts/tower_visual.gd")
 const TileGrid = preload("res://scripts/level_grid.gd")
 const GrassPaletteScript = preload("res://scripts/grass_palette.gd")
 const GrassMaterialConfigScript = preload("res://scripts/grass_material_config.gd")
-const TOWER_IDS := ["laser_tower", "double_tank", "lightning_tower", "water_rocket", "gumball"]
+const TOWER_IDS := ["laser_tower", "double_tank", "lightning_tower", "water_rocket", "gumball", "lava_lamp"]
 const GUMBALL_INDEX := 4
+const LAVA_INDEX := 5
 const TOWER_RADIUS := TowerVisual.FOOTPRINT_RADIUS
 
 @onready var camera: Camera3D = $Camera
@@ -72,6 +74,7 @@ var next_wave_button: Button
 var pause_button: Button
 var level_id := LevelProgress.DEFAULT_LEVEL_ID
 var result_action_button: Button
+var lava_field: LavaField
 
 
 func _enter_tree() -> void:
@@ -91,13 +94,17 @@ func _ready() -> void:
 	# Load once; scene nodes use typed definitions instead of JSON dictionaries.
 	tower_definitions = DefinitionLoader.load_towers(DefinitionLoader.TOWER_OVERRIDE_DIR)
 	unit_definitions = DefinitionLoader.load_units()
-	assert(tower_definitions.has("laser_tower") and tower_definitions.has("double_tank") and tower_definitions.has("lightning_tower") and tower_definitions.has("water_rocket") and tower_definitions.has("gumball") and unit_definitions.has("windup_robot") and unit_definitions.has("blue_sphere"))
+	assert(tower_definitions.has("laser_tower") and tower_definitions.has("double_tank") and tower_definitions.has("lightning_tower") and tower_definitions.has("water_rocket") and tower_definitions.has("gumball") and tower_definitions.has("lava_lamp") and unit_definitions.has("windup_robot") and unit_definitions.has("blue_sphere"))
 	robot_speed = (unit_definitions["windup_robot"] as UnitDefinition).speed
 	blue_speed = (unit_definitions["blue_sphere"] as UnitDefinition).speed
 	objective_health = starting_objective_health
 	currency = starting_currency
 	
 	_setup_route()
+	lava_field = LavaField.new()
+	lava_field.name = "LavaField"
+	shot_effects.add_child(lava_field)
+	lava_field.configure(grid, path, waves)
 	_build_ui()
 	waves.spawn_requested.connect(_on_wave_spawn_requested)
 	waves.state_changed.connect(_refresh_hud)
@@ -298,11 +305,14 @@ func place_tower(point: Vector3) -> void:
 		tower.set_lane_direction(option.direction)
 		(attack as GumballLaneAttack).configure_lane(option.direction, option.cells, grid)
 	else:
-		attack = PlacementTowerAttack.new()
+		attack = LavaTileAttack.new() if selected_type == LAVA_INDEX else PlacementTowerAttack.new()
 	attack.name = "Attack"
 	attack.definition = definition.copy()
 	attack.enemies = path
 	attack.effects = shot_effects
+	if selected_type == LAVA_INDEX:
+		(attack as LavaTileAttack).grid = grid
+		(attack as LavaTileAttack).lava_field = lava_field
 	tower.add_child(attack)
 	if selected_type == GUMBALL_INDEX:
 		# This lane choice belongs to this placement; clear its coverage overlay.
@@ -518,7 +528,13 @@ func _refresh_upgrade_ui() -> void:
 	var attack := selected_tower.get_node("Attack") as PlacementTowerAttack
 	var definition := attack.definition
 	var upgrade := attack.next_upgrade()
-	var stats := "Damage %.0f  •  Cooldown %.2fs  •  Speed %.1f  •  Balls %d" % [definition.damage, definition.cooldown, definition.projectile_speed, definition.ball_count] if definition.id == "gumball" else "Damage %.0f  •  Cooldown %.2fs  •  Range %.1f" % [definition.damage, definition.cooldown, definition.attack_range]
+	var stats: String
+	if definition.id == "lava_lamp":
+		stats = "Impact %.0f  •  Lava %.1f/s  •  Radius %.1f\nCooldown %.1fs  •  Range %.1f" % [definition.damage, definition.lava_damage_per_second, definition.puddle_radius, definition.cooldown, definition.attack_range]
+	elif definition.id == "gumball":
+		stats = "Damage %.0f  •  Cooldown %.2fs  •  Speed %.1f  •  Balls %d" % [definition.damage, definition.cooldown, definition.projectile_speed, definition.ball_count]
+	else:
+		stats = "Damage %.0f  •  Cooldown %.2fs  •  Range %.1f" % [definition.damage, definition.cooldown, definition.attack_range]
 	if upgrade.is_empty():
 		upgrade_details.text = "%s  |  Level 3/3\n%s" % [definition.name, stats]
 		upgrade_button.disabled = true
@@ -562,8 +578,10 @@ func _build_ui() -> void:
 	for index in TOWER_IDS.size():
 		var tile := Button.new()
 		var definition := tower_definitions[TOWER_IDS[index]] as TowerDefinition
-		tile.custom_minimum_size = Vector2(72, 66)
+		tile.custom_minimum_size = Vector2(68, 66)
 		tile.tooltip_text = "%s — %d coins" % [definition.name, definition.cost]
+		if index == LAVA_INDEX:
+			tile.tooltip_text += "\nCovers an occupied path tile with lava until the wave ends."
 		tile.icon = _make_tower_thumbnail(index)
 		tile.expand_icon = true
 		tile.toggle_mode = true
