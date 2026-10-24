@@ -5,6 +5,7 @@ const FOOTPRINT_RADIUS := 0.95
 const RangeVisual = preload("res://scripts/tower_range_visual.gd")
 const WATER_ROCKET_SCENE: PackedScene = preload("res://scenes/water_rocket_visual.tscn")
 const GUMBALL_SCENE: PackedScene = preload("res://scenes/gumball_visual.tscn")
+const LAVA_LAMP_SCENE: PackedScene = preload("res://scenes/lava_lamp_visual.tscn")
 const WaterRocketVisual = preload("res://scripts/water_rocket_visual.gd")
 const LASER_MODELS: Array[PackedScene] = [
 	preload("res://assets/models/towers/laser_tower.glb"),
@@ -18,6 +19,7 @@ const FIRE_SOUNDS: Array[AudioStream] = [
 	preload("res://assets/audio/sfx/towers/tower_03_fire.ogg"),
 	preload("res://assets/audio/sfx/towers/tower_02_fire.ogg"),
 	preload("res://assets/audio/sfx/towers/tower_01_fire.ogg"),
+	preload("res://assets/audio/sfx/towers/tower_03_fire.ogg"),
 ]
 
 @onready var turret_pivot: Node3D = $TurretPivot
@@ -28,6 +30,7 @@ var laser_muzzle: Node3D
 var laser_upgrade_level := 0
 var water_model: WaterRocketVisual
 var gumball_model: Node3D
+var lava_model: LavaLampVisual
 @onready var range_visual: RangeVisual = $RangeVisual
 @onready var fire_audio: AudioStreamPlayer3D = $FireAudio
 
@@ -37,11 +40,12 @@ var is_preview := false
 
 func _ready() -> void:
 	_bind_laser_pivots()
-	if tower_type != 0 and tower_type != 3 and tower_type != 4:
+	if tower_type != 0 and tower_type != 3 and tower_type != 4 and tower_type != 5:
 		_build_base()
 	_build_turret()
 	_ensure_water_model()
 	_ensure_gumball_model()
+	_ensure_lava_model()
 	laser_model.visible = tower_type == 0
 	fire_audio.stream = FIRE_SOUNDS[tower_type]
 
@@ -53,13 +57,14 @@ func set_tower_type(value: int) -> void:
 		var base := get_node_or_null("Base")
 		if tower_type == 0 and base != null:
 			base.queue_free()
-		elif tower_type != 0 and tower_type != 3 and tower_type != 4 and base == null:
+		elif tower_type != 0 and tower_type != 3 and tower_type != 4 and tower_type != 5 and base == null:
 			_build_base()
-		elif tower_type in [3, 4] and base != null:
+		elif tower_type in [3, 4, 5] and base != null:
 			base.queue_free()
 		_build_turret()
 		_ensure_water_model()
 		_ensure_gumball_model()
+		_ensure_lava_model()
 		fire_audio.stream = FIRE_SOUNDS[tower_type]
 
 
@@ -100,6 +105,11 @@ func pump_and_launch(launch: Callable) -> void:
 	water_model.pump_and_launch(launch)
 
 
+func play_lava_fire() -> void:
+	lava_model.fire()
+	play_fire_sound()
+
+
 func _ensure_water_model() -> void:
 	if tower_type != 3:
 		if water_model != null:
@@ -121,6 +131,18 @@ func _ensure_gumball_model() -> void:
 		gumball_model = GUMBALL_SCENE.instantiate()
 		add_child(gumball_model)
 	gumball_model.show()
+	_update_materials(true)
+
+
+func _ensure_lava_model() -> void:
+	if tower_type != 5:
+		if lava_model != null:
+			lava_model.hide()
+		return
+	if lava_model == null:
+		lava_model = LAVA_LAMP_SCENE.instantiate() as LavaLampVisual
+		add_child(lava_model)
+	lava_model.show()
 	_update_materials(true)
 
 
@@ -166,7 +188,7 @@ func _build_turret() -> void:
 	if tower_type == 0:
 		_update_materials(true)
 		return
-	if tower_type == 3 or tower_type == 4:
+	if tower_type == 3 or tower_type == 4 or tower_type == 5:
 		_update_materials(true)
 		return
 	if tower_type == 2:
@@ -226,6 +248,8 @@ func get_muzzle_position(barrel_index: int = 0) -> Vector3:
 		return water_model.muzzle.global_position
 	if tower_type == 4:
 		return gumball_model.muzzle.global_position
+	if tower_type == 5:
+		return lava_model.muzzle.global_position
 	if tower_type == 2:
 		return (turret_pivot.get_node("Orb/LightningOrigin") as Marker3D).global_position
 	var barrel_name := "Barrel" if tower_type == 0 else ("LeftBarrel" if barrel_index == 0 else "RightBarrel")
@@ -240,6 +264,8 @@ func get_yaw_pivot() -> Node3D:
 		return water_model.yaw_pivot
 	if tower_type == 4:
 		return gumball_model.direction_pivot
+	if tower_type == 5:
+		return lava_model.visual_root
 	return turret_pivot
 
 
@@ -305,3 +331,5 @@ func _update_materials(valid: bool) -> void:
 				mesh_part.material_overlay = null
 	if gumball_model != null:
 		gumball_model.set_preview(valid, is_preview)
+	if lava_model != null:
+		lava_model.set_preview(valid, is_preview)

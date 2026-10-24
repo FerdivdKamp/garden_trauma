@@ -10,6 +10,8 @@ The bottom-left tiles show small views of the actual tower models. Hover a tile 
 
 The Gumball Machine uses a straight adjacent path lane. Its placement preview highlights the covered tiles and shows a direction arrow. Press **R** while placing it to cycle valid lanes; see [Gumball Machine tower](gumball-tower.md) for its controls and testing checklist. In debug mode, **R** still toggles the route overlay when no Gumball Machine is selected.
 
+The Lava Lamp fires at an uncovered path tile occupied by a ground enemy. Its puddle damages enemies crossing that tile until the wave ends. Its range ring uses the same world-unit scale as other towers; five tiles equal 10 world units.
+
 The tower demo in `scenes/tower_demo.tscn` lets you compare tower types, change range, turn speed, damage, fire rate, and enemy health, then reset the barrel away from the target to watch aiming. Its save button writes a tower definition override for that demo.
 
 ## Saves and debugging

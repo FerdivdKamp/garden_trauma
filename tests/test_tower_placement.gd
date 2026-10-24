@@ -67,7 +67,7 @@ func _run() -> void:
 	demo._select_tower(2)
 	demo.place_tower(Vector3(0, 0, 8))
 	var lightning_tower := demo.placed_towers.get_child(2) as Node3D
-	_check(demo.tower_buttons.size() == 5 and lightning_tower.tower_type == 2, "Lightning tower is selectable and placeable")
+	_check(demo.tower_buttons.size() == 6 and lightning_tower.tower_type == 2, "Lightning tower is selectable and placeable")
 	_check(lightning_tower.get_node("TurretPivot/Orb/LightningOrigin") != null, "Lightning orb has a strike origin")
 
 	if failures == 0:

@@ -17,6 +17,8 @@ var homing_turn_speed: float = 120.0
 var projectile_lifetime: float = 8.0
 var bounce_height: float = 0.5
 var bounce_frequency: float = 2.5
+var lava_damage_per_second: float = 4.0
+var puddle_radius: float = 0.9
 var damage_type: String
 var bonus_vs_tags: Dictionary
 var targets: PackedStringArray
@@ -43,6 +45,8 @@ func copy() -> TowerDefinition:
 	result.projectile_lifetime = projectile_lifetime
 	result.bounce_height = bounce_height
 	result.bounce_frequency = bounce_frequency
+	result.lava_damage_per_second = lava_damage_per_second
+	result.puddle_radius = puddle_radius
 	result.damage_type = damage_type
 	result.bonus_vs_tags = bonus_vs_tags.duplicate(true)
 	result.targets = targets.duplicate()

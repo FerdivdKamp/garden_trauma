@@ -92,6 +92,8 @@ python tools/asset_pipeline.py export art/blender/towers/laser_tower.blend --ble
 
 `scenes/tower_visual.tscn` contains mk1 so it is visible in the editor. `scripts/tower_visual.gd` swaps to mk2, mk3, then mk4 after each purchase. The explicit `--collection` option includes models hidden in Blender while another version is being edited. Keep the base mesh at the origin, place a yaw empty at the turret's turning center, nest a pitch empty at the gun's hinge, and put a muzzle empty at the barrel tip in each collection. The script uses those imported pivots directly for aiming and shot origins. Future towers can follow this hierarchy, but each should get its own definition and scene wiring when its model is added.
 
+For the current visual test, the four GLBs above were exported from `laser_tower2.blend` with the same collection and output names. Its objects now use the same pivot names as the normal source, so no scene or script paths change. To restore the normal models, rerun the four commands above with `laser_tower.blend`, then reimport the GLBs in Godot.
+
 The scales are applied in the current source. Blender still reports one generic material name; renaming it would make later edits easier to inspect.
 
 ## Wind-up robot enemy

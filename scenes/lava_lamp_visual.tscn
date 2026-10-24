@@ -1,0 +1,19 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/lava_lamp_visual.gd" id="1_lamp"]
+
+[node name="TowerRoot" type="Node3D"]
+script = ExtResource("1_lamp")
+
+[node name="VisualRoot" type="Node3D" parent="."]
+
+[node name="Base" type="Node3D" parent="VisualRoot"]
+
+[node name="GlassChamber" type="Node3D" parent="VisualRoot"]
+
+[node name="LavaContents" type="Node3D" parent="VisualRoot"]
+
+[node name="TopCap" type="Node3D" parent="VisualRoot"]
+
+[node name="Muzzle" type="Marker3D" parent="VisualRoot"]
+position = Vector3(0, 2.55, 0)

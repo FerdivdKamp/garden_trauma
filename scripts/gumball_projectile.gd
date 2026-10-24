@@ -2,6 +2,13 @@ extends Node3D
 
 const PlacementEnemy = preload("res://scripts/placement_enemy.gd")
 const HIT_RADIUS := 0.72
+const BOUNCE_SOUNDS: Array[AudioStream] = [
+	preload("res://assets/audio/sfx/towers/preliminary_gumball_bounce_01.wav"),
+	preload("res://assets/audio/sfx/towers/preliminary_gumball_bounce_02.wav"),
+	preload("res://assets/audio/sfx/towers/preliminary_gumball_bounce_03.wav"),
+	preload("res://assets/audio/sfx/towers/preliminary_gumball_bounce_04.wav"),
+]
+const HIT_SOUND: AudioStream = preload("res://assets/audio/sfx/towers/preliminary_gumball_hit.wav")
 
 @onready var visual: MeshInstance3D = $Visual
 
@@ -47,10 +54,12 @@ func _physics_process(delta: float) -> void:
 	if remaining_distance <= 0.0:
 		queue_free()
 		return
+	var previous_bounce := floori(elapsed * bounce_frequency + bounce_phase / PI)
 	elapsed += delta
 	if elapsed > max_lifetime:
 		queue_free()
 		return
+	var current_bounce := floori(elapsed * bounce_frequency + bounce_phase / PI)
 	var previous := global_position
 	var step := minf(speed * delta, remaining_distance)
 	global_position += direction * step
@@ -59,6 +68,9 @@ func _physics_process(delta: float) -> void:
 	# abs(sin) makes one full hop per PI radians.
 	visual.position.y = absf(sin(elapsed * PI * bounce_frequency + bounce_phase)) * bounce_height
 	visual.rotation.x += delta * 4.0
+	if current_bounce > previous_bounce:
+		# abs(sin) touches the ground whenever this hop number increases.
+		_play_sound(BOUNCE_SOUNDS.pick_random(), -17.0)
 	_check_hits(previous, global_position)
 	if remaining_distance <= 0.0:
 		queue_free()
@@ -67,6 +79,7 @@ func _physics_process(delta: float) -> void:
 func _check_hits(previous: Vector3, current: Vector3) -> void:
 	if enemies == null:
 		return
+	var hit_any_enemy := false
 	for child in enemies.get_children():
 			var enemy := child as PlacementEnemy
 			if enemy == null or enemy.health <= 0.0 or enemy.reached_objective or hit_enemies.has(enemy.get_instance_id()):
@@ -80,3 +93,21 @@ func _check_hits(previous: Vector3, current: Vector3) -> void:
 				hit_enemies[enemy.get_instance_id()] = true
 				var multiplier := 1.0 - enemy.definition.armor_for(damage_type)
 				enemy.take_damage(damage * multiplier)
+				hit_any_enemy = true
+	if hit_any_enemy:
+		# One cue per swept step keeps a cluster of enemies from sounding too loud.
+		_play_sound(HIT_SOUND, -6.0)
+
+
+func _play_sound(stream: AudioStream, volume: float) -> void:
+	# The ball can despawn at the lane end. Put the short sound beside it so
+	# playback can finish after the visual has been freed.
+	var player := AudioStreamPlayer3D.new()
+	player.name = "GumballImpactSound"
+	player.stream = stream
+	player.bus = &"SFX"
+	player.volume_db = volume
+	get_parent().add_child(player)
+	player.global_position = global_position
+	player.finished.connect(player.queue_free)
+	player.play()

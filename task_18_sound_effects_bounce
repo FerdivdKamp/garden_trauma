@@ -1,0 +1,13 @@
+C:\GameDesign\Godot\test_01\sound_effects\towers
+
+has a folder bounce 
+and a folder bounce hit.
+
+they contain sound files. 
+
+Use the bounce file for isolating a few different bounces and apply them as sound effects for the bounces balls of the gumball tower. 
+
+Use the bounce_hit file on impact of the bouncing ball with an enemy. 
+
+Check the license files to tell me whether these can only be placeholder or kept, in which case name them placeholder_bounce etc in the game files, otherwise give them the prefix preliminary_ or something else that indicates they are not the definitive sounds.
+

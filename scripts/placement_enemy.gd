@@ -16,6 +16,11 @@ signal objective_reached(enemy: Node)
 @onready var robot: Node3D = $Visual/Robot
 @onready var destroyed_audio: AudioStreamPlayer3D = $DestroyedAudio
 @onready var objective_audio: AudioStreamPlayer3D = $ObjectiveAudio
+@onready var health_bar: Sprite3D = $HealthBar
+
+const BAR_WIDTH := 64
+const BAR_HEIGHT := 8
+const HIT_BAR_SECONDS := 1.0
 
 var arm_left: Node3D
 var arm_right: Node3D
@@ -32,6 +37,8 @@ var max_health := 50.0
 var health := 50.0
 var reached_objective := false
 var auto_cleanup := true
+var hovered := false
+var hit_bar_remaining := 0.0
 
 
 func _ready() -> void:
@@ -39,15 +46,20 @@ func _ready() -> void:
 	_bind_robot_pivots()
 	_update_visual_scale()
 	_update_color()
+	_update_health_bar()
 
 
 func _process(delta: float) -> void:
+	if hit_bar_remaining > 0.0:
+		hit_bar_remaining = maxf(0.0, hit_bar_remaining - delta)
+		_update_bar_visibility()
 	if health > 0.0 and not reached_objective:
 		_animate_robot(delta)
 		var route := get_parent() as Path3D
 		progress = minf(progress + movement_speed * delta, route.curve.get_baked_length())
 		if progress >= route.curve.get_baked_length():
 			reached_objective = true
+			_update_bar_visibility()
 			objective_audio.play()
 			objective_reached.emit(self)
 			_finish_after_sound(objective_audio)
@@ -63,19 +75,47 @@ func configure(type: int, unit: UnitDefinition, speed: float, size: float) -> vo
 	reached_objective = false
 	if is_node_ready():
 		_update_color()
+		_update_health_bar()
+		hit_bar_remaining = 0.0
+		_update_bar_visibility()
 	health_changed.emit()
 
 
 func take_damage(amount: float) -> void:
 	if health <= 0.0 or reached_objective:
 		return
+	var previous_health := health
 	health = TowerRules.health_after_hit(health, amount)
+	if health < previous_health:
+		hit_bar_remaining = HIT_BAR_SECONDS
 	if health <= 0.0:
 		destroyed_audio.play()
 		defeated.emit(self)
 		_finish_after_sound(destroyed_audio)
 	_update_color()
+	_update_health_bar()
 	health_changed.emit()
+
+
+func set_hovered(value: bool) -> void:
+	hovered = value
+	_update_bar_visibility()
+
+
+func _update_health_bar() -> void:
+	# The black pixels stay visible as health shrinks, showing the lost fraction.
+	var image := Image.create(BAR_WIDTH, BAR_HEIGHT, false, Image.FORMAT_RGBA8)
+	image.fill(Color("111111"))
+	var filled_width := roundi((BAR_WIDTH - 2) * clampf(health / max_health, 0.0, 1.0))
+	if filled_width > 0:
+		image.fill_rect(Rect2i(1, 1, filled_width, BAR_HEIGHT - 2), Color("df353b"))
+	health_bar.texture = ImageTexture.create_from_image(image)
+	_update_bar_visibility()
+
+
+func _update_bar_visibility() -> void:
+	if health_bar != null:
+		health_bar.visible = health > 0.0 and not reached_objective and (hovered or hit_bar_remaining > 0.0)
 
 
 func _update_color() -> void:

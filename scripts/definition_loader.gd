@@ -31,6 +31,8 @@ static func load_tower(path: String) -> TowerDefinition:
 	result.projectile_lifetime = data.attack.get("projectile_lifetime", 8.0)
 	result.bounce_height = data.attack.get("bounce_height", 0.5)
 	result.bounce_frequency = data.attack.get("bounce_frequency", 2.5)
+	result.lava_damage_per_second = data.attack.get("lava_damage_per_second", 4.0)
+	result.puddle_radius = data.attack.get("puddle_radius", 0.9)
 	result.damage_type = data.get("damage_type", "physical")
 	result.bonus_vs_tags = data.get("bonus_vs_tags", {}).duplicate()
 	result.targets = PackedStringArray(data.targeting.targets)
@@ -81,7 +83,8 @@ static func save_tower_override(definition: TowerDefinition, directory := TOWER_
 			"ball_count": definition.ball_count,
 			"homing_turn_speed": definition.homing_turn_speed,
 			"projectile_lifetime": definition.projectile_lifetime,
-			"bounce_height": definition.bounce_height, "bounce_frequency": definition.bounce_frequency},
+			"bounce_height": definition.bounce_height, "bounce_frequency": definition.bounce_frequency,
+			"lava_damage_per_second": definition.lava_damage_per_second, "puddle_radius": definition.puddle_radius},
 		"targeting": {"targets": Array(definition.targets), "priority": definition.priority},
 		"damage_type": definition.damage_type, "bonus_vs_tags": definition.bonus_vs_tags,
 		"tags": Array(definition.tags), "detection_range": definition.detection_range,
@@ -162,7 +165,7 @@ static func _valid_tower(data: Dictionary) -> bool:
 	if not _number(attack.get("projectile_speed"), 0.0, false, true):
 		return false
 	var firing_mode: String = data.get("firing_mode", "targeted")
-	if firing_mode not in ["targeted", "lane"]:
+	if firing_mode not in ["targeted", "lane", "tile"]:
 		return false
 	var lane_tower := firing_mode == "lane"
 	if lane_tower:
@@ -179,9 +182,16 @@ static func _valid_tower(data: Dictionary) -> bool:
 			return false
 	if attack.has("ball_count") and (not _number(attack.ball_count, 1.0, true) or attack.ball_count > 6):
 		return false
-	if not _string_array(targeting.get("targets"), ["ground", "air"]) or targeting.get("priority") not in ["first", "nearest", "last", "lane"]:
+	for key in ["lava_damage_per_second", "puddle_radius"]:
+		if attack.has(key) and not _number(attack[key], 0.0, false, key == "puddle_radius"):
+			return false
+	if firing_mode == "tile" and (not attack.has("lava_damage_per_second") or not attack.has("puddle_radius")):
+		return false
+	if not _string_array(targeting.get("targets"), ["ground", "air"]) or targeting.get("priority") not in ["first", "nearest", "last", "lane", "nearest_tile"]:
 		return false
 	if not lane_tower and targeting.get("priority") == "lane":
+		return false
+	if (firing_mode == "tile") != (targeting.get("priority") == "nearest_tile"):
 		return false
 	if data.has("damage_type") and data.damage_type not in DAMAGE_TYPES:
 		return false
@@ -209,7 +219,7 @@ static func _valid_tower(data: Dictionary) -> bool:
 				if key not in ["id", "name", "cost", "attack"]:
 					return false
 			for key in upgrade.attack:
-				if key not in ["damage", "cooldown", "range", "projectile_speed", "ball_count"]:
+				if key not in ["damage", "cooldown", "range", "projectile_speed", "ball_count", "lava_damage_per_second", "puddle_radius"]:
 					return false
 				if key == "ball_count":
 					if not _number(upgrade.attack[key], 1.0, true) or upgrade.attack[key] > 6:
