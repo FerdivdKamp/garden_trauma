@@ -4,6 +4,8 @@
 [ext_resource type="AudioStream" uid="uid://tktlv2jruf3i" path="res://assets/audio/sfx/enemies/enemy_destroyed_01.ogg" id="2_destroyed"]
 [ext_resource type="AudioStream" uid="uid://dmbud33pyvht3" path="res://assets/audio/sfx/enemies/enemy_objective_reached_01.ogg" id="3_objective"]
 [ext_resource type="PackedScene" uid="uid://cvgjjy87fwwve" path="res://assets/models/units/robot.glb" id="4_robot"]
+[ext_resource type="PackedScene" path="res://scenes/toy_tank_visual.tscn" id="5_tank"]
+[ext_resource type="PackedScene" path="res://scenes/formula_car_visual.tscn" id="6_car"]
 
 [sub_resource type="SphereMesh" id="SphereMesh_enemy"]
 
@@ -19,6 +21,12 @@ mesh = SubResource("SphereMesh_enemy")
 
 [node name="Robot" parent="Visual" unique_id=390864510 instance=ExtResource("4_robot")]
 transform = Transform3D(-1.3113416e-07, 0, -3, 0, 3, 0, 3, 0, -1.3113416e-07, 0, 0, 0)
+
+[node name="Tank" parent="Visual" instance=ExtResource("5_tank")]
+visible = false
+
+[node name="FormulaCar" parent="Visual" instance=ExtResource("6_car")]
+visible = false
 
 [node name="HealthBar" type="Sprite3D" parent="."]
 visible = false

@@ -16,6 +16,8 @@ const TileGrid = preload("res://scripts/level_grid.gd")
 const GrassPaletteScript = preload("res://scripts/grass_palette.gd")
 const GrassMaterialConfigScript = preload("res://scripts/grass_material_config.gd")
 const TOWER_IDS := ["laser_tower", "double_tank", "lightning_tower", "water_rocket", "gumball", "lava_lamp"]
+const UNIT_IDS := ["windup_robot", "blue_sphere", "toy_tank", "formula_car"]
+const UNIT_SCALES := [1.0, 1.3, 1.0, 1.0]
 const GUMBALL_INDEX := 4
 const LAVA_INDEX := 5
 const TOWER_RADIUS := TowerVisual.FOOTPRINT_RADIUS
@@ -94,7 +96,9 @@ func _ready() -> void:
 	# Load once; scene nodes use typed definitions instead of JSON dictionaries.
 	tower_definitions = DefinitionLoader.load_towers(DefinitionLoader.TOWER_OVERRIDE_DIR)
 	unit_definitions = DefinitionLoader.load_units()
-	assert(tower_definitions.has("laser_tower") and tower_definitions.has("double_tank") and tower_definitions.has("lightning_tower") and tower_definitions.has("water_rocket") and tower_definitions.has("gumball") and tower_definitions.has("lava_lamp") and unit_definitions.has("windup_robot") and unit_definitions.has("blue_sphere"))
+	assert(tower_definitions.has("laser_tower") and tower_definitions.has("double_tank") and tower_definitions.has("lightning_tower") and tower_definitions.has("water_rocket") and tower_definitions.has("gumball") and tower_definitions.has("lava_lamp"))
+	for unit_id in UNIT_IDS:
+		assert(unit_definitions.has(unit_id))
 	robot_speed = (unit_definitions["windup_robot"] as UnitDefinition).speed
 	blue_speed = (unit_definitions["blue_sphere"] as UnitDefinition).speed
 	objective_health = starting_objective_health
@@ -323,13 +327,18 @@ func place_tower(point: Vector3) -> void:
 func spawn_enemy(type: int = -1, from_wave: bool = false) -> PlacementEnemy:
 	if type < 0:
 		type = enemy_selector.selected if enemy_selector != null else 0
+	if type >= UNIT_IDS.size():
+		push_error("Unknown enemy type: %d" % type)
+		return null
 	var enemy := ENEMY_SCENE.instantiate() as PlacementEnemy
-	var unit := unit_definitions["windup_robot" if type == 0 else "blue_sphere"] as UnitDefinition
+	var unit := unit_definitions[UNIT_IDS[type]] as UnitDefinition
 	enemy_count += 1
 	enemy.name = "Enemy%d" % enemy_count
 	enemy.auto_cleanup = from_wave
 	enemy.set_meta("wave_enemy", from_wave)
-	enemy.configure(type, unit, robot_speed if type == 0 else blue_speed, robot_scale if type == 0 else blue_scale)
+	var speed := robot_speed if type == 0 else blue_speed if type == 1 else unit.speed
+	var size: float = robot_scale if type == 0 else blue_scale if type == 1 else UNIT_SCALES[type]
+	enemy.configure(type, unit, speed, size)
 	path.add_child(enemy)
 	enemy.health_changed.connect(_update_enemy_health)
 	enemy.defeated.connect(_on_enemy_defeated)
@@ -352,8 +361,8 @@ func reset_enemies() -> void:
 
 
 func _on_wave_spawn_requested(enemy_id: String) -> void:
-	var type := 0 if enemy_id == "windup_robot" else 1
-	if enemy_id != "windup_robot" and enemy_id != "blue_sphere":
+	var type := UNIT_IDS.find(enemy_id)
+	if type < 0:
 		push_error("Unknown wave enemy: " + enemy_id)
 		waves.enemy_resolved()
 		return
@@ -684,6 +693,8 @@ func _build_enemy_ui(column: VBoxContainer) -> void:
 	enemy_selector = OptionButton.new()
 	enemy_selector.add_item("Wind-up Robot")
 	enemy_selector.add_item("Blue sphere")
+	enemy_selector.add_item("Toy Tank")
+	enemy_selector.add_item("Formula Car")
 	column.add_child(enemy_selector)
 	var spawn_button := Button.new()
 	spawn_button.text = "Spawn selected enemy"

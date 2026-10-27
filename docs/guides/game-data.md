@@ -14,7 +14,16 @@ Each tower currently defines exactly three upgrades. Their order in the `upgrade
 
 The tower demo can save a full definition to `user://tower_definitions/<id>.json`. At startup, that user file overrides the packaged definition with the same ID. To change version-controlled defaults, edit `data/towers/` instead. Existing saved overrides may hide changes to those defaults during local testing.
 
-Run the definition and upgrade checks after changing JSON:
+The enemy roster also includes a slow Toy Tank and a fast Formula Car. Their health, base speed, reward, armor, and tags live in `data/units/`. Both use simple editable visual scenes. The tank pivots its hull before continuing around a bend; the car accelerates on straights and brakes as a corner approaches. Garden 2 introduces them in its later waves. In the placement scene's debug controls, select either vehicle and press **Spawn selected enemy** to inspect its movement without playing through the waves.
+
+Run the definition and vehicle checks after changing unit data or movement:
+
+```powershell
+godot --headless --path . --script res://tests/test_definitions.gd
+godot --headless --path . --script res://tests/test_vehicle_units.gd
+```
+
+Run the definition and upgrade checks after changing tower JSON:
 
 ```powershell
 godot --headless --path . --script res://tests/test_definitions.gd

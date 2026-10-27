@@ -1,0 +1,10 @@
+{
+  "$schema": "../schemas/unit.schema.json",
+  "id": "formula_car",
+  "name": "Formula Car",
+  "health": 30,
+  "speed": 5.5,
+  "reward": 12,
+  "armor": { "physical": 0.0 },
+  "tags": ["ground", "mechanical"]
+}
