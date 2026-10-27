@@ -1,8 +1,8 @@
 {
   "waves": [
-    {"enemy_id": "windup_robot", "count": 6, "spawn_interval": 1.4, "break_seconds": 5.0},
-    {"enemy_id": "windup_robot", "count": 8, "spawn_interval": 1.1, "break_seconds": 0.0},
-    {"enemy_id": "windup_robot", "count": 10, "spawn_interval": 1.0, "break_seconds": 0.0},
-    {"enemy_id": "windup_robot", "count": 12, "spawn_interval": 1.0, "break_seconds": 0.0}
+	{"enemy_id": "windup_robot", "count": 6, "spawn_interval": 1.4, "break_seconds": 5.0},
+	{"enemy_id": "windup_robot", "count": 8, "spawn_interval": 1.1, "break_seconds": 0.0},
+	{"enemy_id": "windup_robot", "count": 10, "spawn_interval": 1.0, "break_seconds": 0.0},
+	{"enemy_id": "windup_robot", "count": 12, "spawn_interval": 1.0, "break_seconds": 0.0}
   ]
 }
