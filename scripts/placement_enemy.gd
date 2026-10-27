@@ -14,6 +14,8 @@ signal objective_reached(enemy: Node)
 @onready var visual: Node3D = $Visual
 @onready var sphere: MeshInstance3D = $Visual/Sphere
 @onready var robot: Node3D = $Visual/Robot
+@onready var tank: Node3D = $Visual/Tank
+@onready var formula_car: Node3D = $Visual/FormulaCar
 @onready var destroyed_audio: AudioStreamPlayer3D = $DestroyedAudio
 @onready var objective_audio: AudioStreamPlayer3D = $ObjectiveAudio
 @onready var health_bar: Sprite3D = $HealthBar
@@ -39,11 +41,22 @@ var reached_objective := false
 var auto_cleanup := true
 var hovered := false
 var hit_bar_remaining := 0.0
+var current_speed := 0.0
+
+const TANK_TURN_SPEED := 1.8 # Radians per second while the hull pivots.
+const TANK_MOVE_ANGLE := 0.2
+const CAR_CORNER_SPEED := 2.0
+const CAR_ACCELERATION := 4.0
+const CAR_BRAKING := 9.0
 
 
 func _ready() -> void:
 	# Only the mesh is scaled: movement speed remains world units per second.
 	_bind_robot_pivots()
+	if enemy_type >= 2:
+		# Vehicle bodies steer themselves; PathFollow still supplies the position.
+		rotation_mode = PathFollow3D.ROTATION_NONE
+		visual.rotation.y = _route_heading()
 	_update_visual_scale()
 	_update_color()
 	_update_health_bar()
@@ -56,7 +69,21 @@ func _process(delta: float) -> void:
 	if health > 0.0 and not reached_objective:
 		_animate_robot(delta)
 		var route := get_parent() as Path3D
-		progress = minf(progress + movement_speed * delta, route.curve.get_baked_length())
+		var step_speed := movement_speed
+		if enemy_type == 2:
+			var heading := _route_heading()
+			visual.rotation.y = rotate_toward(visual.rotation.y, heading, TANK_TURN_SPEED * delta)
+			# Pause at a bend until the hull has faced the next segment.
+			if absf(wrapf(heading - visual.rotation.y, -PI, PI)) > TANK_MOVE_ANGLE:
+				step_speed = 0.0
+		elif enemy_type == 3:
+			var corner := _upcoming_bend_angle()
+			var target_speed := CAR_CORNER_SPEED if corner > 0.35 else movement_speed
+			var acceleration := CAR_BRAKING if target_speed < current_speed else CAR_ACCELERATION
+			current_speed = move_toward(current_speed, target_speed, acceleration * delta)
+			step_speed = current_speed
+			visual.rotation.y = _route_heading()
+		progress = minf(progress + step_speed * delta, route.curve.get_baked_length())
 		if progress >= route.curve.get_baked_length():
 			reached_objective = true
 			_update_bar_visibility()
@@ -69,11 +96,15 @@ func configure(type: int, unit: UnitDefinition, speed: float, size: float) -> vo
 	enemy_type = type
 	definition = unit
 	movement_speed = speed
+	current_speed = CAR_CORNER_SPEED if type == 3 else speed
 	visual_scale = size
 	max_health = unit.health
 	health = max_health
 	reached_objective = false
 	if is_node_ready():
+		rotation_mode = PathFollow3D.ROTATION_NONE if type >= 2 else PathFollow3D.ROTATION_XYZ
+		if type >= 2:
+			visual.rotation.y = _route_heading()
 		_update_color()
 		_update_health_bar()
 		hit_bar_remaining = 0.0
@@ -120,7 +151,9 @@ func _update_bar_visibility() -> void:
 
 func _update_color() -> void:
 	robot.visible = enemy_type == 0
-	sphere.visible = enemy_type != 0
+	sphere.visible = enemy_type == 1
+	tank.visible = enemy_type == 2
+	formula_car.visible = enemy_type == 3
 	var material := StandardMaterial3D.new()
 	material.albedo_color = Color("555555") if health <= 0.0 else Color("619de8")
 	sphere.material_override = material
@@ -156,6 +189,30 @@ func _animate_robot(delta: float) -> void:
 	head.rotation.z = sin(animation_time * 3.0) * 0.05
 	antenna.rotation.z = sin(animation_time * 11.0) * 0.11
 	key.rotation.x += delta * 4.0
+
+
+func _route_heading() -> float:
+	var route := get_parent() as Path3D
+	if route == null or route.curve == null:
+		return 0.0
+	var curve := route.curve
+	var start := curve.sample_baked(minf(progress, curve.get_baked_length()))
+	var finish := curve.sample_baked(minf(progress + 0.25, curve.get_baked_length()))
+	var direction := finish - start
+	if direction.length_squared() < 0.0001:
+		return visual.rotation.y
+	# The placeholder models face local -Z.
+	return atan2(-direction.x, -direction.z)
+
+
+func _upcoming_bend_angle() -> float:
+	var curve := (get_parent() as Path3D).curve
+	var length := curve.get_baked_length()
+	var near := curve.sample_baked(minf(progress + 0.1, length)) - curve.sample_baked(progress)
+	var far := curve.sample_baked(minf(progress + 1.8, length)) - curve.sample_baked(minf(progress + 1.5, length))
+	if near.length_squared() < 0.0001 or far.length_squared() < 0.0001:
+		return 0.0
+	return near.angle_to(far)
 
 
 func _finish_after_sound(audio: AudioStreamPlayer3D) -> void:

@@ -8,13 +8,19 @@ var failures := 0
 func _initialize() -> void:
 	var towers := DefinitionLoader.load_towers()
 	var units := DefinitionLoader.load_units()
-	_check(towers.size() == 6 and units.size() == 2, "Each JSON file loads once")
+	_check(towers.size() == 6 and units.size() == 4, "Each JSON file loads once")
 	var tower := towers.get("laser_tower") as TowerDefinition
 	var double_tower := towers.get("double_tank") as TowerDefinition
 	var lightning_tower := towers.get("lightning_tower") as TowerDefinition
 	var water_rocket := towers.get("water_rocket") as TowerDefinition
 	var lava_lamp := towers.get("lava_lamp") as TowerDefinition
 	var red := units.get("windup_robot") as UnitDefinition
+	var tank := units.get("toy_tank") as UnitDefinition
+	var car := units.get("formula_car") as UnitDefinition
+	_check(tank != null and car != null, "Vehicle definitions load")
+	if tank != null and car != null:
+		_check(tank.health > red.health and tank.speed < red.speed, "Tank is durable and slow")
+		_check(car.health < red.health and car.speed > red.speed, "Car is fragile and fast")
 	_check(tower != null and double_tower != null and lightning_tower != null and water_rocket != null and lava_lamp != null and red != null, "Loader returns typed resources")
 	if lava_lamp != null:
 		_check(lava_lamp.firing_mode == "tile" and lava_lamp.lava_damage_per_second == 4.0 and lava_lamp.puddle_radius == 0.9, "Lava field settings load from JSON")

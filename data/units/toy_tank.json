@@ -1,0 +1,10 @@
+{
+  "$schema": "../schemas/unit.schema.json",
+  "id": "toy_tank",
+  "name": "Toy Tank",
+  "health": 220,
+  "speed": 1.5,
+  "reward": 30,
+  "armor": { "physical": 0.25 },
+  "tags": ["ground", "mechanical"]
+}

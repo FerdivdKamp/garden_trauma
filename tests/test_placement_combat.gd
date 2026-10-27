@@ -21,7 +21,7 @@ func _run() -> void:
 	var red := path.get_node("Enemy1") as PlacementEnemy
 	_check(red != null and red.enemy_type == 0, "Scene starts with a wind-up robot")
 	_check(red.robot.visible and not red.sphere.visible, "Robot uses the imported GLB")
-	_check(red.robot.scale.is_equal_approx(Vector3.ONE * 4.0), "Robot model is four times the imported size")
+	_check(red.robot.scale.is_equal_approx(Vector3.ONE * 3.0), "Robot model uses the scene's imported scale")
 	red.progress = 1.0
 	var path_forward := -red.global_transform.basis.z
 	var eye_forward := red.robot.global_transform.basis * Vector3.LEFT
@@ -49,6 +49,12 @@ func _run() -> void:
 	demo._set_enemy_value(1.6, "blue_scale")
 	_check(is_equal_approx(blue.movement_speed, 5.0) and is_equal_approx(blue.visual.scale.x, 1.6), "Speed and visual scale update existing enemy")
 	_check(is_equal_approx(red.movement_speed, 4.0), "Blue settings do not change red speed")
+	var tank := demo.spawn_enemy(2) as PlacementEnemy
+	var car := demo.spawn_enemy(3) as PlacementEnemy
+	_check(tank.definition.id == "toy_tank" and tank.tank.visible and tank.health == 220.0, "Tank spawns through the battle scene")
+	_check(car.definition.id == "formula_car" and car.formula_car.visible and car.health == 30.0, "Car spawns through the battle scene")
+	tank.progress = path.curve.get_baked_length()
+	car.progress = path.curve.get_baked_length()
 
 	demo._select_tower(0)
 	demo.place_tower(Vector3(-10, 0, -1))

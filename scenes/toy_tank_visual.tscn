@@ -1,0 +1,56 @@
+[gd_scene load_steps=8 format=3]
+
+[sub_resource type="StandardMaterial3D" id="body"]
+albedo_color = Color(0.35, 0.48, 0.27, 1)
+
+[sub_resource type="StandardMaterial3D" id="dark"]
+albedo_color = Color(0.13, 0.16, 0.14, 1)
+
+[sub_resource type="BoxMesh" id="hull"]
+size = Vector3(1.35, 0.45, 1.75)
+
+[sub_resource type="BoxMesh" id="turret"]
+size = Vector3(0.78, 0.3, 0.8)
+
+[sub_resource type="CylinderMesh" id="barrel"]
+top_radius = 0.09
+bottom_radius = 0.09
+height = 0.9
+
+[sub_resource type="BoxMesh" id="side"]
+size = Vector3(0.24, 0.3, 1.8)
+
+[sub_resource type="BoxMesh" id="hatch"]
+size = Vector3(0.38, 0.08, 0.38)
+
+[node name="ToyTank" type="Node3D"]
+
+[node name="Hull" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.48, 0)
+mesh = SubResource("hull")
+material_override = SubResource("body")
+
+[node name="Turret" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.84, -0.1)
+mesh = SubResource("turret")
+material_override = SubResource("body")
+
+[node name="Barrel" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0.84, -0.86)
+mesh = SubResource("barrel")
+material_override = SubResource("dark")
+
+[node name="Hatch" type="MeshInstance3D" parent="."]
+position = Vector3(0, 1.03, 0.05)
+mesh = SubResource("hatch")
+material_override = SubResource("dark")
+
+[node name="LeftSide" type="MeshInstance3D" parent="."]
+position = Vector3(-0.72, 0.34, 0)
+mesh = SubResource("side")
+material_override = SubResource("dark")
+
+[node name="RightSide" type="MeshInstance3D" parent="."]
+position = Vector3(0.72, 0.34, 0)
+mesh = SubResource("side")
+material_override = SubResource("dark")

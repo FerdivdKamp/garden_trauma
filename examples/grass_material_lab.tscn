@@ -1,25 +1,25 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://brod6xrjx0ie"]
 
-[ext_resource type="Script" path="res://examples/grass_material_lab.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://b08aoxt54ftpr" path="res://examples/grass_material_lab.gd" id="1_script"]
 [ext_resource type="Environment" path="res://scenes/garden_environment.tres" id="2_environment"]
 
-[node name="GrassMaterialLab" type="Node3D"]
+[node name="GrassMaterialLab" type="Node3D" unique_id=1007694547]
 script = ExtResource("1_script")
 
-[node name="Tiles" type="Node3D" parent="."]
+[node name="Tiles" type="Node3D" parent="." unique_id=1300075529]
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=902782453]
 environment = ExtResource("2_environment")
 
-[node name="Sun" type="DirectionalLight3D" parent="."]
-rotation_degrees = Vector3(-55, -35, 0)
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1198346011]
+transform = Transform3D(0.81915206, 0.46984634, -0.32898995, 0, 0.57357645, 0.81915206, 0.57357645, -0.6710101, 0.46984634, 0, 0, 0)
 shadow_enabled = true
 shadow_blur = 1.5
 
-[node name="Camera" type="Camera3D" parent="."]
-position = Vector3(2, 18, 14)
+[node name="Camera" type="Camera3D" parent="." unique_id=231306861]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 18, 14)
 projection = 1
-size = 22.0
 current = true
+size = 22.0
 
-[node name="Controls" type="CanvasLayer" parent="."]
+[node name="Controls" type="CanvasLayer" parent="." unique_id=596071455]
