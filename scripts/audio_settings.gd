@@ -1,6 +1,7 @@
 extends Node
 
 const SETTINGS_PATH := "user://settings.cfg"
+var save_path := SETTINGS_PATH
 
 var music_enabled := true
 var music_volume := 80.0
@@ -29,8 +30,10 @@ func apply() -> void:
 	_set_bus("SFX", sfx_enabled, sfx_volume)
 
 
-func save(path: String = SETTINGS_PATH) -> void:
+func save(path: String = "") -> void:
 	apply()
+	if path == "":
+		path = save_path
 	var config := ConfigFile.new()
 	config.set_value("audio", "music_enabled", music_enabled)
 	config.set_value("audio", "music_volume", music_volume)

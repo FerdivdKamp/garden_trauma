@@ -41,7 +41,7 @@ func _run() -> void:
 	_check(garden.upgrade_panel.visible and garden.upgrade_details.text.contains("Water Rocket"), "Water rocket opens the existing upgrade UI")
 	attack.shot_clock = 0.0
 	attack._process(attack.definition.cooldown + 0.1)
-	var desired_yaw: float = TowerRules.target_yaw(enemy.global_position - tower.get_yaw_pivot().global_position)
+	var desired_yaw: float = TowerRules.target_yaw(enemy.get_aim_position() - tower.get_yaw_pivot().global_position)
 	_check(absf(angle_difference(tower.get_yaw_pivot().rotation.y, desired_yaw)) < deg_to_rad(5.0), "Pump and launcher turn toward the enemy")
 	_check(is_equal_approx(enemy.health, enemy.max_health), "Pump begins before damage")
 	await create_timer(0.20).timeout
@@ -61,7 +61,7 @@ func _run() -> void:
 	await create_timer(0.40).timeout
 	_check(tower.water_model.loaded_rocket.visible and is_equal_approx(tower.water_model.accordion.scale.y, 1.0), "Bellows and rocket reset")
 	var definition := attack.definition as TowerDefinition
-	var hit_point: Vector3 = enemy.visual.global_position
+	var hit_point: Vector3 = enemy.get_aim_position()
 	var start := hit_point + Vector3(0, 0.8, 4.0)
 	var rocket := garden.shot_effects.fire_water_rocket(start, enemy, definition, Vector3(0, 1, -0.35)) as WaterRocketProjectile
 	rocket.set_physics_process(false)

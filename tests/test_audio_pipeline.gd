@@ -58,6 +58,9 @@ func _run() -> void:
 	_check(menu.get_node("Center/Menu").visible, "Back returns to menu")
 	var music_instance_id := music.get_instance_id()
 	menu.get_node("Center/Menu/Start").pressed.emit()
+	_check(menu.get_node("Center/PlayerPanel").visible, "Start opens player selection")
+	# Player selection itself is tested with isolated saves in test_players.gd.
+	change_scene_to_file("res://scenes/level_select.tscn")
 	await process_frame
 	await process_frame
 	_check(current_scene != null and current_scene.scene_file_path == "res://scenes/level_select.tscn", "Start loads level selection")
@@ -72,6 +75,24 @@ func _run() -> void:
 	garden.waves._process(0.0)
 	var enemy := garden.get_node("PlacementPath/Enemy1")
 	_check(enemy.get_node("DestroyedAudio") is AudioStreamPlayer3D and enemy.get_node("ObjectiveAudio").bus == "SFX", "Enemy cues use positional SFX")
+	var objective_voice = garden.get_node("ObjectiveVoice")
+	_check(objective_voice.bus == "SFX", "Objective voice uses the SFX bus")
+	var test_voice := AudioStreamWAV.new()
+	test_voice.mix_rate = 44100
+	test_voice.data = PackedByteArray([0, 0, 0, 0])
+	objective_voice.voice_clips.clear()
+	objective_voice.voice_clips.append(test_voice)
+	var health_before: int = garden.objective_health
+	enemy.objective_reached.emit(enemy)
+	var cooldown: int = objective_voice.next_play_msec
+	_check(cooldown > Time.get_ticks_msec(), "Objective signal starts the voice cooldown")
+	objective_voice.stop()
+	enemy.objective_reached.emit(enemy)
+	_check(objective_voice.next_play_msec == cooldown and not objective_voice.playing, "A second objective signal during cooldown does not replay the voice")
+	_check(garden.objective_health == health_before - 2, "Voice cooldown does not suppress objective damage")
+	objective_voice.next_play_msec = 0
+	enemy.objective_reached.emit(enemy)
+	_check(objective_voice.next_play_msec > 0, "A later objective signal can play again")
 	var tower_scene := load("res://scenes/tower_visual.tscn") as PackedScene
 	var streams: Array[AudioStream] = []
 	for tower_type in 4:

@@ -8,6 +8,35 @@ python tools/asset_pipeline.py export art/blender/environment/garden/tiles/tile_
 
 Use `validate` in place of `export` to inspect a source without writing output. `python tools/asset_pipeline.py gui` opens the desktop interface. If Blender is not on `PATH`, pass `--blender-exe` with its installed executable path.
 
+## Tower and unit inventory and batch export
+
+`tools/model_exports.json` lists each tower and unit definition, its likely Blender source, and its export collections. It is an artist-facing inventory, separate from the gameplay definitions in `data/` and from the generated `*.materials.json` files. The mappings record what is known today, not proof of a model's provenance.
+
+From the project root:
+
+```powershell
+python tools/export_models.py list
+python tools/export_models.py export --blender-exe "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe"
+python tools/export_models.py export --kind unit --id windup_robot --blender-exe "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe"
+
+python tools/export_models.py export --kind tower --blender-exe "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe"
+```
+
+`list` writes nothing. `export` runs each **active** entry through the existing Blender exporter, reports each result, continues after failures, and exits with an error if any export failed. It currently exports four laser variants from `laser_tower2.blend`, the robot from `robot.blend`, and the car from `race_car.blend`. Check the laser source before using the batch: the older `laser_tower.blend` can produce the same output names and would replace those four GLBs. A failed export leaves its previous GLB in place. Review the results, then open Godot so it imports changed GLBs; explicitly reimport them in the editor if needed. This script exports GLBs; it does not run Godot or verify that gameplay uses a newly added node.
+
+**Candidate** entries identify plausible Blender work that is not used by the current game visual. **Placeholder** entries have no known source. Both are listed and skipped by export, including when selected explicitly. The gumball has several possible Blender files; `gumball2.blend` is only a candidate. Confirm the intended file and wire its GLB into the appropriate Godot scene before making an entry active. To add an active mapping, set its source and add one or more export objects: `{}` uses the default filename and collection; `{"collection": "...", "output_name": "..."}` exports a named collection. IDs should match the corresponding definition files. Update this inventory when models are added or replaced.
+
+The robot and car each contain a Blender Empty named `AimPoint`, imported as a `Node3D`. `placement_enemy.gd` provides its world position to the laser, shell, lightning and homing rocket attacks; its transform follows the model as it moves, rotates, or scales. Sphere and tank placeholders fall back to their visual origin. After editing a point, re-export the model and inspect it in Godot. The batch script does not yet validate the point.
+
+### Outside this inventory
+
+- **Grass and path tiles, and garden borders:** environment assets rather than towers or units. Borders also use three named exports from one Blender file, and their materials require the Godot post-import script.
+- **Flowers, grass tufts, and pebbles:** garden dressing with a separate placement workflow; they are not combat models.
+- **Fence and rocks:** border props with special preparation or baking steps. A generic batch export could bypass those steps.
+- **Other assets and backup/experimental Blender files:** not established tower or unit sources. Avoid guessing their output mappings.
+
+These assets can be added later after their source-to-output mappings and special steps are recorded explicitly. Until then, use their existing individual workflows below and in [Level dressing](level-dressing.md) and [Garden border assets](garden-border-assets.md).
+
 For supported procedural materials, the export manifest records shader settings. Set the GLB's Godot **Import Script** to `res://tools/godot_material_post_import.gd`; the script reads the manifest and rebuilds supported materials with `shaders/procedural_noise_color_ramp.gdshader`. Existing path and grass tile imports have this setting. Re-export after changing a `.blend`, then open Godot or reimport the GLB. Unsupported Blender node graphs keep the GLB material and may render differently.
 
 Sand path tile tops use world-space procedural noise. Grass tile tops use a shared color field from `assets/textures/environment/garden/grass_color_noise.png`, sampled in world space so the pattern continues across neighboring tiles, including rotated variants. The grass shader also blends top normals toward vertical to soften the lighting facets from the mesh bumps. `tools/godot_material_post_import.gd` sets the grass color strength and normal blend for all three grass GLBs; reimport those GLBs after changing these settings.
@@ -108,7 +137,7 @@ python tools/asset_pipeline.py export art/blender/units/robot.blend --blender-ex
 
 The eyes point along the model's local `-X` axis. The enemy scene rotates only the imported Robot node 90 degrees around Y so its eyes align with `PathFollow3D`'s local `-Z` forward direction, and scales that node to four times the imported size. The arms and legs swing around their local `Z` axes, which run sideways through their pivots. Keep the scene rotation when re-exporting the current Blender source; if a future source faces local `-Z`, remove the scene rotation.
 
-The second enemy still uses the blue sphere placeholder. The robot and sphere share the same `Visual` parent so the existing visual scale control works for both.
+The second enemy still uses the blue sphere placeholder. The robot, car and other enemy visuals share the same `Visual` parent so the existing visual scale control works for each. The car points along Blender +Y, which exports as Godot -Z, and its current dimensions fit the path without additional scene scaling.
 
 ## Garden grass mesh variants
 

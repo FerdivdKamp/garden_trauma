@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Voice clip review</title>
+<style>body{font:16px system-ui;max-width:950px;margin:2rem auto;padding:0 1rem;color:#25302a}article{border:1px solid #ccd5cc;border-radius:8px;padding:1rem;margin:1rem 0}label{display:inline-block;margin:.4rem}input,select,button{font:inherit;padding:.35rem}input{width:17rem}input[type=number]{width:6rem}input.seek{display:block;width:100%;height:2rem;margin:.5rem 0;cursor:pointer}audio{display:block;width:100%}small{display:block;overflow-wrap:anywhere}button{cursor:pointer}</style></head>
+<body><h1>Voice clip review</h1><p>Listen, correct each suggestion, and save it. Export afterwards from the command line.</p><main id="clips"></main>
+<script>
+const speakers=['attacker','defender'];
+const categories=['objective_reached','attacker_victory','attacker_defeat','defender_victory','defender_defeat','tower_attack','enemy_destroyed','wave_start','other','unidentified'];
+function field(card,label,name,value,options){const wrap=document.createElement('label');wrap.append(label+' ');const input=document.createElement(options?'select':'input');input.name=name;if(options) for(const option of options){const el=document.createElement('option');el.value=option;el.textContent=option;input.append(el)}input.value=value;wrap.append(input);card.append(wrap)}
+async function init(){
+  const response=await fetch('/manifest');
+  const data=await response.json();
+  const main=document.querySelector('#clips');
+  if(!data.clips.length) main.textContent='No clips yet. Run analyze first.';
+  for(const [index,clip] of data.clips.entries()){
+    const card=document.createElement('article');
+    const title=document.createElement('small');
+    title.textContent=`Clip ${index+1} · ${clip.source} · ${clip.start}–${clip.end}s · confidence ${clip.confidence}`;
+    card.append(title);
+    const audio=document.createElement('audio');
+    audio.controls=true; audio.preload='metadata'; audio.src='/audio/'+encodeURIComponent(clip.id); card.append(audio);
+    const seek=document.createElement('input'); seek.type='range'; seek.className='seek'; seek.min=0; seek.max=1; seek.step=0.01; seek.value=0; seek.setAttribute('aria-label','Seek through clip');
+    const clock=document.createElement('small'); clock.textContent='0.00 / … seconds';
+    audio.addEventListener('loadedmetadata',()=>{if(Number.isFinite(audio.duration)) seek.max=audio.duration;});
+    audio.addEventListener('timeupdate',()=>{seek.value=audio.currentTime;clock.textContent=`${audio.currentTime.toFixed(2)} / ${Number.isFinite(audio.duration)?audio.duration.toFixed(2):'…'} seconds`;});
+    seek.addEventListener('input',()=>{audio.currentTime=Number(seek.value);clock.textContent=`${audio.currentTime.toFixed(2)} / ${Number.isFinite(audio.duration)?audio.duration.toFixed(2):'…'} seconds`;});
+    card.append(seek,clock);
+    field(card,'Transcription','transcription',clip.transcription);
+    field(card,'Speaker','speaker',clip.speaker,speakers);
+    field(card,'Category','category',clip.category,categories);
+    field(card,'Filename base','filename',clip.filename);
+    field(card,'Decision','review_status',clip.review_status==='reviewed'?'needs_review':clip.review_status,['needs_review','accepted','rejected']);
+    const button=document.createElement('button'); button.textContent='Save decision';
+    const message=document.createElement('span');
+    button.onclick=async()=>{
+      const edit={id:clip.id};
+      for(const input of card.querySelectorAll('input[name],select[name]')) edit[input.name]=input.value;
+      try {const result=await fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(edit)});message.textContent=result.ok?' Saved':' Save failed';}
+      catch {message.textContent=' Save failed: server unavailable';}
+    };
+    card.append(button,message);
+    const split=document.createElement('p');
+    const detectControls=document.createElement('p');
+    const dbLabel=document.createElement('label'); dbLabel.textContent='Silence threshold (dB) ';
+    const db=document.createElement('input'); db.type='number'; db.min=-100; db.max=0; db.step=1; db.value=-40; dbLabel.append(db);
+    const pauseLabel=document.createElement('label'); pauseLabel.textContent='Minimum pause (seconds) ';
+    const pause=document.createElement('input'); pause.type='number'; pause.min=0.05; pause.max=10; pause.step=0.05; pause.value=0.3; pauseLabel.append(pause);
+    const detectButton=document.createElement('button'); detectButton.textContent='Suggest cuts';
+    const detectMessage=document.createElement('span');
+    detectControls.append(dbLabel,pauseLabel,detectButton,detectMessage); card.append(detectControls);
+    split.textContent='Split at playback seconds (comma-separated): ';
+    const times=document.createElement('input'); times.placeholder='e.g. 1.5, 3.2'; split.append(times);
+    detectButton.onclick=async()=>{
+      detectButton.disabled=true; detectMessage.textContent=' Detecting…';
+      try {
+        const result=await fetch('/detect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:clip.id,threshold:db.value,pause:pause.value})});
+        if(!result.ok) {detectMessage.textContent=' Detection failed. Check values and FFmpeg.';return;}
+        const proposal=await result.json(); times.value=proposal.cuts.join(', ');
+        detectMessage.textContent=proposal.cuts.length?` ${proposal.cuts.length} cuts suggested; check them before splitting.`:' No cuts found; adjust the settings.';
+      } catch {detectMessage.textContent=' Detection failed: server unavailable.';}
+      finally {detectButton.disabled=false;}
+    };
+    const mark=document.createElement('button'); mark.textContent='Add current time';
+    mark.onclick=()=>{const value=audio.currentTime.toFixed(2);times.value+=(times.value.trim()?', ':'')+value;}; split.append(mark);
+    const splitButton=document.createElement('button'); splitButton.textContent='Split clip';
+    const splitMessage=document.createElement('span');
+    splitButton.onclick=async()=>{
+      const values=times.value.split(',').map(v=>v.trim());
+      if(values.some(v=>!v || !Number.isFinite(Number(v)))) {splitMessage.textContent=' Enter valid times.';return;}
+      splitButton.disabled=true;
+      try {
+        const result=await fetch('/split',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:clip.id,times:values.map(Number)})});
+        if(result.ok) location.reload(); else {splitMessage.textContent=' Split failed. Check times are in order and within the clip.';splitButton.disabled=false;}
+      } catch {splitMessage.textContent=' Split failed: server unavailable.';splitButton.disabled=false;}
+    };
+    split.append(splitButton,splitMessage);card.append(split);main.append(card);
+    const next=data.clips[index+1];
+    if(next && clip.source_id===next.source_id && Math.abs(clip.end-next.start)<=0.005){
+      const mergeArea=document.createElement('div');
+      mergeArea.style.cssText='padding:.75rem;border:2px solid #66856d;border-radius:8px;background:#edf5ef';
+      const description=document.createElement('span');
+      description.textContent=`Merge clip ${index+1} above (${clip.start}–${clip.end}s) with clip ${index+2} below (${next.start}–${next.end}s): `;
+      const mergeButton=document.createElement('button'); mergeButton.textContent='Merge these two clips';
+      const mergeMessage=document.createElement('span');
+      mergeButton.onclick=async()=>{
+        if(!confirm(`Merge clip ${index+1} (${clip.start}–${clip.end}s) with clip ${index+2} (${next.start}–${next.end}s)? The merged clip will need review. Save other edits first; the page will reload.`)) return;
+        mergeButton.disabled=true;mergeMessage.textContent=' Merging…';
+        try{
+          const result=await fetch('/merge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:clip.id,next_id:next.id})});
+          if(result.ok) location.reload(); else {mergeMessage.textContent=' Merge failed; check the server output.';mergeButton.disabled=false;}
+        }catch{mergeMessage.textContent=' Merge failed: server unavailable.';mergeButton.disabled=false;}
+      };
+      mergeArea.append(description,mergeButton,mergeMessage); main.append(mergeArea);
+    }
+  }
+}
+if (location.protocol === 'file:') {
+  document.querySelector('#clips').textContent = 'This page needs the review server. In PowerShell, run: python tools/voice_processor/process_voices.py review — then open http://127.0.0.1:8765/ in your browser. Keep PowerShell open while reviewing.';
+} else {
+  init().catch(() => document.querySelector('#clips').textContent = 'Could not connect to the review server. Check that the review command is still running, then reload this page.');
+}
+</script></body></html>

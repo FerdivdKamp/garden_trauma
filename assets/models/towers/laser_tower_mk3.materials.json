@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "asset": "laser_tower2",
+  "asset": "laser_tower4",
   "materials": [
     {
       "name": "BallJoint",
@@ -35,22 +35,6 @@
       }
     },
     {
-      "name": "Barrel",
-      "classification": "directly_exportable",
-      "type": "basic_principled",
-      "principled": {
-        "base_color": [
-          0.8796226382255554,
-          0.7912982106208801,
-          0.6104958653450012,
-          1.0
-        ],
-        "metallic": 0.0,
-        "roughness": 0.30000001192092896,
-        "alpha": 1.0
-      }
-    },
-    {
       "name": "BarrelAccents",
       "classification": "directly_exportable",
       "type": "basic_principled",
@@ -67,6 +51,22 @@
       }
     },
     {
+      "name": "Barrel_plastic_white",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.8796226382255554,
+          0.7912982106208801,
+          0.6104958653450012,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.30000001192092896,
+        "alpha": 1.0
+      }
+    },
+    {
       "name": "BaseLower",
       "classification": "directly_exportable",
       "type": "basic_principled",
@@ -78,12 +78,12 @@
           1.0
         ],
         "metallic": 0.0,
-        "roughness": 0.5,
+        "roughness": 0.4000000059604645,
         "alpha": 1.0
       }
     },
     {
-      "name": "GunBase",
+      "name": "Gun_Base",
       "classification": "directly_exportable",
       "type": "basic_principled",
       "principled": {
@@ -99,23 +99,7 @@
       }
     },
     {
-      "name": "Material.003",
-      "classification": "directly_exportable",
-      "type": "basic_principled",
-      "principled": {
-        "base_color": [
-          0.02219332382082939,
-          0.07036656141281128,
-          0.18590469658374786,
-          1.0
-        ],
-        "metallic": 0.0,
-        "roughness": 0.5,
-        "alpha": 1.0
-      }
-    },
-    {
-      "name": "UpgradeBands",
+      "name": "Material.001",
       "classification": "directly_exportable",
       "type": "basic_principled",
       "principled": {

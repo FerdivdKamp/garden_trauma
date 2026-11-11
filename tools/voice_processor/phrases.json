@@ -1,0 +1,7 @@
+[
+  {"phrase": "that's in", "category": "objective_reached", "speaker": "attacker"},
+  {"phrase": "get in there", "category": "objective_reached", "speaker": "attacker"},
+  {"phrase": "I'll get you next time", "category": "defender_defeat", "speaker": "defender"},
+  {"phrase": "enemy destroyed", "category": "enemy_destroyed", "speaker": "defender"},
+  {"phrase": "wave incoming", "category": "wave_start"}
+]
