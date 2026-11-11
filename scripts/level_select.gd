@@ -4,6 +4,8 @@ extends Control
 
 
 func _ready() -> void:
+	if LevelProgress.active_player_name != "":
+		$Center/Panel/Content/Title.text = "SELECT A GARDEN — " + LevelProgress.active_player_name
 	for level in LevelProgress.LEVELS:
 		var id: String = level.id
 		var button := Button.new()

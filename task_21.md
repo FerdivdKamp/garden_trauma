@@ -10,7 +10,7 @@ Check if I'm correct first, then fix it.
 
   duplicate level 1 and make it the test level on top of the level selection.
 
-  we'll hide it later. The towers in test.blend are all unlocked and cost 1 credit, same for upgrades. 
+  We'll hide it later. The towers in teh test level are all unlocked and cost 1 credit, same for upgrades. 
 
 
 # part 1

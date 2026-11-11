@@ -20,13 +20,16 @@ func _run() -> void:
 	root.add_child(menu)
 	current_scene = menu
 	menu.get_node("Center/Menu/Start").pressed.emit()
+	_check(menu.get_node("Center/PlayerPanel").visible, "Start opens player selection")
+	# Player creation and selection have their own isolated save test.
+	change_scene_to_file("res://scenes/level_select.tscn")
 	await process_frame
 	await process_frame
 	_check(current_scene.scene_file_path == "res://scenes/level_select.tscn", "Start opens level selection")
 	var selection := current_scene
 	var level_buttons := selection.get_node("Center/Panel/Content/Levels")
-	_check(not level_buttons.get_child(0).disabled and level_buttons.get_child(1).disabled, "Selection shows the unlock rule")
-	level_buttons.get_child(0).pressed.emit()
+	_check(not level_buttons.get_child(0).disabled and not level_buttons.get_child(1).disabled and level_buttons.get_child(2).disabled, "Test and first garden are available, while Garden 2 is locked")
+	level_buttons.get_child(1).pressed.emit()
 	await process_frame
 	await process_frame
 	var garden := current_scene
@@ -45,7 +48,7 @@ func _run() -> void:
 	var second := current_scene
 	_check(second.level_id == "garden_test_02" and second.grid.level_file == "res://levels/data/garden_test_02.json", "Next level loads its own map")
 	_check(second.grid.error_message == "" and second.grid.route.size() > first_route_size, "Second map has a valid, distinct route")
-	_check(second.waves.schedule_file == "res://levels/waves/garden_test_02.json" and second.waves.waves.size() == 3, "Second level loads its own waves")
+	_check(second.waves.schedule_file == "res://levels/waves/garden_test_02.json" and second.waves.waves.size() == 4, "Second level loads its own waves")
 	second.objective_health = 1
 	second.waves.start_next_wave()
 	second.waves._process(0.0)
@@ -67,13 +70,16 @@ func _run() -> void:
 		if wave_index < second.waves.waves.size() - 1:
 			second.waves._process(100.0)
 	_check(second.battle_result == "victory" and progress.is_completed("garden_test_02"), "Clearing Garden 2 saves its completion")
-	_check(second.result_action_button.text == "Level selection", "Final victory offers level selection")
-	second.result_action_button.pressed.emit()
+	_check(second.result_action_button.text == "Next level", "Garden 2 victory offers Garden 3")
+	second._return_to_menu()
 	await process_frame
 	await process_frame
-	_check(current_scene.scene_file_path == "res://scenes/level_select.tscn", "Final victory returns to selection")
+	change_scene_to_file("res://scenes/level_select.tscn")
+	await process_frame
+	await process_frame
+	_check(current_scene.scene_file_path == "res://scenes/level_select.tscn", "Menu returns to selection")
 	level_buttons = current_scene.get_node("Center/Panel/Content/Levels")
-	_check(level_buttons.get_child(0).text.contains("Completed") and level_buttons.get_child(1).text.contains("Completed"), "Selection shows completed levels")
+	_check(level_buttons.get_child(1).text.contains("Completed") and level_buttons.get_child(2).text.contains("Completed"), "Selection shows completed levels")
 	progress.completed_ids.clear()
 	progress.load_progress()
 	_check(progress.is_completed("garden_test_01") and progress.is_completed("garden_test_02"), "Both completions survive a reload")

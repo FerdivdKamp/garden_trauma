@@ -113,6 +113,10 @@ custom_minimum_size = Vector2(220, 42)
 layout_mode = 2
 text = "Resume"
 
+[node name="Options" type="Button" parent="UI/PauseOverlay/Center/Panel/Actions"]
+layout_mode = 2
+text = "Options"
+
 [node name="Restart" type="Button" parent="UI/PauseOverlay/Center/Panel/Actions" unique_id=268497111]
 layout_mode = 2
 text = "Restart level"
@@ -120,6 +124,60 @@ text = "Restart level"
 [node name="MainMenu" type="Button" parent="UI/PauseOverlay/Center/Panel/Actions" unique_id=1312692330]
 layout_mode = 2
 text = "Main menu"
+
+[node name="Settings" type="VBoxContainer" parent="UI/PauseOverlay/Center/Panel"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Heading" type="Label" parent="UI/PauseOverlay/Center/Panel/Settings"]
+layout_mode = 2
+theme_type_variation = &"SectionHeading"
+text = "Options"
+
+[node name="MusicHeading" type="Label" parent="UI/PauseOverlay/Center/Panel/Settings"]
+layout_mode = 2
+text = "Music"
+
+[node name="MusicEnabled" type="CheckBox" parent="UI/PauseOverlay/Center/Panel/Settings"]
+layout_mode = 2
+text = "Enabled"
+
+[node name="MusicVolumeLabel" type="Label" parent="UI/PauseOverlay/Center/Panel/Settings"]
+layout_mode = 2
+text = "Volume"
+
+[node name="MusicVolume" type="HSlider" parent="UI/PauseOverlay/Center/Panel/Settings"]
+custom_minimum_size = Vector2(260, 24)
+layout_mode = 2
+max_value = 100.0
+step = 1.0
+
+[node name="SfxHeading" type="Label" parent="UI/PauseOverlay/Center/Panel/Settings"]
+layout_mode = 2
+text = "Sound Effects"
+
+[node name="SfxEnabled" type="CheckBox" parent="UI/PauseOverlay/Center/Panel/Settings"]
+layout_mode = 2
+text = "Enabled"
+
+[node name="SfxVolumeLabel" type="Label" parent="UI/PauseOverlay/Center/Panel/Settings"]
+layout_mode = 2
+text = "Volume"
+
+[node name="SfxVolume" type="HSlider" parent="UI/PauseOverlay/Center/Panel/Settings"]
+layout_mode = 2
+max_value = 100.0
+step = 1.0
+
+[node name="HintsEnabled" type="CheckBox" parent="UI/PauseOverlay/Center/Panel/Settings"]
+layout_mode = 2
+text = "Show in-game hints"
+
+[node name="Back" type="Button" parent="UI/PauseOverlay/Center/Panel/Settings"]
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "Back"
 
 [node name="ResultOverlay" type="Control" parent="UI" unique_id=574480293]
 visible = false

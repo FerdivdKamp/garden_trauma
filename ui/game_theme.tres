@@ -198,6 +198,8 @@ corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
+[sub_resource type="StyleBoxEmpty" id="CheckBoxBackground"]
+
 [resource]
 default_font_size = 19
 Button/colors/font_color = Color(0.94902, 0.93725, 0.89412, 1)
@@ -218,6 +220,11 @@ CheckBox/colors/font_hover_color = Color(1, 1, 0.96, 1)
 CheckBox/colors/font_pressed_color = Color(0.94902, 0.93725, 0.89412, 1)
 CheckBox/font_sizes/font_size = 19
 CheckBox/styles/focus = SubResource("ButtonFocus")
+CheckBox/styles/normal = SubResource("CheckBoxBackground")
+CheckBox/styles/hover = SubResource("CheckBoxBackground")
+CheckBox/styles/pressed = SubResource("CheckBoxBackground")
+CheckBox/styles/hover_pressed = SubResource("CheckBoxBackground")
+CheckBox/styles/disabled = SubResource("CheckBoxBackground")
 DangerButton/base_type = &"Button"
 DangerButton/styles/disabled = SubResource("ButtonDisabled")
 DangerButton/styles/focus = SubResource("ButtonFocus")

@@ -14,6 +14,8 @@ The Lava Lamp uses `firing_mode: "tile"` and `targeting.priority: "nearest_tile"
 
 Each tower currently defines exactly three upgrades. Their order in the `upgrades` array is the purchase order. Each has an ID, name, cost, and an `attack` object containing explicit replacement values. Only fields named in that object change. The current UI lets the player buy the next upgrade of a placed tower when affordable.
 
+`LevelProgress` derives tower unlocks from completed campaign levels: the laser is initially available and Garden 1 rewards the lightning tower. `TOWER_REWARDS` in `scripts/level_progress.gd` is the current small list of level-based rewards; completing a level is saved, so old completion saves also unlock its reward. Tower Test and the scene's debug mode allow every tower. Tower Test changes costs only in its loaded definitions, leaving packaged and saved tower data untouched.
+
 The tower demo can save a full definition to `user://tower_definitions/<id>.json`. At startup, that user file overrides the packaged definition with the same ID. To change version-controlled defaults, edit `data/towers/` instead. Existing saved overrides may hide changes to those defaults during local testing.
 
 The enemy roster also includes a slow Toy Tank and a fast Formula Car. Their health, base speed, reward, armor, and tags live in `data/units/`. The tank uses a procedural visual; the car uses `race_car.glb` exported from Blender. The tank pivots its hull before continuing around a bend; the car accelerates on straights and brakes as a corner approaches. Garden 2 introduces them in its later waves. In the placement scene's debug controls, select either vehicle and press **Spawn selected enemy** to inspect its movement without playing through the waves.

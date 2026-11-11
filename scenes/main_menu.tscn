@@ -61,6 +61,52 @@ text = "Quit"
 visible = false
 layout_mode = 2
 
+[node name="PlayerPanel" type="PanelContainer" parent="Center"]
+visible = false
+layout_mode = 2
+
+[node name="Contents" type="VBoxContainer" parent="Center/PlayerPanel"]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Heading" type="Label" parent="Center/PlayerPanel/Contents"]
+layout_mode = 2
+theme_type_variation = &"SectionHeading"
+text = "Choose a player"
+horizontal_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="Center/PlayerPanel/Contents"]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Players" type="VBoxContainer" parent="Center/PlayerPanel/Contents/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Name" type="LineEdit" parent="Center/PlayerPanel/Contents"]
+layout_mode = 2
+placeholder_text = "New player name"
+max_length = 32
+
+[node name="Create" type="Button" parent="Center/PlayerPanel/Contents"]
+layout_mode = 2
+text = "Start new game"
+
+[node name="Import" type="Button" parent="Center/PlayerPanel/Contents"]
+layout_mode = 2
+text = "Import previous game"
+
+[node name="Message" type="Label" parent="Center/PlayerPanel/Contents"]
+layout_mode = 2
+autowrap_mode = 2
+
+[node name="Back" type="Button" parent="Center/PlayerPanel/Contents"]
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "Back"
+
 [node name="Settings" type="VBoxContainer" parent="Center/OptionsPanel"]
 layout_mode = 2
 theme_override_constants/separation = 12

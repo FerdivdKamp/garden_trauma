@@ -20,7 +20,7 @@ func _run() -> void:
 	root.add_child(garden)
 	current_scene = garden
 	await process_frame
-	_check(garden.waves.waves.size() == 3 and garden.waves.current_wave == -1, "Three waves wait for player input")
+	_check(garden.waves.waves.size() == 5 and garden.waves.current_wave == -1, "Five waves wait for player input")
 	_check(garden.path.get_child_count() == 1 and garden.enemy_selector == null, "Normal play starts without manual enemies or debug controls")
 	_check(garden.objective_health == 10 and garden.currency == 240, "Level starts with health and coins")
 
@@ -28,8 +28,9 @@ func _run() -> void:
 	var tower_cost: int = garden.tower_definitions["laser_tower"].cost
 	garden.place_tower(Vector3(-10, 0, -1))
 	_check(garden.placed_towers.get_child_count() == 1 and garden.currency == 240 - tower_cost, "Tower purchase deducts its cost")
-	garden._select_tower(2)
-	garden.currency = (garden.tower_definitions["lightning_tower"] as TowerDefinition).cost - 1
+	garden.placed_towers.get_child(0).get_node("Attack").set_process(false)
+	garden._select_tower(0)
+	garden.currency = tower_cost - 1
 	var before_unaffordable: int = garden.currency
 	garden.place_tower(Vector3(-8, 0, -1))
 	_check(garden.placed_towers.get_child_count() == 1 and garden.currency == before_unaffordable, "Unaffordable tower cannot be placed")
@@ -57,6 +58,7 @@ func _run() -> void:
 		for child in garden.path.get_children():
 			var enemy := child as PlacementEnemy
 			if enemy != null and enemy.health > 0.0:
+				enemy.movement_speed = 0.0
 				live.append(enemy)
 		_check(live.size() == int(garden.waves.waves[wave_index].count), "Wave %d has the scheduled enemy count" % [wave_index + 1])
 		var first := live[0]
@@ -74,8 +76,9 @@ func _run() -> void:
 			live[index].take_damage(1000.0)
 		_check(garden.waves.active_enemies == 0, "Wave %d resolves all enemies" % [wave_index + 1])
 		if wave_index < garden.waves.waves.size() - 1:
-			_check(garden.waves.state == WaveController.State.INTERMISSION and garden.next_wave_button.disabled, "Break follows wave %d" % [wave_index + 1])
-			garden.waves._process(100.0)
+			if float(garden.waves.waves[wave_index].break_seconds) > 0.0:
+				_check(garden.waves.state == WaveController.State.INTERMISSION and garden.next_wave_button.disabled, "Break follows wave %d" % [wave_index + 1])
+				garden.waves._process(100.0)
 			_check(garden.waves.state == WaveController.State.READY and not garden.next_wave_button.disabled, "Next wave becomes available")
 	_check(garden.battle_result == "victory" and garden.result_overlay.visible, "Final wave produces victory")
 	_check(not garden.waves.start_next_wave(), "Victory prevents further waves")

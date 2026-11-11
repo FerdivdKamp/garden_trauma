@@ -95,6 +95,12 @@ func _ready() -> void:
 		GrassMaterialConfigScript.apply_lighting($Sun, $WorldEnvironment, GrassMaterialConfigScript.load_settings())
 	# Load once; scene nodes use typed definitions instead of JSON dictionaries.
 	tower_definitions = DefinitionLoader.load_towers(DefinitionLoader.TOWER_OVERRIDE_DIR)
+	if LevelProgress.level_for(level_id).get("test", false):
+		# These are battle-local definitions, not saved edits to the tower JSON.
+		for definition in tower_definitions.values():
+			definition.cost = 1
+			for upgrade in definition.upgrades:
+				upgrade.cost = 1
 	unit_definitions = DefinitionLoader.load_units()
 	assert(tower_definitions.has("laser_tower") and tower_definitions.has("double_tank") and tower_definitions.has("lightning_tower") and tower_definitions.has("water_rocket") and tower_definitions.has("gumball") and tower_definitions.has("lava_lamp"))
 	for unit_id in UNIT_IDS:
@@ -114,6 +120,9 @@ func _ready() -> void:
 	waves.state_changed.connect(_refresh_hud)
 	waves.all_waves_cleared.connect(func() -> void: _finish_battle("victory"))
 	$UI/PauseOverlay/Center/Panel/Actions/Resume.pressed.connect(_resume_battle)
+	$UI/PauseOverlay/Center/Panel/Actions/Options.pressed.connect(_show_pause_options)
+	$UI/PauseOverlay/Center/Panel/Settings/Back.pressed.connect(_hide_pause_options)
+	_setup_pause_options()
 	$UI/PauseOverlay/Center/Panel/Actions/Restart.pressed.connect(_restart_level)
 	$UI/PauseOverlay/Center/Panel/Actions/MainMenu.pressed.connect(_return_to_menu)
 	$UI/ResultOverlay/Center/Panel/Actions/Restart.pressed.connect(_restart_level)
@@ -396,7 +405,13 @@ func _resolve_wave_enemy(enemy: Node) -> void:
 func _can_afford_selected() -> bool:
 	if selected_type < 0:
 		return false
-	return currency >= (tower_definitions[TOWER_IDS[selected_type]] as TowerDefinition).cost
+	return _tower_available(selected_type) and currency >= (tower_definitions[TOWER_IDS[selected_type]] as TowerDefinition).cost
+
+
+func _tower_available(tower_type: int) -> bool:
+	if tower_type < 0 or tower_type >= TOWER_IDS.size():
+		return false
+	return debug_mode or LevelProgress.level_for(level_id).get("test", false) or LevelProgress.is_tower_unlocked(TOWER_IDS[tower_type])
 
 
 func _set_enemy_value(value: float, key: String) -> void:
@@ -425,6 +440,8 @@ func _update_enemy_health() -> void:
 
 func _select_tower(tower_type: int) -> void:
 	if battle_result != "":
+		return
+	if tower_type >= 0 and not _tower_available(tower_type):
 		return
 	_select_placed_tower(null)
 	selected_type = tower_type
@@ -589,6 +606,8 @@ func _build_ui() -> void:
 		var definition := tower_definitions[TOWER_IDS[index]] as TowerDefinition
 		tile.custom_minimum_size = Vector2(68, 66)
 		tile.tooltip_text = "%s — %d coins" % [definition.name, definition.cost]
+		if not _tower_available(index):
+			tile.tooltip_text = "%s — Locked" % definition.name
 		if index == LAVA_INDEX:
 			tile.tooltip_text += "\nCovers an occupied path tile with lava until the wave ends."
 		tile.icon = _make_tower_thumbnail(index)
@@ -598,15 +617,17 @@ func _build_ui() -> void:
 		row.add_child(tile)
 		tower_buttons.append(tile)
 	status = Label.new()
+	status.visible = AudioSettings.hints_enabled
 	status.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	column.add_child(status)
 	_build_upgrade_ui()
 	var hud := VBoxContainer.new()
 	hud.add_theme_constant_override("separation", 4)
 	enemy_panel.add_child(hud)
 	_build_battle_ui(hud)
 	help_panel = PanelContainer.new()
+	# Its contents can change while the scene tree is paused in Options.
+	help_panel.process_mode = Node.PROCESS_MODE_ALWAYS
 	help_panel.visible = AudioSettings.hints_enabled
 	$UI.add_child(help_panel)
 	$UI.move_child(help_panel, pause_overlay.get_index())
@@ -614,6 +635,7 @@ func _build_ui() -> void:
 	help_panel.position = Vector2(12, 12)
 	var help_column := VBoxContainer.new()
 	help_panel.add_child(help_column)
+	help_column.add_child(status)
 	var help := Label.new()
 	help.text = "Select a tower tile, then click grass to build.\nClick a placed tower to upgrade. Right-click or Esc cancels.\nEnemies reaching FINISH reduce garden life."
 	help.add_theme_font_size_override("font_size", 15)
@@ -747,13 +769,14 @@ func _refresh_hud() -> void:
 			next_wave_button.text = "Waves complete"
 	for index in tower_buttons.size():
 		var definition := tower_definitions[TOWER_IDS[index]] as TowerDefinition
-		tower_buttons[index].disabled = battle_result != "" or currency < definition.cost
+		tower_buttons[index].disabled = battle_result != "" or not _tower_available(index) or currency < definition.cost
 	_refresh_upgrade_ui()
 
 
 func _pause_battle() -> void:
 	if battle_result != "":
 		return
+	_hide_pause_options()
 	pause_overlay.show()
 	get_tree().paused = true
 
@@ -761,6 +784,40 @@ func _pause_battle() -> void:
 func _resume_battle() -> void:
 	get_tree().paused = false
 	pause_overlay.hide()
+
+
+func _setup_pause_options() -> void:
+	var settings := $UI/PauseOverlay/Center/Panel/Settings
+	settings.get_node("MusicEnabled").toggled.connect(func(value: bool) -> void: _save_pause_setting("music_enabled", value))
+	settings.get_node("MusicVolume").value_changed.connect(func(value: float) -> void: _save_pause_setting("music_volume", value))
+	settings.get_node("SfxEnabled").toggled.connect(func(value: bool) -> void: _save_pause_setting("sfx_enabled", value))
+	settings.get_node("SfxVolume").value_changed.connect(func(value: float) -> void: _save_pause_setting("sfx_volume", value))
+	settings.get_node("HintsEnabled").toggled.connect(func(value: bool) -> void: _save_pause_setting("hints_enabled", value))
+
+
+func _show_pause_options() -> void:
+	var settings := $UI/PauseOverlay/Center/Panel/Settings
+	# set_*_no_signal avoids saving settings just because the panel was opened.
+	settings.get_node("MusicEnabled").set_pressed_no_signal(AudioSettings.music_enabled)
+	settings.get_node("MusicVolume").set_value_no_signal(AudioSettings.music_volume)
+	settings.get_node("SfxEnabled").set_pressed_no_signal(AudioSettings.sfx_enabled)
+	settings.get_node("SfxVolume").set_value_no_signal(AudioSettings.sfx_volume)
+	settings.get_node("HintsEnabled").set_pressed_no_signal(AudioSettings.hints_enabled)
+	$UI/PauseOverlay/Center/Panel/Actions.hide()
+	settings.show()
+
+
+func _hide_pause_options() -> void:
+	$UI/PauseOverlay/Center/Panel/Settings.hide()
+	$UI/PauseOverlay/Center/Panel/Actions.show()
+
+
+func _save_pause_setting(property: String, value: Variant) -> void:
+	AudioSettings.set(property, value)
+	AudioSettings.save()
+	if property == "hints_enabled":
+		help_panel.visible = value
+		status.visible = value
 
 
 func _restart_level() -> void:
@@ -785,7 +842,11 @@ func _finish_battle(result: String) -> void:
 	if battle_result != "":
 		return
 	battle_result = result
+	var unlocked_tower := ""
 	if result == "victory":
+		var reward: String = LevelProgress.TOWER_REWARDS.get(level_id, "")
+		if reward != "" and not LevelProgress.is_tower_unlocked(reward):
+			unlocked_tower = (tower_definitions[reward] as TowerDefinition).name
 		LevelProgress.complete_level(level_id)
 	waves.stop()
 	for tower in placed_towers.get_children():
@@ -794,6 +855,8 @@ func _finish_battle(result: String) -> void:
 		if child is PlacementEnemy:
 			child.set_process(false)
 	$UI/ResultOverlay/Center/Panel/Actions/Title.text = "Garden defended!" if result == "victory" else "Garden overrun"
+	if unlocked_tower != "":
+		$UI/ResultOverlay/Center/Panel/Actions/Title.text += "\nUnlocked: " + unlocked_tower
 	var next_id := LevelProgress.next_level_id(level_id)
 	result_action_button.text = "Next level" if result == "victory" and next_id != "" else "Level selection"
 	result_overlay.show()

@@ -58,6 +58,9 @@ func _run() -> void:
 	_check(menu.get_node("Center/Menu").visible, "Back returns to menu")
 	var music_instance_id := music.get_instance_id()
 	menu.get_node("Center/Menu/Start").pressed.emit()
+	_check(menu.get_node("Center/PlayerPanel").visible, "Start opens player selection")
+	# Player selection itself is tested with isolated saves in test_players.gd.
+	change_scene_to_file("res://scenes/level_select.tscn")
 	await process_frame
 	await process_frame
 	_check(current_scene != null and current_scene.scene_file_path == "res://scenes/level_select.tscn", "Start loads level selection")
