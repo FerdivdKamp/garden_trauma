@@ -11,3 +11,5 @@ __pycache__/
 !*.blend
 
 sound/raw/*.*
+/voice_work/
+/.venv-voices/

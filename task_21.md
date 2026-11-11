@@ -25,3 +25,13 @@ Check if I'm correct first, then fix it.
 level one should be: 
 3 waves of robots and a final round of race cars, which on first try the race cars will come through. But winning the level will grant you a new tower that is better against faster units than the laser tower.
 
+# Headless test warnings
+
+Investigate and clean up warnings observed when running Godot's headless checks:
+
+- Godot could not create or rotate its `user://logs/godot.log` file in the restricted test environment. Check whether this also occurs in a normal Godot session and provide a writable test log location if needed.
+- Godot could not read the Windows root certificate store. Check whether this is specific to the restricted environment and whether any network features are affected.
+- Some tests report leaked `ObjectDB` instances and resources still in use at shutdown. Identify the remaining test-owned scenes and resources and clean them up.
+
+The checks reported passing despite these messages; their causes still need verification.
+

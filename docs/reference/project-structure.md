@@ -14,6 +14,7 @@
 | `assets/models/` | Exported models and material manifests used by Godot. |
 | `assets/audio/` | Music, effects, and bus layout. See [audio sources](audio-sources.md). |
 | `tools/` | Blender export pipeline, Godot material import script, and balance report. |
+| `tools/voice_processor/` | Local recording segmentation, transcription, review, and voice asset export; see its README. |
 | `tests/` | Focused Godot and Python checks. |
 
 `scripts/level_progress.gd` lists the playable level IDs and links each to its map and waves. Add a new level there after creating its files. Entries marked `test` are available separately and do not advance the campaign; `TOWER_REWARDS` maps campaign completions to tower unlocks. [Build a tile level](../guides/build-tile-level.md) explains the map format.

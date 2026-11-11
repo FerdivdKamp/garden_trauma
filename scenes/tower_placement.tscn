@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://d160nplr1mnud" path="res://scripts/wave_controller.gd" id="5_waves"]
 [ext_resource type="Theme" uid="uid://dam468t37xtqy" path="res://ui/game_theme.tres" id="6_theme"]
 [ext_resource type="Environment" path="res://scenes/garden_environment.tres" id="7_environment"]
+[ext_resource type="Script" path="res://scripts/objective_voice.gd" id="8_objective_voice"]
 
 [node name="TowerPlacement" type="Node3D" unique_id=1227784002]
 script = ExtResource("1_placement")
@@ -26,6 +27,10 @@ script = ExtResource("5_waves")
 
 [node name="ShotEffects" type="Node3D" parent="." unique_id=2054604004]
 script = ExtResource("3_effects")
+
+[node name="ObjectiveVoice" type="AudioStreamPlayer" parent="."]
+bus = &"SFX"
+script = ExtResource("8_objective_voice")
 
 [node name="Preview" type="Node3D" parent="." unique_id=1866902016]
 

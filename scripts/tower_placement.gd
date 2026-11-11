@@ -28,6 +28,7 @@ const TOWER_RADIUS := TowerVisual.FOOTPRINT_RADIUS
 @onready var placed_towers: Node3D = $PlacedTowers
 @onready var waves: WaveController = $Waves
 @onready var shot_effects: ShotEffects = $ShotEffects
+@onready var objective_voice: AudioStreamPlayer = $ObjectiveVoice
 @onready var preview_holder: Node3D = $Preview
 @onready var palette: PanelContainer = $UI/Palette
 @onready var enemy_panel: PanelContainer = $UI/EnemyPanel
@@ -389,6 +390,7 @@ func _on_enemy_defeated(enemy: Node) -> void:
 func _on_enemy_objective_reached(enemy: Node) -> void:
 	if battle_result != "":
 		return
+	objective_voice.play_objective_reached()
 	objective_health = maxi(0, objective_health - 1)
 	if objective_health == 0:
 		_finish_battle("defeat")
