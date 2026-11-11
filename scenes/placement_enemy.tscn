@@ -5,7 +5,7 @@
 [ext_resource type="AudioStream" uid="uid://dmbud33pyvht3" path="res://assets/audio/sfx/enemies/enemy_objective_reached_01.ogg" id="3_objective"]
 [ext_resource type="PackedScene" uid="uid://cvgjjy87fwwve" path="res://assets/models/units/robot.glb" id="4_robot"]
 [ext_resource type="PackedScene" path="res://scenes/toy_tank_visual.tscn" id="5_tank"]
-[ext_resource type="PackedScene" path="res://scenes/formula_car_visual.tscn" id="6_car"]
+[ext_resource type="PackedScene" path="res://assets/models/units/race_car.glb" id="6_car"]
 
 [sub_resource type="SphereMesh" id="SphereMesh_enemy"]
 

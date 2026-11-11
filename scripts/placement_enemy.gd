@@ -163,6 +163,17 @@ func _update_visual_scale() -> void:
 	visual.scale = Vector3.ONE * visual_scale
 
 
+func get_aim_position() -> Vector3:
+	# Each imported model owns its target point, so it follows model transforms.
+	# The sphere and tank placeholders retain the previous visual-origin target.
+	var model: Node3D = robot if enemy_type == 0 else formula_car if enemy_type == 3 else null
+	if model != null:
+		var aim_point := model.find_child("AimPoint", true, false) as Node3D
+		if aim_point != null:
+			return aim_point.global_position
+	return visual.global_position
+
+
 func _bind_robot_pivots() -> void:
 	# Blender empties become Node3D pivots in the imported GLB. Look them up
 	# inside the model so these references survive a later Blender re-export.

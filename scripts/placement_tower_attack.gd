@@ -67,16 +67,16 @@ func _process(delta: float) -> void:
 	shot_clock += delta
 	if target == null:
 		return
-	var direction := target.global_position - pivot.global_position
+	var hit_position := target.get_aim_position()
+	var direction := hit_position - pivot.global_position
 	var desired_yaw := TowerRules.target_yaw(direction)
 	pivot.rotation.y = TowerRules.step_yaw(pivot.rotation.y, desired_yaw, deg_to_rad(definition.turn_speed), delta)
 	var aimed := absf(angle_difference(pivot.rotation.y, desired_yaw)) < deg_to_rad(5.0)
 	if tower.tower_type == 0:
-		aimed = tower.aim_pitch_at(target.visual.global_position, definition.turn_speed, delta) and aimed
+		aimed = tower.aim_pitch_at(hit_position, definition.turn_speed, delta) and aimed
 	if shot_clock >= definition.cooldown and aimed and TowerRules.can_attack(target_distance, definition.attack_range, definition.detection_range):
 		shot_clock = 0.0
 		# Capture world positions now. Shell visuals can finish after the target has moved.
-		var hit_position := target.visual.global_position
 		var muzzle_position: Vector3 = tower.get_muzzle_position(next_barrel)
 		if tower.tower_type == 3:
 			# The cooldown starts now; the tween launches after the bellows compress.

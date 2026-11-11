@@ -1,0 +1,36 @@
+{
+  "description": "Tower and unit visual inventory. Only active exports are run; candidates require review.",
+  "models": [
+    {
+      "kind": "tower", "id": "laser_tower", "status": "active",
+      "source": "art/blender/towers/laser_tower4.blend",
+      "note": "Workflow guide identifies this as the source used for the current visual test; laser_tower.blend is an alternative, not an additional export.",
+      "exports": [
+        {"collection": "tower_laser_mk1", "output_name": "laser_tower"},
+        {"collection": "tower_laser_mk2", "output_name": "laser_tower_mk2"},
+        {"collection": "tower_laser_mk3", "output_name": "laser_tower_mk3"},
+        {"collection": "tower_laser_mk4", "output_name": "laser_tower_mk4"}
+      ]
+    },
+    {"kind": "tower", "id": "double_tank", "status": "placeholder", "source": null, 
+      "note": "Godot procedural visual; no known Blender source.", "exports": []},
+    {"kind": "tower", "id": "lightning_tower", "status": "placeholder", "source": null, 
+      "note": "Godot procedural visual; no known Blender source.", "exports": []},
+    {"kind": "tower", "id": "water_rocket", "status": "placeholder", "source": null, 
+      "note": "Godot procedural visual; no known Blender source.", "exports": []},
+    {"kind": "tower", "id": "gumball", "status": "candidate", "source": "art/blender/towers/gumball2.blend", 
+    "note": "Possible source; gumball.blend and gumball1.blend also exist. Current visual is procedural; confirm which source to use.", "exports": []},
+    {"kind": "tower", "id": "lava_lamp", "status": "candidate", "source": "art/blender/towers/lava_lamp.blend", 
+    "note": "Possible source; current visual is procedural and this file is not wired into the game.", "exports": []},
+   
+   
+    {"kind": "unit", "id": "windup_robot", "status": "active", "source": "art/blender/units/robot.blend", 
+    "note": "Used by scenes/placement_enemy.tscn.", "exports": [{}]},
+    {"kind": "unit", "id": "blue_sphere", "status": "placeholder", "source": null, 
+    "note": "Godot sphere mesh; no known Blender source.", "exports": []},
+    {"kind": "unit", "id": "toy_tank", "status": "placeholder", "source": null, 
+    "note": "Godot procedural visual; no known Blender source.", "exports": []},
+    {"kind": "unit", "id": "formula_car", "status": "active", "source": "art/blender/units/race_car.blend", 
+      "note": "Used by scenes/placement_enemy.tscn.", "exports": [{}]}
+  ]
+}

@@ -21,7 +21,7 @@ func _run() -> void:
 	var tank := _add_enemy(route, 2, "toy_tank")
 	var car := _add_enemy(route, 3, "formula_car")
 	_check(tank.tank.visible and not tank.robot.visible and not tank.sphere.visible, "Tank has its own placeholder model")
-	_check(car.formula_car.visible and not car.robot.visible and not car.sphere.visible, "Car has its own placeholder model")
+	_check(car.formula_car.visible and not car.robot.visible and not car.sphere.visible, "Car has its own imported model")
 	_check(tank.health == 220.0 and car.health == 30.0, "Vehicle health comes from data")
 
 	# A tank turns its hull at the corner before continuing down the next leg.

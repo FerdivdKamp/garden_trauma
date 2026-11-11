@@ -47,7 +47,7 @@ func _physics_process(delta: float) -> void:
 	if target_ref != null:
 		target = target_ref.get_ref() as PlacementEnemy
 	if target != null and target.health > 0.0 and not target.reached_objective:
-		var to_target := target.visual.global_position - global_position
+		var to_target := target.get_aim_position() - global_position
 		var desired := to_target.normalized()
 		var angle := direction.angle_to(desired)
 		var turn_rate := deg_to_rad(turn_speed)
@@ -60,8 +60,9 @@ func _physics_process(delta: float) -> void:
 	var previous_position := global_position
 	global_position += direction * speed * delta
 	if target != null and target.health > 0.0 and not target.reached_objective:
-		var closest := Geometry3D.get_closest_point_to_segment(target.visual.global_position, previous_position, global_position)
-		if closest.distance_to(target.visual.global_position) <= HIT_RADIUS:
+		var hit_position := target.get_aim_position()
+		var closest := Geometry3D.get_closest_point_to_segment(hit_position, previous_position, global_position)
+		if closest.distance_to(hit_position) <= HIT_RADIUS:
 			_impact(target)
 
 

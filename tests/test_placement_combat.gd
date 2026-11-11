@@ -21,6 +21,8 @@ func _run() -> void:
 	var red := path.get_node("Enemy1") as PlacementEnemy
 	_check(red != null and red.enemy_type == 0, "Scene starts with a wind-up robot")
 	_check(red.robot.visible and not red.sphere.visible, "Robot uses the imported GLB")
+	var robot_aim := red.robot.find_child("AimPoint", true, false) as Node3D
+	_check(robot_aim != null and red.get_aim_position().is_equal_approx(robot_aim.global_position), "Robot uses its imported AimPoint")
 	_check(red.robot.scale.is_equal_approx(Vector3.ONE * 3.0), "Robot model uses the scene's imported scale")
 	red.progress = 1.0
 	var path_forward := -red.global_transform.basis.z
@@ -44,6 +46,7 @@ func _run() -> void:
 	var blue := demo.spawn_enemy() as PlacementEnemy
 	_check(blue.enemy_type == 1 and blue.health == 75.0, "Selector spawns blue variant")
 	_check(blue.sphere.visible and not blue.robot.visible, "Second enemy keeps its sphere visual")
+	_check(blue.get_aim_position().is_equal_approx(blue.visual.global_position), "Placeholder retains visual-origin targeting")
 	_check(blue.visual_scale > red.visual_scale, "Blue sphere uses its own scale setting")
 	demo._set_enemy_value(5.0, "blue_speed")
 	demo._set_enemy_value(1.6, "blue_scale")
@@ -53,6 +56,11 @@ func _run() -> void:
 	var car := demo.spawn_enemy(3) as PlacementEnemy
 	_check(tank.definition.id == "toy_tank" and tank.tank.visible and tank.health == 220.0, "Tank spawns through the battle scene")
 	_check(car.definition.id == "formula_car" and car.formula_car.visible and car.health == 30.0, "Car spawns through the battle scene")
+	var car_aim := car.formula_car.find_child("AimPoint", true, false) as Node3D
+	_check(car_aim != null and car.get_aim_position().is_equal_approx(car_aim.global_position), "Car uses its imported AimPoint")
+	car.visual.rotation.y = 0.8
+	car.visual.scale = Vector3.ONE * 1.5
+	_check(car_aim != null and car.get_aim_position().is_equal_approx(car_aim.global_position), "AimPoint follows the car's rotation and scale")
 	tank.progress = path.curve.get_baked_length()
 	car.progress = path.curve.get_baked_length()
 
@@ -72,6 +80,7 @@ func _run() -> void:
 	_check(beam != null and beam.mesh == demo.shot_effects.laser_template.mesh, "Laser reuses its preloaded mesh")
 	var red_hit := demo.shot_effects.get_node_or_null("RedHit") as GPUParticles3D
 	_check(red_hit != null and red_hit.process_material == demo.shot_effects.red_hit_template.process_material, "Laser reuses red hit particles")
+	_check(red_hit != null and red_hit.global_position.is_equal_approx(red.get_aim_position()), "Laser impact appears at the robot's AimPoint")
 	_check(is_equal_approx(blue.health, 75.0), "Out-of-range enemy takes no damage")
 	_check(demo.enemy_health_label.text.contains("40 / 50 HP"), "Health display updates after damage")
 	attack._process(0.2)
