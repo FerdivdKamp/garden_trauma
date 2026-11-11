@@ -12,6 +12,7 @@ var effects: ShotEffects
 var shot_clock := 0.0
 var next_barrel := 0
 var upgrade_level := 0
+var locked_target: PlacementEnemy
 
 
 func next_upgrade() -> Dictionary:
@@ -41,32 +42,11 @@ func _process(delta: float) -> void:
 		return
 	var tower := get_parent() as TowerVisual
 	var pivot := tower.get_yaw_pivot()
-	var target: PlacementEnemy
-	var target_distance := INF
-	var best_priority := -INF
-	for child in enemies.get_children():
-		var enemy := child as PlacementEnemy
-		if enemy == null:
-			continue
-		if enemy.health <= 0.0:
-			continue
-		if enemy.reached_objective:
-			continue
-		if not _can_target(enemy):
-			continue
-		var distance := tower.global_position.distance_to(enemy.global_position)
-		var priority_score := -distance
-		if definition.priority == "first":
-			priority_score = enemy.progress
-		elif definition.priority == "last":
-			priority_score = -enemy.progress
-		if TowerRules.can_detect(distance, definition.detection_range) and priority_score > best_priority:
-			target = enemy
-			target_distance = distance
-			best_priority = priority_score
+	var target := _choose_target(tower)
 	shot_clock += delta
 	if target == null:
 		return
+	var target_distance := tower.global_position.distance_to(target.global_position)
 	var hit_position := target.get_aim_position()
 	var direction := hit_position - pivot.global_position
 	var desired_yaw := TowerRules.target_yaw(direction)
@@ -96,6 +76,45 @@ func _process(delta: float) -> void:
 			if definition.bonus_vs_tags.has(tag):
 				multiplier *= float(definition.bonus_vs_tags[tag])
 		target.take_damage(definition.damage * multiplier)
+
+
+func _choose_target(tower: TowerVisual) -> PlacementEnemy:
+	# Detection can be wider than attack range. Only lock enemies we can fire at,
+	# so a detected enemy outside firing range cannot block an attackable one.
+	if is_instance_valid(locked_target) and _eligible_target(locked_target):
+		var distance := tower.global_position.distance_to(locked_target.global_position)
+		if TowerRules.can_attack(distance, definition.attack_range, definition.detection_range):
+			return locked_target
+	locked_target = null
+	var best: PlacementEnemy
+	var best_priority := -INF
+	var best_can_attack := false
+	for child in enemies.get_children():
+		var enemy := child as PlacementEnemy
+		if not _eligible_target(enemy):
+			continue
+		var distance := tower.global_position.distance_to(enemy.global_position)
+		if not TowerRules.can_detect(distance, definition.detection_range):
+			continue
+		var can_attack := TowerRules.can_attack(distance, definition.attack_range, definition.detection_range)
+		var priority_score := -distance
+		if definition.priority == "first":
+			priority_score = enemy.progress
+		elif definition.priority == "last":
+			priority_score = -enemy.progress
+		if (can_attack and not best_can_attack) or (can_attack == best_can_attack and priority_score > best_priority):
+			best = enemy
+			best_priority = priority_score
+			best_can_attack = can_attack
+	if best_can_attack:
+		locked_target = best
+	return best
+
+
+func _eligible_target(enemy: PlacementEnemy) -> bool:
+	return is_instance_valid(enemy) and not enemy.is_queued_for_deletion() \
+		and enemy.get_parent() == enemies and enemy.health > 0.0 \
+		and not enemy.reached_objective and _can_target(enemy)
 
 
 func _launch_water_rocket(target_ref: WeakRef, shot_definition: TowerDefinition) -> void:
