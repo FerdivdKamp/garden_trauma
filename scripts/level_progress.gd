@@ -17,6 +17,7 @@ const TOWER_REWARDS := {"garden_test_01": "lightning_tower"}
 var save_path := "user://progress.cfg"
 var selected_level_id := DEFAULT_LEVEL_ID
 var completed_ids: Array[String] = []
+var level_stars: Dictionary = {}
 var players_index_path := "user://players.cfg"
 var players_directory := "user://players"
 var legacy_save_path := "user://progress.cfg"
@@ -175,16 +176,24 @@ func select_level(id: String) -> bool:
 	return true
 
 
-func complete_level(id: String) -> void:
+func stars_for(id: String) -> int:
+	# Older saves only recorded completion, so award the guaranteed first star.
+	return int(level_stars.get(id, 1 if is_completed(id) else 0))
+
+
+func complete_level(id: String, stars: int = 1) -> void:
 	var level := level_for(id)
-	if level.is_empty() or level.get("test", false) or is_completed(id):
+	if level.is_empty() or level.get("test", false):
 		return
-	completed_ids.append(id)
+	if not is_completed(id):
+		completed_ids.append(id)
+	level_stars[id] = maxi(stars_for(id), clampi(stars, 1, 2))
 	save_progress()
 
 
 func load_progress() -> void:
 	completed_ids.clear()
+	level_stars.clear()
 	var config := ConfigFile.new()
 	if config.load(save_path) != OK:
 		return
@@ -193,11 +202,18 @@ func load_progress() -> void:
 		for id in saved:
 			if id is String and not level_for(id).is_empty() and not completed_ids.has(id):
 				completed_ids.append(id)
+	var saved_stars: Variant = config.get_value("levels", "stars", {})
+	if saved_stars is Dictionary:
+		for id in completed_ids:
+			var value: Variant = saved_stars.get(id, 1)
+			if value is int:
+				level_stars[id] = clampi(value, 1, 3)
 
 
 func save_progress() -> void:
 	var config := ConfigFile.new()
 	config.set_value("levels", "completed_ids", completed_ids)
+	config.set_value("levels", "stars", level_stars)
 	var error := config.save(save_path)
 	if error != OK:
 		push_error("Could not save level progress: %s" % error_string(error))

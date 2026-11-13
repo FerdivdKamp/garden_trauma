@@ -79,9 +79,9 @@ func _add_outer_ground(half_width: float, half_height: float) -> void:
 		Vector2(half_width * 2.0, band), material)
 
 
-func _add_ground_strip(name: String, point: Vector3, size: Vector2, material: Material) -> void:
+func _add_ground_strip(strip_name: String, point: Vector3, size: Vector2, material: Material) -> void:
 	var ground := MeshInstance3D.new()
-	ground.name = name
+	ground.name = strip_name
 	var plane := PlaneMesh.new()
 	plane.size = size
 	ground.mesh = plane

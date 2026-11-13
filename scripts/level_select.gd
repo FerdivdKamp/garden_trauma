@@ -12,6 +12,8 @@ func _ready() -> void:
 		button.custom_minimum_size = Vector2(280, 52)
 		button.disabled = not LevelProgress.is_unlocked(id)
 		var state := "Completed" if LevelProgress.is_completed(id) else ("Available" if not button.disabled else "Locked")
+		if LevelProgress.is_completed(id):
+			state += " (%d / 3 stars)" % LevelProgress.stars_for(id)
 		button.text = "%s  -  %s" % [level.title, state]
 		button.pressed.connect(_play_level.bind(id))
 		level_list.add_child(button)

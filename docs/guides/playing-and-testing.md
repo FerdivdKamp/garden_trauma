@@ -8,6 +8,8 @@ Press **Start wave 1** when ready. Defeated enemies pay their unit reward; each 
 
 The level selection also has **Tower Test** at the top. It copies Garden 1's map and waves, makes every tower available, and charges one credit per tower and upgrade. Completing it does not advance the campaign. In the campaign, only the Laser Tower is initially available; winning Garden 1 unlocks the Lightning Tower for later levels and replays. Other towers have no campaign unlock yet. Existing Garden 1 completions also grant the Lightning Tower.
 
+Campaign victories earn one star, or two if the garden loses no health during the level. The best result is saved per player and shown on level selection; replaying cannot lower it. The third star is reserved for a future achievement. Earlier completed levels count as one star because their remaining health was not recorded. Tower Test shows the result for the current run but does not save campaign stars.
+
 The bottom-left tiles show small views of the actual tower models. Hover a tile to see its name and price. Click a placed tower to inspect and buy its next upgrade. Hover Upgrade to see its cost and the current-to-new stat values, even if you lack credits. Each tower has three sequential upgrades defined in its JSON file. An upgrade replaces the listed attack values and leaves unspecified values as they were.
 
 The Gumball Machine uses a straight adjacent path lane. Its placement preview highlights the covered tiles and shows a direction arrow. Press **R** while placing it to cycle valid lanes; see [Gumball Machine tower](gumball-tower.md) for its controls and testing checklist. In debug mode, **R** still toggles the route overlay when no Gumball Machine is selected.
