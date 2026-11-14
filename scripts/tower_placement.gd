@@ -67,6 +67,7 @@ var enemy_count := 0
 var tower_definitions: Dictionary
 var unit_definitions: Dictionary
 var objective_health := 10
+var objective_health_lost := false
 var currency := 240
 var battle_result := ""
 var currency_label: Label
@@ -392,6 +393,7 @@ func _on_enemy_objective_reached(enemy: Node) -> void:
 		return
 	objective_voice.play_objective_reached()
 	objective_health = maxi(0, objective_health - 1)
+	objective_health_lost = true
 	if objective_health == 0:
 		_finish_battle("defeat")
 	else:
@@ -849,7 +851,7 @@ func _finish_battle(result: String) -> void:
 		var reward: String = LevelProgress.TOWER_REWARDS.get(level_id, "")
 		if reward != "" and not LevelProgress.is_tower_unlocked(reward):
 			unlocked_tower = (tower_definitions[reward] as TowerDefinition).name
-		LevelProgress.complete_level(level_id)
+		LevelProgress.complete_level(level_id, 1 if objective_health_lost else 2)
 	waves.stop()
 	for tower in placed_towers.get_children():
 		tower.get_node("Attack").set_process(false)
@@ -857,6 +859,8 @@ func _finish_battle(result: String) -> void:
 		if child is PlacementEnemy:
 			child.set_process(false)
 	$UI/ResultOverlay/Center/Panel/Actions/Title.text = "Garden defended!" if result == "victory" else "Garden overrun"
+	if result == "victory":
+		$UI/ResultOverlay/Center/Panel/Actions/Title.text += "\nStars earned: %d / 3" % (1 if objective_health_lost else 2)
 	if unlocked_tower != "":
 		$UI/ResultOverlay/Center/Panel/Actions/Title.text += "\nUnlocked: " + unlocked_tower
 	var next_id := LevelProgress.next_level_id(level_id)

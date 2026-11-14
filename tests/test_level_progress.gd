@@ -12,6 +12,16 @@ func _run() -> void:
 	progress.save_path = "res://tests/.level_progress_test.cfg"
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(progress.save_path))
 	progress.completed_ids.clear()
+	progress.level_stars.clear()
+	var legacy := ConfigFile.new()
+	legacy.set_value("levels", "completed_ids", ["garden_test_01"])
+	legacy.save(progress.save_path)
+	progress.load_progress()
+	_check(progress.stars_for("garden_test_01") == 1, "An older completion receives one star")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(progress.save_path))
+	progress.load_progress()
+	progress.complete_level("tower_test", 2)
+	_check(progress.stars_for("tower_test") == 0, "Tower Test does not save campaign stars")
 	progress.selected_level_id = "garden_test_01"
 	_check(progress.is_unlocked("garden_test_01") and not progress.is_unlocked("garden_test_02"), "Only the first level starts unlocked")
 	_check(not progress.select_level("garden_test_02"), "Locked level cannot be selected")
@@ -36,12 +46,20 @@ func _run() -> void:
 	_check(garden.level_id == "garden_test_01" and garden.grid.level_file == "res://levels/data/garden_test_01.json", "First level loads its map")
 	_check(garden.waves.schedule_file == "res://levels/waves/garden_test_01.json", "First level loads its waves")
 	var first_route_size: int = garden.grid.route.size()
+	var escaped_enemy := Node.new()
+	garden._on_enemy_objective_reached(escaped_enemy)
+	escaped_enemy.free()
 	garden._finish_battle("victory")
 	_check(progress.is_completed("garden_test_01") and progress.is_unlocked("garden_test_02"), "Victory saves completion and unlocks level 2")
+	_check(progress.stars_for("garden_test_01") == 1, "A victory after health loss earns one star")
+	_check(garden.get_node("UI/ResultOverlay/Center/Panel/Actions/Title").text.contains("1 / 3"), "Victory displays the stars earned")
+	progress.complete_level("garden_test_01", 2)
+	progress.complete_level("garden_test_01", 1)
+	_check(progress.stars_for("garden_test_01") == 2, "A better replay improves stars and a worse replay does not reduce them")
 	_check(garden.result_action_button.text == "Next level", "Victory offers the next level")
 	progress.completed_ids.clear()
 	progress.load_progress()
-	_check(progress.is_completed("garden_test_01"), "Completion survives loading from disk")
+	_check(progress.is_completed("garden_test_01") and progress.stars_for("garden_test_01") == 2, "Completion and best stars survive loading from disk")
 	garden.result_action_button.pressed.emit()
 	await process_frame
 	await process_frame
@@ -56,6 +74,7 @@ func _run() -> void:
 	escaping.progress = second.path.curve.get_baked_length() - 0.5
 	escaping._process(1.0)
 	_check(second.battle_result == "defeat" and not progress.is_completed("garden_test_02"), "Losing Garden 2 does not save completion")
+	_check(progress.stars_for("garden_test_02") == 0, "Defeat earns no stars")
 	second.get_node("UI/ResultOverlay/Center/Panel/Actions/Restart").pressed.emit()
 	await process_frame
 	await process_frame
@@ -70,6 +89,7 @@ func _run() -> void:
 		if wave_index < second.waves.waves.size() - 1:
 			second.waves._process(100.0)
 	_check(second.battle_result == "victory" and progress.is_completed("garden_test_02"), "Clearing Garden 2 saves its completion")
+	_check(progress.stars_for("garden_test_02") == 2, "A flawless victory earns two stars")
 	_check(second.result_action_button.text == "Next level", "Garden 2 victory offers Garden 3")
 	second._return_to_menu()
 	await process_frame
@@ -80,6 +100,7 @@ func _run() -> void:
 	_check(current_scene.scene_file_path == "res://scenes/level_select.tscn", "Menu returns to selection")
 	level_buttons = current_scene.get_node("Center/Panel/Content/Levels")
 	_check(level_buttons.get_child(1).text.contains("Completed") and level_buttons.get_child(2).text.contains("Completed"), "Selection shows completed levels")
+	_check(level_buttons.get_child(1).text.contains("2 / 3 stars"), "Selection shows the best star result")
 	progress.completed_ids.clear()
 	progress.load_progress()
 	_check(progress.is_completed("garden_test_01") and progress.is_completed("garden_test_02"), "Both completions survive a reload")

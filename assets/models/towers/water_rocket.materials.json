@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "asset": "water_rocket_tower",
+  "materials": [
+    {
+      "name": "rocket_base",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.800000011920929,
+          0.800000011920929,
+          0.800000011920929,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.800000011920929,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "rocket_fins",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.42054522037506104,
+          0.0336177833378315,
+          0.029869113117456436,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.699999988079071,
+        "alpha": 1.0
+      }
+    }
+  ]
+}

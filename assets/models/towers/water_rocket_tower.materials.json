@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "asset": "water_rocket_tower",
+  "materials": [
+    {
+      "name": "Material",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.36228814721107483,
+          0.08015623688697815,
+          0.08841988444328308,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.30000001192092896,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "base_paint",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.1746475100517273,
+          0.24620144069194794,
+          0.7991030812263489,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "pipe",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.46991220116615295,
+          0.46991220116615295,
+          0.46991220116615295,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.30000001192092896,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "pipe_elbow",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.21111644804477692,
+          0.21111644804477692,
+          0.21111644804477692,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.30000001192092896,
+        "alpha": 1.0
+      }
+    },
+    {
+      "name": "rotator_paint",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.05589674413204193,
+          0.07695832848548889,
+          0.2351144254207611,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "alpha": 1.0
+      }
+    }
+  ]
+}

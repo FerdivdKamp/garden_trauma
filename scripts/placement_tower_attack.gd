@@ -50,10 +50,14 @@ func _process(delta: float) -> void:
 	var hit_position := target.get_aim_position()
 	var direction := hit_position - pivot.global_position
 	var desired_yaw := TowerRules.target_yaw(direction)
+	if tower.tower_type == 3:
+		desired_yaw += tower.water_model.PLATE_YAW_OFFSET
 	pivot.rotation.y = TowerRules.step_yaw(pivot.rotation.y, desired_yaw, deg_to_rad(definition.turn_speed), delta)
 	var aimed := absf(angle_difference(pivot.rotation.y, desired_yaw)) < deg_to_rad(5.0)
 	if tower.tower_type == 0:
 		aimed = tower.aim_pitch_at(hit_position, definition.turn_speed, delta) and aimed
+	elif tower.tower_type == 3:
+		aimed = tower.water_model.aim_pitch(target_distance, definition.attack_range, definition.turn_speed, delta) and aimed
 	if shot_clock >= definition.cooldown and aimed and TowerRules.can_attack(target_distance, definition.attack_range, definition.detection_range):
 		shot_clock = 0.0
 		# Capture world positions now. Shell visuals can finish after the target has moved.
@@ -121,10 +125,9 @@ func _launch_water_rocket(target_ref: WeakRef, shot_definition: TowerDefinition)
 	var tower := get_parent() as TowerVisual
 	if effects == null or not is_instance_valid(tower):
 		return
-	var forward := -tower.get_yaw_pivot().global_basis.z
 	effects.fire_water_rocket(
 		tower.get_muzzle_position(), target_ref.get_ref(), shot_definition,
-		(Vector3.UP + forward * 0.35).normalized()
+		tower.water_model.launch_direction()
 	)
 	tower.play_fire_sound()
 

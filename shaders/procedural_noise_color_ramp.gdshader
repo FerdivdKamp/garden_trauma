@@ -31,10 +31,21 @@ uniform float grass_color_strength = 0.85;
 uniform float grass_detail_scale = 0.0;
 uniform float grass_detail_strength = 0.0;
 uniform float grass_roughness_variation = 0.0;
+// The path supplies these per tile; other materials keep the effect disabled.
+uniform vec4 path_shadow_sides = vec4(0.0); // north, east, south, west
+uniform vec4 path_shadow_corners = vec4(0.0); // NE, SE, SW, NW
+uniform vec3 path_tile_center = vec3(0.0);
+uniform vec3 path_tile_axis_x = vec3(1.0, 0.0, 0.0);
+uniform vec3 path_tile_axis_z = vec3(0.0, 0.0, 1.0);
+uniform float path_shadow_width = 0.3;
+uniform float path_shadow_strength = 0.0;
+uniform float grass_edge_width = 0.5;
+uniform float grass_edge_strength = 0.0;
 
 varying vec3 noise_position;
 varying vec2 grass_uv;
 varying vec2 grass_world_xz;
+varying vec2 path_position;
 
 float hash3(vec3 point) {
 	return fract(sin(dot(point, vec3(127.1, 311.7, 74.7))) * 43758.5453);
@@ -58,6 +69,8 @@ float value_noise(vec3 point) {
 }
 
 void vertex() {
+	vec3 path_offset = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz - path_tile_center;
+	path_position = vec2(dot(path_offset, path_tile_axis_x), dot(path_offset, path_tile_axis_z));
 	if (grass_world_variation && grass_normal_flatten > 0.0) {
 		NORMAL = normalize(mix(NORMAL, vec3(0.0, 1.0, 0.0), grass_normal_flatten));
 	}
@@ -123,7 +136,33 @@ void fragment() {
 		grass_color *= 1.0 + detail * grass_detail_strength;
 		grass_roughness = clamp(material_roughness + detail * grass_roughness_variation, 0.0, 1.0);
 	}
-	ALBEDO = grass_color;
+	// Border meshes extend well into the tile, with an irregular outline.
+	// Approximate their visible edge halfway between grid edge and centre.
+	// Max avoids making overlapping edges darker than a single edge.
+	float width = max(path_shadow_width, 0.001);
+	float lip = -0.45;
+	float shadow = 0.0;
+	shadow = max(shadow, path_shadow_sides.x * (1.0 - smoothstep(0.0, width, path_position.y - lip)));
+	shadow = max(shadow, path_shadow_sides.y * (1.0 - smoothstep(0.0, width, -path_position.x - lip)));
+	shadow = max(shadow, path_shadow_sides.z * (1.0 - smoothstep(0.0, width, -path_position.y - lip)));
+	shadow = max(shadow, path_shadow_sides.w * (1.0 - smoothstep(0.0, width, path_position.x - lip)));
+	shadow = max(shadow, path_shadow_corners.x * (1.0 - smoothstep(0.0, width, length(max(vec2(-path_position.x, path_position.y) - lip, vec2(0.0))))));
+	shadow = max(shadow, path_shadow_corners.y * (1.0 - smoothstep(0.0, width, length(max(-path_position - lip, vec2(0.0))))));
+	shadow = max(shadow, path_shadow_corners.z * (1.0 - smoothstep(0.0, width, length(max(vec2(path_position.x, -path_position.y) - lip, vec2(0.0))))));
+	shadow = max(shadow, path_shadow_corners.w * (1.0 - smoothstep(0.0, width, length(max(path_position - lip, vec2(0.0))))));
+	// Border meshes lie on the path tile. Shade their grass-facing lip too,
+	// fading back to the normal palette before the neighboring grass tile.
+	float grass_width = max(grass_edge_width, 0.001);
+	float grass_edge = 0.0;
+	grass_edge = max(grass_edge, path_shadow_sides.x * (1.0 - smoothstep(0.0, grass_width, abs(path_position.y + 0.45))));
+	grass_edge = max(grass_edge, path_shadow_sides.y * (1.0 - smoothstep(0.0, grass_width, abs(path_position.x - 0.45))));
+	grass_edge = max(grass_edge, path_shadow_sides.z * (1.0 - smoothstep(0.0, grass_width, abs(path_position.y - 0.45))));
+	grass_edge = max(grass_edge, path_shadow_sides.w * (1.0 - smoothstep(0.0, grass_width, abs(path_position.x + 0.45))));
+	grass_edge = max(grass_edge, path_shadow_corners.x * (1.0 - smoothstep(0.0, grass_width, distance(path_position, vec2(0.45, -0.45)))));
+	grass_edge = max(grass_edge, path_shadow_corners.y * (1.0 - smoothstep(0.0, grass_width, distance(path_position, vec2(0.45, 0.45)))));
+	grass_edge = max(grass_edge, path_shadow_corners.z * (1.0 - smoothstep(0.0, grass_width, distance(path_position, vec2(-0.45, 0.45)))));
+	grass_edge = max(grass_edge, path_shadow_corners.w * (1.0 - smoothstep(0.0, grass_width, distance(path_position, vec2(-0.45, -0.45)))));
+	ALBEDO = grass_color * (1.0 - shadow * path_shadow_strength) * (1.0 - grass_edge * grass_edge_strength);
 	ROUGHNESS = grass_roughness;
 	METALLIC = material_metallic;
 	SPECULAR = material_specular;
