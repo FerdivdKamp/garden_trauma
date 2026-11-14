@@ -1,7 +1,7 @@
 extends Node3D
 
 const PAWN_SAVE_PATH := "user://pawn.json"
-const TOWER_IDS := ["laser_tower", "double_tank", "lightning_tower"]
+const TOWER_IDS := ["laser_tower", "double_tank", "lightning_tower", "water_rocket"]
 const TowerVisual = preload("res://scripts/tower_visual.gd")
 const LightningEffect = preload("res://scripts/lightning_effect.gd")
 
@@ -9,6 +9,7 @@ const LightningEffect = preload("res://scripts/lightning_effect.gd")
 @onready var turret_pivot: Node3D = tower_visual.get_yaw_pivot()
 @onready var pawn: Node3D = $Pawn
 @onready var lightning_effect: LightningEffect = $LightningEffect
+@onready var shot_effects: Node3D = $ShotEffects
 @onready var settings_panel: PanelContainer = $UI/SettingsPanel
 
 var tower_type := 0
@@ -45,24 +46,69 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	var direction := pawn.global_position - turret_pivot.global_position
 	var desired_yaw := TowerRules.target_yaw(direction)
+	if tower_type == 3:
+		desired_yaw += tower_visual.water_model.PLATE_YAW_OFFSET
+	var pitch_aimed := true
 	if TowerRules.can_detect(pawn_distance, detection_radius) and pawn_health > 0.0:
 		turret_pivot.rotation.y = TowerRules.step_yaw(
 			turret_pivot.rotation.y, desired_yaw, deg_to_rad(turn_speed), delta
 		)
 		if tower_type == 0:
-			tower_visual.aim_pitch_at(pawn_visual.global_position, turn_speed, delta)
+			pitch_aimed = tower_visual.aim_pitch_at(pawn_visual.global_position, turn_speed, delta)
+		elif tower_type == 3:
+			pitch_aimed = tower_visual.water_model.aim_pitch(pawn_distance, attack_radius, turn_speed, delta)
 
 	shot_clock += delta
-	var aimed := absf(angle_difference(turret_pivot.rotation.y, desired_yaw)) < deg_to_rad(5.0)
+	var aimed := pitch_aimed and absf(angle_difference(turret_pivot.rotation.y, desired_yaw)) < deg_to_rad(5.0)
 	if shot_clock >= definition.cooldown and aimed and pawn_health > 0.0 and \
 			TowerRules.can_attack(pawn_distance, attack_radius, detection_radius):
 		shot_clock = 0.0
-		if tower_type == 2:
-			lightning_effect.strike(tower_visual.get_muzzle_position(), pawn_visual.global_position)
-		pawn_health = TowerRules.health_after_hit(pawn_health, definition.damage)
-		_set_field_without_signal("pawn_health", pawn_health)
-		_update_pawn_color()
+		if tower_type == 3:
+			# The demo pawn is not a combat enemy, so animate the real rocket
+			# toward it and apply damage on arrival instead of using enemy homing.
+			tower_visual.pump_and_launch(_launch_demo_rocket.bind(definition.copy()))
+		else:
+			if tower_type == 2:
+				lightning_effect.strike(tower_visual.get_muzzle_position(), pawn_visual.global_position)
+			_damage_pawn(definition.damage)
 	_update_status()
+
+
+func _launch_demo_rocket(shot_definition: TowerDefinition) -> void:
+	var start := tower_visual.get_muzzle_position()
+	var direction := tower_visual.water_model.launch_direction()
+	var rocket: Node3D = shot_effects.fire_water_rocket(start, pawn, shot_definition, direction)
+	# Gameplay rockets track PlacementEnemy; this playground uses a simple pawn.
+	rocket.set_physics_process(false)
+	tower_visual.play_fire_sound()
+	var duration := clampf(start.distance_to(pawn_visual.global_position) / maxf(shot_definition.projectile_speed, 0.01), 0.3, 3.0)
+	var flight := create_tween()
+	flight.tween_method(_move_demo_rocket.bind(rocket, start, direction, duration), 0.0, 1.0, duration)
+	flight.tween_callback(func() -> void:
+		if is_instance_valid(rocket):
+			rocket.queue_free()
+		_damage_pawn(shot_definition.damage)
+	)
+
+
+func _move_demo_rocket(progress: float, rocket: Node3D, start: Vector3, direction: Vector3, duration: float) -> void:
+	if not is_instance_valid(rocket):
+		return
+	# A quadratic curve leaves the muzzle along its actual pitch and follows the
+	# adjustable pawn. It is a demo visual, not the gameplay homing simulation.
+	var control := start + direction * minf(duration * 3.0, 3.0)
+	var target := pawn_visual.global_position
+	var position_on_curve := start.bezier_interpolate(control, control, target, progress)
+	var tangent := (control - start) * (1.0 - progress) * (1.0 - progress) + (target - control) * progress * progress
+	rocket.global_position = position_on_curve
+	if tangent.length_squared() > 0.0001:
+		rocket.quaternion = Quaternion(Vector3.UP, tangent.normalized())
+
+
+func _damage_pawn(amount: float) -> void:
+	pawn_health = TowerRules.health_after_hit(pawn_health, amount)
+	_set_field_without_signal("pawn_health", pawn_health)
+	_update_pawn_color()
 
 
 func _build_pawn() -> void:
@@ -106,6 +152,7 @@ func _build_ui() -> void:
 	tower_selector.add_item("Laser Tower")
 	tower_selector.add_item("Double barrel")
 	tower_selector.add_item("Lightning tower")
+	tower_selector.add_item("Water Rocket")
 	tower_selector.item_selected.connect(_on_tower_selected)
 	column.add_child(tower_selector)
 
@@ -225,6 +272,8 @@ func _update_status() -> void:
 func _reset_aim() -> void:
 	var direction := pawn.global_position - turret_pivot.global_position
 	turret_pivot.rotation.y = TowerRules.target_yaw(direction) + PI
+	if tower_type == 3:
+		turret_pivot.rotation.y += tower_visual.water_model.PLATE_YAW_OFFSET
 	shot_clock = 0.0
 
 
@@ -305,3 +354,4 @@ func _load_pawn() -> void:
 	pawn_health = clampf(float(data.get("health", 50.0)), 0.0, 500.0)
 	_set_field_without_signal("pawn_distance", pawn_distance)
 	_set_field_without_signal("pawn_health", pawn_health)
+

@@ -70,6 +70,21 @@ func _run() -> void:
 	demo._process(1.2)
 	_check(demo.pawn_health < health_before and demo.lightning_effect.active, "Demo lightning attack damages and draws a bolt")
 
+	demo.set_process(false)
+	demo.call("_on_tower_selected", 3)
+	_check(demo.definition.id == "water_rocket" and demo.tower_visual.water_model != null, "Water rocket is selectable and loads its definition")
+	demo._on_field_changed(360.0, "turn_speed", demo.fields["turn_speed"]["number"])
+	demo._on_field_changed(4.0, "pawn_distance", demo.fields["pawn_distance"]["number"])
+	demo._on_field_changed(500.0, "pawn_health", demo.fields["pawn_health"]["number"])
+	demo._process(4.0)
+	var water = demo.tower_visual.water_model
+	_check(absf(water.pitch_pivot.rotation.z) > 0.1 and water.pump_tween != null, "Water rocket aims and pumps in the demo")
+	var before_launch: float = demo.pawn_health
+	await create_timer(0.3).timeout
+	_check(demo.shot_effects.get_node_or_null("WaterRocketProjectile") != null and demo.pawn_health == before_launch, "Rocket launches before dealing damage")
+	await create_timer(2.0).timeout
+	_check(demo.pawn_health < before_launch, "Rocket damages the pawn on arrival")
+
 	if failures == 0:
 		print("Tower scene tests passed")
 	quit(1 if failures > 0 else 0)

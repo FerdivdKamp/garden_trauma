@@ -16,7 +16,7 @@ func _run() -> void:
 	garden.currency = 1000
 	garden._select_tower(3)
 	_check(garden.tower_buttons.size() == 6 and garden.preview.water_model != null, "Water rocket has a placeable preview")
-	_check(garden.preview.water_model.muzzle is Marker3D, "Placeholder has a muzzle marker")
+	_check(garden.preview.water_model.muzzle is Node3D, "Imported tower has a muzzle node")
 	garden.place_tower(Vector3(-8, 0, 8))
 	var placed_cost: int = (garden.tower_definitions["water_rocket"] as TowerDefinition).cost
 	_check(garden.placed_towers.get_child_count() == 1 and garden.currency == 1000 - placed_cost, "Placement deducts the configured cost")
@@ -25,6 +25,8 @@ func _run() -> void:
 	attack.set_process(false)
 	_check(tower.tower_type == 3 and tower.get_yaw_pivot() == tower.water_model.yaw_pivot, "Water rocket uses its own yaw pivot")
 	_check(tower.get_muzzle_position().is_equal_approx(tower.water_model.muzzle.global_position), "Projectile uses the marker position")
+	_check(tower.water_model.loaded_rocket.get_node("RocketModel/rocket_base").global_position.distance_to(tower.get_muzzle_position()) < 0.001, "Loaded rocket base matches the imported muzzle")
+	_check(tower.water_model.yaw_pivot.is_ancestor_of(tower.water_model.get_node("TowerModel/Base/pivot/rotator")), "Yaw turns the plate and launcher together")
 	var enemy = garden.path.get_node("Enemy1")
 	enemy.movement_speed = 0.0
 	var nearest_progress := 0.0
@@ -41,12 +43,21 @@ func _run() -> void:
 	_check(garden.upgrade_panel.visible and garden.upgrade_details.text.contains("Water Rocket"), "Water rocket opens the existing upgrade UI")
 	attack.shot_clock = 0.0
 	attack._process(attack.definition.cooldown + 0.1)
-	var desired_yaw: float = TowerRules.target_yaw(enemy.get_aim_position() - tower.get_yaw_pivot().global_position)
+	var desired_yaw: float = TowerRules.target_yaw(enemy.get_aim_position() - tower.get_yaw_pivot().global_position) + tower.water_model.PLATE_YAW_OFFSET
 	_check(absf(angle_difference(tower.get_yaw_pivot().rotation.y, desired_yaw)) < deg_to_rad(5.0), "Pump and launcher turn toward the enemy")
+	_check(absf(angle_difference(tower.water_model.tower_body.rotation.y, desired_yaw)) < 0.001, "Tower body follows the plate heading")
+	var hinge_position: Vector3 = tower.water_model.pitch_pivot.global_position
+	var launch_direction: Vector3 = tower.water_model.launch_direction()
+	var toward_enemy: Vector3 = enemy.get_aim_position() - tower.water_model.pitch_pivot.global_position
+	var arm_offset: Vector3 = tower.water_model.arm.global_position - tower.water_model.pitch_pivot.global_position
+	var right_of_target := Vector2(-toward_enemy.z, toward_enemy.x).normalized()
+	_check(Vector2(arm_offset.x, arm_offset.z).normalized().dot(right_of_target) > 0.5, "Arm stays on the tower's right side")
+	_check(Vector2(launch_direction.x, launch_direction.z).normalized().dot(Vector2(toward_enemy.x, toward_enemy.z).normalized()) > 0.99, "Pitched launcher points forward toward the target")
+	_check(launch_direction.y > 0.0 and launch_direction.y < 0.8, "Launcher pitches forward and upward")
 	_check(is_equal_approx(enemy.health, enemy.max_health), "Pump begins before damage")
-	await create_timer(0.20).timeout
+	await create_timer(0.26).timeout
 	var launched_rocket := garden.shot_effects.get_node_or_null("WaterRocketProjectile") as WaterRocketProjectile
-	_check(launched_rocket != null and launched_rocket.global_position.distance_to(tower.get_muzzle_position()) < 1.0, "Attack launches from the rotating muzzle")
+	_check(launched_rocket != null and launched_rocket.global_position.distance_to(tower.get_muzzle_position()) < 1.5, "Attack launches from the rotating muzzle")
 	if launched_rocket != null:
 		launched_rocket.queue_free()
 	enemy.health = enemy.max_health
@@ -60,6 +71,15 @@ func _run() -> void:
 	_check(launches.count == 1 and launches.compressed_scale <= 0.56, "Launch follows full compression")
 	await create_timer(0.40).timeout
 	_check(tower.water_model.loaded_rocket.visible and is_equal_approx(tower.water_model.accordion.scale.y, 1.0), "Bellows and rocket reset")
+	_check(tower.water_model.pitch_pivot.name == "pitch", "Uses Blender's imported pitch pivot")
+	tower.water_model.aim_pitch(0.0, 8.0, 1000.0, 1.0)
+	var close_direction: Vector3 = tower.water_model.launch_direction()
+	_check(tower.water_model.pitch_pivot.global_position.distance_to(hinge_position) < 0.001, "Imported pitch pivot remains fixed as the arm moves")
+	tower.water_model.aim_pitch(8.0, 8.0, 1000.0, 1.0)
+	var far_direction: Vector3 = tower.water_model.launch_direction()
+	_check(is_equal_approx(close_direction.y, sin(deg_to_rad(45.0))), "Nearby targets use 45 degree elevation")
+	_check(is_equal_approx(far_direction.y, sin(deg_to_rad(20.0))) and far_direction.y < close_direction.y, "Distant targets use a flatter elevation")
+	_check(tower.water_model.loaded_rocket.get_node("RocketModel/rocket_base").global_position.distance_to(tower.get_muzzle_position()) < 0.001, "Rocket stays seated as the launcher pitches")
 	var definition := attack.definition as TowerDefinition
 	var hit_point: Vector3 = enemy.get_aim_position()
 	var start := hit_point + Vector3(0, 0.8, 4.0)
@@ -107,3 +127,8 @@ func _check(condition: bool, message: String) -> void:
 	if not condition:
 		push_error(message)
 		failures += 1
+
+
+
+
+

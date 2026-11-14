@@ -16,7 +16,7 @@ The Gumball Machine uses a straight adjacent path lane. Its placement preview hi
 
 The Lava Lamp fires at an uncovered path tile occupied by a ground enemy. Its puddle damages enemies crossing that tile until the wave ends. Its range ring uses the same world-unit scale as other towers; five tiles equal 10 world units.
 
-The tower demo in `scenes/tower_demo.tscn` lets you compare tower types, change range, turn speed, damage, fire rate, and enemy health, then reset the barrel away from the target to watch aiming. Its save button writes a tower definition override for that demo.
+Open `scenes/tower_demo.tscn` and press F6 to compare the laser, double barrel, lightning, and water rocket towers. Change the pawn distance, health, range, turn speed, damage, and fire rate, then reset the barrel away from the target to watch aiming. The water rocket uses the real tower animation and a simplified flight toward the adjustable pawn; test its gameplay homing in a level. The save button writes a tower definition override for that demo.
 
 ## Saves and debugging
 
