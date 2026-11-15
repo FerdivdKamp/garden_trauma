@@ -35,6 +35,22 @@
       }
     },
     {
+      "name": "car_paint_battery",
+      "classification": "directly_exportable",
+      "type": "basic_principled",
+      "principled": {
+        "base_color": [
+          0.5171364545822144,
+          0.8000074625015259,
+          0.6926470994949341,
+          1.0
+        ],
+        "metallic": 0.699999988079071,
+        "roughness": 0.4000000059604645,
+        "alpha": 1.0
+      }
+    },
+    {
       "name": "chrome",
       "classification": "directly_exportable",
       "type": "basic_principled",

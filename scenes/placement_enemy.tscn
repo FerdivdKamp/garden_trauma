@@ -7,6 +7,8 @@
 [ext_resource type="PackedScene" path="res://scenes/toy_tank_visual.tscn" id="5_tank"]
 [ext_resource type="PackedScene" path="res://assets/models/units/race_car.glb" id="6_car"]
 
+[ext_resource type="PackedScene" path="res://assets/models/units/race_car_battery.glb" id="7_battery"]
+
 [sub_resource type="SphereMesh" id="SphereMesh_enemy"]
 
 [node name="Enemy" type="PathFollow3D" unique_id=1555021071]
@@ -26,6 +28,9 @@ transform = Transform3D(-1.3113416e-07, 0, -3, 0, 3, 0, 3, 0, -1.3113416e-07, 0,
 visible = false
 
 [node name="FormulaCar" parent="Visual" instance=ExtResource("6_car")]
+visible = false
+
+[node name="BatteryCar" parent="Visual" instance=ExtResource("7_battery")]
 visible = false
 
 [node name="HealthBar" type="Sprite3D" parent="."]

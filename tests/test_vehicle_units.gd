@@ -20,6 +20,10 @@ func _run() -> void:
 
 	var tank := _add_enemy(route, 2, "toy_tank")
 	var car := _add_enemy(route, 3, "formula_car")
+	var battery := _add_enemy(route, 4, "race_car_battery")
+	_check(battery.battery_car.visible and not battery.formula_car.visible, "Battery car uses its own model")
+	_check(is_equal_approx(battery.movement_speed, car.movement_speed * 1.5), "Battery car has 50 percent more top speed")
+	_check(battery.battery_car.find_child("AimPoint*", true, false) != null, "Battery car retains its targeting marker")
 	_check(tank.tank.visible and not tank.robot.visible and not tank.sphere.visible, "Tank has its own placeholder model")
 	_check(car.formula_car.visible and not car.robot.visible and not car.sphere.visible, "Car has its own imported model")
 	_check(tank.health == 220.0 and car.health == 30.0, "Vehicle health comes from data")

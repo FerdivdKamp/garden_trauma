@@ -16,8 +16,8 @@ const TileGrid = preload("res://scripts/level_grid.gd")
 const GrassPaletteScript = preload("res://scripts/grass_palette.gd")
 const GrassMaterialConfigScript = preload("res://scripts/grass_material_config.gd")
 const TOWER_IDS := ["laser_tower", "double_tank", "lightning_tower", "water_rocket", "gumball", "lava_lamp"]
-const UNIT_IDS := ["windup_robot", "blue_sphere", "toy_tank", "formula_car"]
-const UNIT_SCALES := [1.0, 1.3, 1.0, 1.0]
+const UNIT_IDS := ["windup_robot", "blue_sphere", "toy_tank", "formula_car", "race_car_battery"]
+const UNIT_SCALES := [1.0, 1.3, 1.0, 1.0, 1.0]
 const GUMBALL_INDEX := 4
 const LAVA_INDEX := 5
 const TOWER_RADIUS := TowerVisual.FOOTPRINT_RADIUS
@@ -721,6 +721,7 @@ func _build_enemy_ui(column: VBoxContainer) -> void:
 	enemy_selector.add_item("Blue sphere")
 	enemy_selector.add_item("Toy Tank")
 	enemy_selector.add_item("Formula Car")
+	enemy_selector.add_item("Race Car Battery")
 	column.add_child(enemy_selector)
 	var spawn_button := Button.new()
 	spawn_button.text = "Spawn selected enemy"

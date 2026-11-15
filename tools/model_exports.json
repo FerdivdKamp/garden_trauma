@@ -108,7 +108,23 @@
       "source": "art/blender/units/race_car.blend",
       "note": "Used by scenes/placement_enemy.tscn.",
       "exports": [
-        {}
+        {
+          "collection": "car_mk1",
+          "output_name": "race_car"
+        }
+      ]
+    },
+    {
+      "kind": "unit",
+      "id": "race_car_battery",
+      "status": "active",
+      "source": "art/blender/units/race_car.blend",
+      "note": "Battery car collection, used by scenes/placement_enemy.tscn.",
+      "exports": [
+        {
+          "collection": "car_mk2_battery",
+          "output_name": "race_car_battery"
+        }
       ]
     }
   ]

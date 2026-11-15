@@ -16,6 +16,7 @@ signal objective_reached(enemy: Node)
 @onready var robot: Node3D = $Visual/Robot
 @onready var tank: Node3D = $Visual/Tank
 @onready var formula_car: Node3D = $Visual/FormulaCar
+@onready var battery_car: Node3D = $Visual/BatteryCar
 @onready var destroyed_audio: AudioStreamPlayer3D = $DestroyedAudio
 @onready var objective_audio: AudioStreamPlayer3D = $ObjectiveAudio
 @onready var health_bar: Sprite3D = $HealthBar
@@ -76,7 +77,7 @@ func _process(delta: float) -> void:
 			# Pause at a bend until the hull has faced the next segment.
 			if absf(wrapf(heading - visual.rotation.y, -PI, PI)) > TANK_MOVE_ANGLE:
 				step_speed = 0.0
-		elif enemy_type == 3:
+		elif enemy_type == 3 or enemy_type == 4:
 			var corner := _upcoming_bend_angle()
 			var target_speed := CAR_CORNER_SPEED if corner > 0.35 else movement_speed
 			var acceleration := CAR_BRAKING if target_speed < current_speed else CAR_ACCELERATION
@@ -96,7 +97,7 @@ func configure(type: int, unit: UnitDefinition, speed: float, size: float) -> vo
 	enemy_type = type
 	definition = unit
 	movement_speed = speed
-	current_speed = CAR_CORNER_SPEED if type == 3 else speed
+	current_speed = CAR_CORNER_SPEED if type == 3 or type == 4 else speed
 	visual_scale = size
 	max_health = unit.health
 	health = max_health
@@ -154,6 +155,7 @@ func _update_color() -> void:
 	sphere.visible = enemy_type == 1
 	tank.visible = enemy_type == 2
 	formula_car.visible = enemy_type == 3
+	battery_car.visible = enemy_type == 4
 	var material := StandardMaterial3D.new()
 	material.albedo_color = Color("555555") if health <= 0.0 else Color("619de8")
 	sphere.material_override = material
@@ -166,9 +168,9 @@ func _update_visual_scale() -> void:
 func get_aim_position() -> Vector3:
 	# Each imported model owns its target point, so it follows model transforms.
 	# The sphere and tank placeholders retain the previous visual-origin target.
-	var model: Node3D = robot if enemy_type == 0 else formula_car if enemy_type == 3 else null
+	var model: Node3D = robot if enemy_type == 0 else formula_car if enemy_type == 3 else battery_car if enemy_type == 4 else null
 	if model != null:
-		var aim_point := model.find_child("AimPoint", true, false) as Node3D
+		var aim_point := model.find_child("AimPoint*", true, false) as Node3D
 		if aim_point != null:
 			return aim_point.global_position
 	return visual.global_position

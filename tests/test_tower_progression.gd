@@ -29,6 +29,13 @@ func _run() -> void:
 	var test_level = (load("res://scenes/tower_placement.tscn") as PackedScene).instantiate()
 	root.add_child(test_level)
 	_check(test_level.grid.level_file.ends_with("tower_test.json") and test_level.waves.schedule_file.ends_with("tower_test.json"), "Test level loads its copied map and waves")
+	test_level.waves.start_next_wave()
+	test_level.waves._process(100.0)
+	var spawned_ids: Array[String] = []
+	for enemy in test_level.path.get_children():
+		if enemy.has_method("take_damage"):
+			spawned_ids.append(enemy.definition.id)
+	_check(spawned_ids == Array(test_level.UNIT_IDS, TYPE_STRING, "", null), "Test wave spawns one of each unit in order")
 	for index in test_level.TOWER_IDS.size():
 		var definition = test_level.tower_definitions[test_level.TOWER_IDS[index]]
 		_check(not test_level.tower_buttons[index].disabled and definition.cost == 1, "Test tower %s is available for one credit" % definition.id)
