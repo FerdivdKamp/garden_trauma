@@ -28,7 +28,7 @@ func _ready() -> void:
 		push_error("Wave schedule needs a waves array: " + schedule_file)
 		return
 	for entry in data.waves:
-		if not entry is Dictionary or not entry.get("enemy_id") is String or int(entry.get("count", 0)) <= 0 or float(entry.get("spawn_interval", 0.0)) <= 0.0 or float(entry.get("break_seconds", -1.0)) < 0.0:
+		if not entry is Dictionary or not _valid_enemies(entry) or float(entry.get("spawn_interval", 0.0)) <= 0.0 or float(entry.get("break_seconds", -1.0)) < 0.0:
 			push_error("Invalid wave in " + schedule_file)
 			waves.clear()
 			return
@@ -37,11 +37,25 @@ func _ready() -> void:
 		push_error("Wave schedule is empty: " + schedule_file)
 
 
+# Mixed waves list each spawn in order; older single-type schedules stay valid.
+func _valid_enemies(entry: Dictionary) -> bool:
+	if entry.has("enemy_ids"):
+		var ids: Variant = entry.enemy_ids
+		if not ids is Array or ids.is_empty():
+			return false
+		for id in ids:
+			if not id is String or id.is_empty():
+				return false
+		return true
+	return entry.get("enemy_id") is String and not entry.enemy_id.is_empty() and int(entry.get("count", 0)) > 0
+
+
 func start_next_wave() -> bool:
 	if state != State.READY or current_wave + 1 >= waves.size():
 		return false
 	current_wave += 1
-	remaining_to_spawn = int(waves[current_wave].count)
+	var wave := waves[current_wave]
+	remaining_to_spawn = wave.enemy_ids.size() if wave.has("enemy_ids") else int(wave.count)
 	spawn_clock = 0.0
 	state = State.SPAWNING
 	state_changed.emit()
@@ -54,7 +68,9 @@ func _process(delta: float) -> void:
 		while remaining_to_spawn > 0 and spawn_clock <= 0.0:
 			remaining_to_spawn -= 1
 			active_enemies += 1
-			spawn_requested.emit(str(waves[current_wave].enemy_id))
+			var wave := waves[current_wave]
+			var enemy_id: String = wave.enemy_ids[wave.enemy_ids.size() - remaining_to_spawn - 1] if wave.has("enemy_ids") else wave.enemy_id
+			spawn_requested.emit(enemy_id)
 			spawn_clock += float(waves[current_wave].spawn_interval)
 		state_changed.emit()
 		_check_wave_cleared()

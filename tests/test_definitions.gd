@@ -8,7 +8,7 @@ var failures := 0
 func _initialize() -> void:
 	var towers := DefinitionLoader.load_towers()
 	var units := DefinitionLoader.load_units()
-	_check(towers.size() == 6 and units.size() == 4, "Each JSON file loads once")
+	_check(towers.size() == 6 and units.size() == 5, "Each JSON file loads once")
 	var tower := towers.get("laser_tower") as TowerDefinition
 	var double_tower := towers.get("double_tank") as TowerDefinition
 	var lightning_tower := towers.get("lightning_tower") as TowerDefinition

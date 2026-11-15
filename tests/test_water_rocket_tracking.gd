@@ -25,6 +25,11 @@ func _run() -> void:
 	await _check_route(Vector3(-20, 0, 0), Vector3(20, 0, 0), 16.0, Vector3(0, 1, -5), Vector3(0, 1, 0.35), faster_rocket, unit, "fast crossing")
 	if failures == 0:
 		print("Water rocket tracking tests passed")
+	# Let the audio thread release the looping music before this headless test exits.
+	var music := root.get_node("AudioManager/MusicPlayer") as AudioStreamPlayer
+	music.stop()
+	music.stream = null
+	await create_timer(0.2).timeout
 	quit(1 if failures > 0 else 0)
 
 

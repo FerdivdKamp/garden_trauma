@@ -36,8 +36,8 @@ class ModelExportTests(unittest.TestCase):
              contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             result = export_models.main()
         self.assertEqual(result, 1)
-        self.assertEqual(len(calls), 6)
-        self.assertEqual(calls[-2:], [("robot.blend", None, None), ("race_car.blend", None, None)])
+        self.assertEqual(len(calls), 9)
+        self.assertEqual(calls[-3:], [("robot.blend", None, None), ("race_car.blend", "car_mk1", "race_car"), ("race_car.blend", "car_mk2_battery", "race_car_battery")])
         self.assertEqual([call[1] for call in calls[:4]],
                          [f"tower_laser_mk{number}" for number in range(1, 5)])
 

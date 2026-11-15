@@ -41,11 +41,14 @@ func _run() -> void:
 	_check(nearest_distance < attack.definition.attack_range, "Placed tower can reach the test route")
 	garden._select_placed_tower(tower)
 	_check(garden.upgrade_panel.visible and garden.upgrade_details.text.contains("Water Rocket"), "Water rocket opens the existing upgrade UI")
+	var stationary_body_basis: Basis = tower.water_model.tower_body.global_basis
+	var stationary_pump_transform: Transform3D = tower.water_model.accordion.global_transform
 	attack.shot_clock = 0.0
 	attack._process(attack.definition.cooldown + 0.1)
 	var desired_yaw: float = TowerRules.target_yaw(enemy.get_aim_position() - tower.get_yaw_pivot().global_position) + tower.water_model.PLATE_YAW_OFFSET
-	_check(absf(angle_difference(tower.get_yaw_pivot().rotation.y, desired_yaw)) < deg_to_rad(5.0), "Pump and launcher turn toward the enemy")
-	_check(absf(angle_difference(tower.water_model.tower_body.rotation.y, desired_yaw)) < 0.001, "Tower body follows the plate heading")
+	_check(absf(angle_difference(tower.get_yaw_pivot().rotation.y, desired_yaw)) < deg_to_rad(5.0), "Launcher turns toward the enemy")
+	_check(tower.water_model.tower_body.global_basis.is_equal_approx(stationary_body_basis), "Base stays fixed while the launcher turns")
+	_check(tower.water_model.accordion.global_transform.is_equal_approx(stationary_pump_transform), "Pump stays fixed while the launcher turns")
 	var hinge_position: Vector3 = tower.water_model.pitch_pivot.global_position
 	var launch_direction: Vector3 = tower.water_model.launch_direction()
 	var toward_enemy: Vector3 = enemy.get_aim_position() - tower.water_model.pitch_pivot.global_position
@@ -107,9 +110,14 @@ func _run() -> void:
 	lost_target.set_physics_process(false)
 	enemy.take_damage(enemy.health)
 	lost_target._physics_process(0.1)
-	_check(not lost_target.impacted and lost_target.global_position.y > start.y, "Lost target leaves rocket on its last heading")
-	lost_target._physics_process(definition.projectile_lifetime)
-	_check(lost_target.is_queued_for_deletion(), "Rocket expires at its lifetime")
+	_check(lost_target.spiraling and not lost_target.impacted and lost_target.global_position.y > start.y, "Lost target starts an upward spiral")
+	var first_spiral_position: Vector3 = lost_target.global_position
+	lost_target._physics_process(0.2)
+	_check(lost_target.global_position.y > first_spiral_position.y and not is_equal_approx(lost_target.global_position.x, first_spiral_position.x), "Spiral climbs and turns")
+	lost_target._physics_process(2.0)
+	_check(lost_target.impacted and not lost_target.rocket_visual.visible and not lost_target.trail.emitting, "Spiral ends by hiding the rocket and stopping its trail")
+	_check(lost_target.get_node_or_null("WaterFirework") != null and lost_target.get_node_or_null("WaterSpout") != null, "Lost target produces a firework and upward water spout")
+	_check(hits.count == 1, "The water firework does not deal another hit")
 	var upgrades := definition.upgrades.duplicate(true)
 	for level in upgrades.size():
 		var upgrade: Dictionary = upgrades[level]
@@ -120,6 +128,12 @@ func _run() -> void:
 			_check(is_equal_approx(float(definition.get(property_name)), float(upgrade.attack[key])), "Upgrade stage %d applies %s" % [level + 1, key])
 	if failures == 0:
 		print("Water rocket tests passed")
+	# Free the battle and stop music before allowing audio playback to shut down.
+	garden.queue_free()
+	var music := root.get_node("AudioManager/MusicPlayer") as AudioStreamPlayer
+	music.stop()
+	music.stream = null
+	await create_timer(0.2).timeout
 	quit(1 if failures > 0 else 0)
 
 

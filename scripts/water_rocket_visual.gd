@@ -20,8 +20,6 @@ var pump_tween: Tween
 
 
 func aim_pitch(distance: float, attack_range: float, turn_speed: float, delta: float) -> bool:
-	# The body and plate share the same heading.
-	tower_body.rotation.y = yaw_pivot.rotation.y
 	# Elevation is measured from the ground; the Blender arm starts vertical.
 	var distance_fraction := clampf(distance / maxf(attack_range, 0.01), 0.0, 1.0)
 	var elevation := lerpf(CLOSE_ELEVATION, FAR_ELEVATION, distance_fraction)

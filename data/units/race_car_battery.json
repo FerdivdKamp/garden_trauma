@@ -1,0 +1,15 @@
+{
+  "$schema": "../schemas/unit.schema.json",
+  "id": "race_car_battery",
+  "name": "Race Car Battery",
+  "health": 30,
+  "speed": 8.25,
+  "reward": 12,
+  "armor": {
+    "physical": 0.0
+  },
+  "tags": [
+    "ground",
+    "mechanical"
+  ]
+}
