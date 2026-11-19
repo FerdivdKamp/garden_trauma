@@ -31,6 +31,7 @@ nav:
       - Next steps and open questions: roadmap/next.md
       - Design and planning notes:
           - Game design: roadmap/plans/game-design.md
+          - Unit visual damage: roadmap/plans/unit-visual-damage.md
           - Tile system: roadmap/plans/tile-system.md
           - Asset pipeline: roadmap/plans/asset-pipeline.md
           - Blender import: roadmap/plans/blender-asset-import.md

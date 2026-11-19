@@ -67,11 +67,15 @@ func _run() -> void:
 		first.take_damage(1000.0)
 		first.take_damage(1000.0)
 		_check(garden.currency == currency_before + reward, "Enemy reward is paid once")
-		_check(not first.visual.visible, "Defeated enemy hides while its sound finishes")
+		var has_destruction := first.enemy_type == 0 or first.enemy_type == 3 or first.enemy_type == 4
+		_check(first.visual.visible == has_destruction, "Defeated enemy shows its destruction effect when available")
 		if wave_index == 0:
-			await first.destroyed_audio.finished
+			if has_destruction:
+				await create_timer(2.7).timeout
+			elif first.destroyed_audio.playing:
+				await first.destroyed_audio.finished
 			await process_frame
-			_check(not is_instance_valid(first), "Defeated enemy is removed after its sound")
+			_check(not is_instance_valid(first), "Defeated enemy is removed after its effect and sound")
 		for index in range(1, live.size()):
 			live[index].take_damage(1000.0)
 		_check(garden.waves.active_enemies == 0, "Wave %d resolves all enemies" % [wave_index + 1])

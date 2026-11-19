@@ -49,6 +49,7 @@ const TANK_MOVE_ANGLE := 0.2
 const CAR_CORNER_SPEED := 2.0
 const CAR_ACCELERATION := 4.0
 const CAR_BRAKING := 9.0
+const DEBRIS_COLLISION_LAYER := 1 << 19
 
 
 func _ready() -> void:
@@ -122,8 +123,9 @@ func take_damage(amount: float) -> void:
 		hit_bar_remaining = HIT_BAR_SECONDS
 	if health <= 0.0:
 		destroyed_audio.play()
+		_start_destruction_visual()
 		defeated.emit(self)
-		_finish_after_sound(destroyed_audio)
+		_finish_after_sound(destroyed_audio, enemy_type == 0 or enemy_type == 3 or enemy_type == 4)
 	_update_color()
 	_update_health_bar()
 	health_changed.emit()
@@ -228,9 +230,158 @@ func _upcoming_bend_angle() -> float:
 	return near.angle_to(far)
 
 
-func _finish_after_sound(audio: AudioStreamPlayer3D) -> void:
+func _finish_after_sound(audio: AudioStreamPlayer3D, show_destruction: bool = false) -> void:
 	if not auto_cleanup:
 		return
-	visual.hide()
-	# The audio player remains in the world until its one-shot has finished.
-	audio.finished.connect(queue_free, CONNECT_ONE_SHOT)
+	if show_destruction:
+		# Both the effect and the sound need to finish before the enemy is freed.
+		await get_tree().create_timer(2.5, false).timeout
+	else:
+		visual.hide()
+	if audio.playing:
+		await audio.finished
+	queue_free()
+
+
+func _start_destruction_visual() -> void:
+	if enemy_type == 0:
+		_destroy_robot()
+	elif enemy_type == 3 or enemy_type == 4:
+		_destroy_car(formula_car if enemy_type == 3 else battery_car)
+
+
+func _destroy_robot() -> void:
+	# The paths are visual meshes, so debris gets a private floor at the path
+	# height. Its collision layer keeps this cosmetic physics out of gameplay.
+	_add_debris_floor()
+	var parts: Array[Node3D] = [arm_left, arm_right, leg_left, leg_right, head]
+	var velocities: Array[Vector3] = [Vector3(-0.8, 0.2, 0.1), Vector3(0.8, 0.2, -0.1), Vector3(-0.45, 0.1, 0.45), Vector3(0.45, 0.1, 0.45), Vector3(0.15, 0.3, -0.55)]
+	for index in parts.size():
+		var part := parts[index]
+		var mesh := part.get_child(0) as MeshInstance3D
+		if mesh:
+			var body := _make_debris_body(part, mesh)
+			body.linear_velocity = visual.global_basis.orthonormalized() * velocities[index] * visual_scale
+			body.angular_velocity = Vector3(0.4, 0.6, 2.0 if index % 2 == 0 else -2.0)
+	var torso := robot.find_child("Torso", true, false) as Node3D
+	if torso is MeshInstance3D:
+		_make_debris_body(torso, torso as MeshInstance3D)
+
+
+func _add_debris_floor() -> void:
+	var floor_body := StaticBody3D.new()
+	floor_body.name = "DebrisFloor"
+	floor_body.collision_layer = DEBRIS_COLLISION_LAYER
+	floor_body.collision_mask = 0
+	add_child(floor_body)
+	floor_body.top_level = true
+	floor_body.global_position = visual.global_position - Vector3(0, 0.1, 0)
+	var collision := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(20, 0.2, 20)
+	collision.shape = box
+	floor_body.add_child(collision)
+
+
+func _make_debris_body(part: Node3D, mesh: MeshInstance3D) -> RigidBody3D:
+	# Fit a simple box to the main mesh at its current walking pose. Antennas
+	# and keys stay attached visually but do not make the box overly large.
+	var bounds := mesh.get_aabb()
+	var mesh_transform := mesh.global_transform
+	var body := RigidBody3D.new()
+	body.name = "Debris_" + part.name
+	body.collision_layer = 0
+	body.collision_mask = DEBRIS_COLLISION_LAYER
+	body.mass = 1.0
+	add_child(body)
+	body.top_level = true
+	body.global_transform = Transform3D(mesh_transform.basis.orthonormalized(), mesh_transform * bounds.get_center())
+	var collision := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = (bounds.size * mesh_transform.basis.get_scale().abs()).max(Vector3(0.02, 0.02, 0.02))
+	collision.shape = box
+	body.add_child(collision)
+	part.reparent(body, true)
+	return body
+
+
+func _destroy_car(model: Node3D) -> void:
+	# The exported tire and hub meshes contain mirrored geometry. Split each
+	# mesh by side, then keep the tire and hub on one pivot per wheel.
+	var wheels: Dictionary = {}
+	for child in model.find_children("tire_*", "MeshInstance3D", true, false):
+		var original := child as MeshInstance3D
+		for side in [-1, 1]:
+			var piece := _make_wheel_piece(original, model, side)
+			if piece == null:
+				continue
+			var center := piece.mesh.get_aabb().get_center()
+			var wheel_id := Vector2i(side, 1 if center.z > 0.0 else -1)
+			if not wheels.has(wheel_id):
+				var pivot := Node3D.new()
+				pivot.name = "WheelDebris"
+				pivot.set_meta("wheel_debris", true)
+				model.add_child(pivot)
+				pivot.position = center
+				wheels[wheel_id] = pivot
+			var pivot: Node3D = wheels[wheel_id]
+			pivot.add_child(piece)
+			piece.position = -pivot.position
+		original.hide()
+	var rng := RandomNumberGenerator.new()
+	for wheel_id: Vector2i in wheels:
+		var pivot: Node3D = wheels[wheel_id]
+		# Vary distance, direction and timing per wheel, like the gumballs.
+		# The car faces local -Z; the wheels tip only after rolling forward.
+		var roll_distance := clampf(current_speed * 0.22, 0.5, 1.4) * rng.randf_range(0.8, 1.2)
+		var roll_time := 1.15 * rng.randf_range(0.85, 1.15)
+		var sideways := wheel_id.x * rng.randf_range(0.25, 0.55)
+		var tween := create_tween().set_parallel(true)
+		tween.tween_property(pivot, "position", pivot.position + Vector3(sideways, -0.04, -roll_distance), roll_time).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tween.tween_property(pivot, "rotation:x", roll_distance / 0.17, roll_time).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tween.tween_property(pivot, "rotation:z", -wheel_id.x * 1.2, roll_time * 0.48).set_delay(roll_time * 0.52).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	for name_prefix in ["body*", "canopy*"]:
+		var part := model.find_child(name_prefix, true, false) as Node3D
+		if part:
+			var tween := create_tween()
+			tween.tween_property(part, "position:y", part.position.y - 0.10, 0.45).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+
+
+func _make_wheel_piece(source: MeshInstance3D, model: Node3D, side: int) -> MeshInstance3D:
+	var result := ArrayMesh.new()
+	var mesh := source.mesh
+	var to_model := model.global_transform.affine_inverse() * source.global_transform
+	for surface in mesh.get_surface_count():
+		var arrays := mesh.surface_get_arrays(surface)
+		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+		var uvs: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV] if arrays[Mesh.ARRAY_TEX_UV] != null else PackedVector2Array()
+		var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+		if indices.is_empty():
+			for index in vertices.size():
+				indices.append(index)
+		var builder := SurfaceTool.new()
+		builder.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var count := 0
+		for triangle in range(0, indices.size(), 3):
+			var center := Vector3.ZERO
+			for corner in 3:
+				center += to_model * vertices[indices[triangle + corner]]
+			if center.x * side <= 0.0:
+				continue
+			for corner in 3:
+				var index := indices[triangle + corner]
+				if not normals.is_empty():
+					builder.set_normal((to_model.basis.inverse().transposed() * normals[index]).normalized())
+				if not uvs.is_empty():
+					builder.set_uv(uvs[index])
+				builder.add_vertex(to_model * vertices[index])
+				count += 1
+		if count > 0:
+			builder.set_material(source.get_active_material(surface))
+			builder.commit(result)
+	if result.get_surface_count() == 0:
+		return null
+	var piece := MeshInstance3D.new()
+	piece.mesh = result
+	return piece

@@ -1,0 +1,54 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://examples/unit_destruction.gd" id="1"]
+
+[sub_resource type="Curve3D" id="Curve"]
+_data = {"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -4.5, 0, 0, 0, 0, 0, 0, 0, 0, 4.5, 0, 0), "tilts": PackedFloat32Array(0, 0)}
+point_count = 2
+
+[sub_resource type="PlaneMesh" id="Floor"]
+size = Vector2(14, 10)
+
+[sub_resource type="StandardMaterial3D" id="FloorMaterial"]
+albedo_color = Color(0.35, 0.48, 0.3, 1)
+
+[node name="UnitDestructionExample" type="Node3D"]
+script = ExtResource("1")
+
+[node name="Route" type="Path3D" parent="."]
+curve = SubResource("Curve")
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+material_override = SubResource("FloorMaterial")
+mesh = SubResource("Floor")
+
+[node name="Camera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.819152, 0.573576, 0, -0.573576, 0.819152, 0, 7, 10)
+current = true
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.9, -0.4, 0)
+shadow_enabled = true
+
+[node name="Controls" type="CanvasLayer" parent="."]
+
+[node name="Buttons" type="HBoxContainer" parent="Controls"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 360.0
+offset_bottom = 52.0
+
+[node name="Destroy" type="Button" parent="Controls/Buttons"]
+layout_mode = 2
+text = "Destroy units"
+
+[node name="Reset" type="Button" parent="Controls/Buttons"]
+layout_mode = 2
+text = "Reset"
+
+[node name="Hint" type="Label" parent="Controls/Buttons"]
+layout_mode = 2
+text = "Robot   /   Formula car   /   Battery car"
+
+[connection signal="pressed" from="Controls/Buttons/Destroy" to="." method="_on_destroy_pressed"]
+[connection signal="pressed" from="Controls/Buttons/Reset" to="." method="_spawn_examples"]
